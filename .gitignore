@@ -1,0 +1,29 @@
+# Haskell build artefacts
+*.o
+*.hi
+*.dyn_o
+*.dyn_hi
+
+# Cabal/Stack output
+dist/
+dist-newstyle/
+.stack-work/
+.ghc.environment.*
+
+# Lean / Lake build artefacts
+**/.lake/
+**/build/
+
+# LaTeX build artefacts (if any paper-shaped artefact lands later)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.bbl
+*.blg
+
+# macOS metadata
+.DS_Store
