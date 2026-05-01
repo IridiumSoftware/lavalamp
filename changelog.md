@@ -5,6 +5,122 @@ messages match entry summaries.
 
 ---
 
+## 0.0.3 — 2026-05-01 — Attack-surface enumeration (P1)
+
+The load-bearing technical artefact: formal threat tree against
+LavaLamp's architecture as currently specified (LL-001..LL-014).
+
+### Added
+
+- **`docs/attack_surface_enumeration.md`** — formal threat tree
+  document. Six adversary classes taxonomised (A1 remote
+  software, A2 unprivileged user-space, A3 root [out of scope],
+  A4 side-channel / physical proximity, A5 registration-time,
+  A6 time-localized). Ten attack vectors enumerated:
+  - **V-001** "good enough" trajectory (defended by LL-006
+    Lyapunov-spectrum + LL-003 single-attractor + LL-002 visual
+    decoupling)
+  - **V-002** basin-spoofing (closed by LL-002 decoupling;
+    documented as historical attack with discipline-watch)
+  - **V-003** quantum-seed → classical software boundary
+    (defended by LL-005 Nyquist + LL-004 continuous coupling)
+  - **V-004** sensor Nyquist failure (defended by LL-005)
+  - **V-005** slow-drift threshold gaming (defended by LL-006
+    multi-scale spectrum + LL-007 chaos-guard)
+  - **V-006** sensor-input poisoning (largest residual risk;
+    surfaces LL-016 sensor-authenticity-requirement as new
+    spec entry)
+  - **V-007** registration ceremony (trust-root attack; LL-011
+    pending design)
+  - **V-008** cold-start window exploitation (LL-012 pending
+    design)
+  - **V-009** cross-config transition spoofing (LL-013 pending
+    design; inherits V-006 risk)
+  - **V-010** threshold calibration gaming (surfaces LL-017
+    no-oracle requirement; defended partially by LL-006)
+  Document also includes adversary-class × attack-vector matrix
+  (§4), residual-risks-not-yet-defeated enumeration (§5),
+  spec-impact recommendations (§6), followups (§7), and document
+  discipline (§8). Maintained artefact, not session companion —
+  will be updated as architecture evolves.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — three new spec entries surfaced by
+  the enumeration:
+  - **LL-015 — adversary-class-A3-out-of-scope** (Boundary).
+    Honest scoping: LavaLamp does not claim defense against
+    kernel-level adversaries. Parallel to LL-009 / LL-010 in
+    pinning a corpus boundary explicitly.
+  - **LL-016 — sensor-authenticity-requirement** (Core). Sensor
+    reads used in security primitive require independent
+    authenticity check. Largest residual risk in current
+    architecture; mitigation strategies pending (multi-sensor
+    cross-validation / hardware attestation /
+    accepted-deployment-context risk).
+  - **LL-017 — verification-no-oracle** (Core). Verification
+    protocol must not expose accept/reject feedback usable for
+    threshold probing. Required for LL-014 calibration to
+    deliver intended security.
+  Counts: 14 → 17 entries; all `:open`.
+- **`artifact_registry.md`** — three new rows for LL-015..LL-017.
+  Counts updated. A1 coverage check updated to 17/17.
+- **`dashboard.md`** — P1 marked ✓ landed. Spec status updated
+  (17 entries). Open structural questions section expanded to
+  include the three new entries surfaced by enumeration. Recent
+  companion docs / formal artefacts section now distinguishes
+  session companions from maintained artefacts.
+
+### Why
+
+P1 is the load-bearing technical content of LavaLamp. Without a
+formal threat model, the architectural claims in
+`LAVALAMP_SPEC.md` are defensible only against the attacks that
+happen to come to mind during informal discussion. The
+enumeration produces:
+
+1. **Defensible claims.** Each LL-ID's defensive coverage is
+   traced to specific attack vectors. The architecture's
+   security posture is now stateable in concrete terms.
+2. **Honest residual risks.** Five risks the current
+   architecture does *not* defeat are named explicitly: sensor
+   authenticity (V-006); registration ceremony (V-007);
+   cold-start window (V-008); cross-config transitions (V-009);
+   threshold calibration (V-010). Each is mapped to its `:open`
+   spec entry. No covert overclaiming.
+3. **Spec growth.** Three architectural claims that were
+   *implicit* in 0.0.1–0.0.2 are now *explicit*: A3 boundary
+   (LL-015), sensor authenticity (LL-016), no-oracle requirement
+   (LL-017). Pinning prevents drift.
+4. **Foundation for P2 (architectural design pass).** Each
+   attack vector's "mitigation pending" section lists the design
+   work needed. P2 closes those.
+
+### Spec impact
+
+Spec entries 14 → 17. All `:open`. Counts in
+`LAVALAMP_SPEC.md`, `artifact_registry.md`, and `dashboard.md`
+synchronized.
+
+### Known gaps
+
+- **Sensor authenticity (V-006 / LL-016) is the biggest residual
+  risk** in the current architecture. Mitigation strategies are
+  named but not yet selected.
+- **Registration ceremony (V-007 / LL-011)** is the trust root;
+  any deployment is undefended at registration time until
+  designed.
+- **Cold-start window, cross-config transitions, threshold
+  calibration (V-008..V-010)** all pending P2 design work.
+- **No code yet.** P3 (Julia prototype core) gated on P2 closure.
+- **Round-2 synthesis-team review** of the attack-surface
+  enumeration not yet triggered. Plan: forward this document +
+  P2 outputs (when ready) to Gemini and Grok and ask them to
+  validate the threat tree against attacks the enumeration may
+  have missed.
+
+---
+
 ## 0.0.2 — 2026-05-01 — Language-plan correction
 
 Pattern-match correction on the priority-stack language assignments.

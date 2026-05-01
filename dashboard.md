@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-01 (0.0.2 — language-plan correction).
+Last updated: 2026-05-01 (0.0.3 — attack-surface enumeration).
 
 ## Status summary
 
@@ -42,16 +42,20 @@ edge-witness-seat (Grok) review on 2026-04-30. No code yet.
 
 ## Priority stack
 
-P1 — **Attack-surface enumeration document.** The synthesis team
-  named five attack vectors (good-enough trajectory, basin
-  spoofing — now resolved by LL-002, side-channel timing replay,
-  sensor Nyquist failure, slow-drift threshold gaming). Plus
-  protocol-level open questions (registration, cold-start,
-  cross-config transitions, threshold calibration). All need to
-  be written out as a formal threat tree with adversary
-  capabilities and architectural defense traced for each. This
-  document also doubles as the load-bearing technical content of
-  the eventual LavaLamp paper.
+P1 — **Attack-surface enumeration document.** ✓ Landed in 0.0.3
+  (`docs/attack_surface_enumeration.md`). Six adversary classes
+  (A1 remote, A2 unprivileged, A3 root [out of scope per
+  LL-015], A4 side-channel, A5 registration-time, A6 time-
+  localized). Ten attack vectors enumerated (V-001 "good
+  enough" trajectory, V-002 basin-spoofing [closed by LL-002],
+  V-003 quantum-seed → classical boundary, V-004 sensor Nyquist,
+  V-005 slow-drift threshold gaming, V-006 sensor-input
+  poisoning, V-007 registration ceremony, V-008 cold-start
+  window, V-009 cross-config transition, V-010 threshold
+  calibration gaming). Each has adversary class / mechanism /
+  defenses (LL-IDs) / residual risk / mitigation pending.
+  Document doubles as load-bearing technical content of the
+  eventual LavaLamp paper.
 
 P2 — **Architectural design pass.** Formalise:
   - Lyapunov-spectrum residue audit (probabilistic detection
@@ -95,31 +99,45 @@ P7 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 14
+- Total spec entries: 17 (was 14 in 0.0.2; +3 from attack-surface
+  enumeration: LL-015 A3-out-of-scope, LL-016 sensor-authenticity,
+  LL-017 verification-no-oracle)
 - `:proved`: 0
 - `:tested`: 0
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:open`: 14
+- `:open`: 17
 - `:argued`: 0
 
 All entries `:open`. Concept-stage.
 
 ## Open structural questions
 
-The four `:open`-protocol-level entries (LL-011 through LL-014)
-that block any production deployment:
+The four `:open`-protocol-level entries from 0.0.1 (LL-011..LL-014)
+plus the three surfaced by 0.0.3 attack-surface enumeration
+(LL-015..LL-017) that block any production deployment:
 
-- **Registration ceremony.** How does verifier acquire device's
-  registered Lyapunov-spectrum envelope without holding the
-  device?
-- **Cold-start window.** Just-booted device behavior before SDE
-  has converged. Is the device unauthenticated during warmup?
-- **Cross-config transitions.** Distinguishing legitimate USB-plug
-  (or AC adapter, or thermal) shift from adversarial spoofing
-  attempt at the verifier.
-- **Threshold calibration.** False-positive vs false-negative
-  tradeoff in the Lyapunov-spectrum divergence threshold.
+- **Registration ceremony** (LL-011). How does verifier acquire
+  device's registered Lyapunov-spectrum envelope without holding
+  the device? Trust-root attack surface (V-007).
+- **Cold-start window** (LL-012). Just-booted device behavior
+  before SDE has converged. Authentication during warmup
+  (V-008).
+- **Cross-config transitions** (LL-013). Distinguishing
+  legitimate USB-plug (or AC adapter, or thermal) shift from
+  adversarial spoofing attempt at the verifier (V-009).
+- **Threshold calibration** (LL-014). False-positive vs
+  false-negative tradeoff in the Lyapunov-spectrum divergence
+  threshold (V-010).
+- **Sensor authenticity** (LL-016). The largest residual risk:
+  hardware sensors can be manipulated at the source (V-006).
+  Solution requires multi-sensor cross-validation, hardware
+  attestation, or accepted-deployment-context risk.
+- **Verification no-oracle** (LL-017). Verification protocol
+  must not expose accept/reject feedback usable for threshold
+  probing.
+- **A3 (root) explicitly out of scope** (LL-015). Honest scoping
+  boundary; prevents drift toward overclaiming.
 
 ## Live discipline notes
 
@@ -136,7 +154,7 @@ that block any production deployment:
 - **No open-ended simulation** (LL-010) is in force. Bounded-time
   windows only.
 
-## Recent companion docs
+## Recent companion docs / formal artefacts
 
 - `docs/concept_origin_companion.md` — provenance graph (codetaur
   visual seed, Aaron concept derived from Possibilistic Security,
@@ -144,7 +162,13 @@ that block any production deployment:
 - `docs/synthesis_team_round1_companion.md` — full dialogue arc:
   Gemini synthesis 1, Grok edge-witness 1, Gemini rebuttal +
   premature skeleton, Grok edge-witness 2 on visual-richness
-  blindspot, Aaron's decoupling resolution.
+  blindspot, Aaron's decoupling resolution; §7 captures 0.0.2
+  language-plan revision.
+- **`docs/attack_surface_enumeration.md`** — formal threat tree.
+  Adversary taxonomy (A1–A6, with A3 explicitly out of scope),
+  attack vectors V-001..V-010, defenses by LL-ID, residual
+  risks, spec-impact recommendations. Maintained artefact (not
+  a session companion); will be updated as architecture evolves.
 
 ## Out of scope (explicit)
 

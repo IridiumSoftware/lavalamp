@@ -238,14 +238,90 @@ LL-ID, not the Key.
 
 ---
 
+## Surfaced by attack-surface enumeration (0.0.3)
+
+### LL-015 — adversary-class-A3-out-of-scope
+- Key: kernel-level (A3) adversaries explicitly not defended against
+- Logic tier: Boundary
+- Description: LavaLamp does *not* claim defense against
+  adversaries with kernel-level (root) execution on the device.
+  At that capability level the device's identity is irrelevant —
+  the attacker can simulate any trajectory directly. Honest
+  scoping. The architecture defends against adversary classes
+  A1 (remote software), A2 (unprivileged user-space software),
+  A4 (side-channel / physical proximity), A5 (registration-time
+  insider), and A6 (time-localized observer); A3 is explicitly
+  out of scope.
+- Evidence type: none
+- Status: :open
+- Source: `docs/attack_surface_enumeration.md` §2 (adversary
+  taxonomy) + §5 (residual risks).
+- Notes: This is a honest-scoping claim parallel to LL-009 (no
+  complex numbers in security math) and LL-010 (no open-ended
+  simulation). Documenting the boundary prevents drift toward
+  overclaiming; consumers of the spec must understand which
+  adversary capabilities LavaLamp covers.
+
+### LL-016 — sensor-authenticity-requirement
+- Key: sensor reads used in the security primitive require independent authenticity check
+- Logic tier: Core
+- Description: Hardware sensor reads (battery, AC adapter, USB
+  status, thermal, scheduler timing) participating in the
+  external-potential-field coupling (LL-004) must satisfy an
+  independent authenticity check beyond simply trusting the
+  reported value. Sensors can be manipulated at the source
+  (V-006: a hairdryer drives thermal up; a flashed USB device
+  reports plug-events without attaching; a charge controller
+  spoofs AC-adapter status). Without authenticity verification,
+  an A4 adversary with physical proximity can drive the genuine
+  device to produce a chosen trajectory ("spoofing without
+  replication"). Authenticity strategy candidates:
+  multi-sensor cross-validation (correlated readings sanity-
+  checked against each other); hardware-attested sensors (TPM /
+  Secure Enclave signatures over readings); accepted-residual-
+  risk with explicit deployment-context guidance.
+- Evidence type: none
+- Status: :open
+- Source: `docs/attack_surface_enumeration.md` §3 V-006
+  (sensor-input poisoning).
+- Notes: This is the largest residual risk in the current
+  architecture. Sensor authenticity cannot be solved purely
+  within the trajectory layer; it requires either additional
+  hardware (attestation) or accepted-deployment-bound risk.
+
+### LL-017 — verification-no-oracle
+- Key: verification protocol must not expose accept/reject feedback usable for threshold probing
+- Logic tier: Core
+- Description: The verification protocol returning "accepted" or
+  "rejected" for a submitted trajectory MUST NOT expose
+  intermediate-state feedback (e.g., divergence value, distance-
+  to-threshold, time-to-detection) that lets an adversary probe
+  the residue threshold via repeated submissions. Without this
+  no-oracle requirement, V-010 (threshold calibration gaming) is
+  always possible: an adversary submits forged trajectories of
+  varying parameters and uses accept/reject responses to
+  triangulate the threshold's geometry. The verification
+  protocol must be all-or-nothing on response.
+- Evidence type: none
+- Status: :open
+- Source: `docs/attack_surface_enumeration.md` §3 V-010
+  (threshold calibration gaming).
+- Notes: A practical implementation may also include rate
+  limiting on verification attempts and statistical bounds on
+  repeated-submission patterns. Adaptive thresholding (where
+  the threshold itself learns from history) is a stronger
+  variant.
+
+---
+
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 14
+- Total: 17
 - `:proved`: 0
 - `:tested`: 0
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:open`: 14
+- `:open`: 17
 - `:argued`: 0
 
 **Concept-stage. Nothing verified. Attack-surface enumeration is

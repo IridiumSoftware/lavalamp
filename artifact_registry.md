@@ -66,22 +66,30 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-013 | cross-config transition handling | Operational | none | — | — | :open |
 | LL-014 | adversary-signature threshold calibration | Operational | none | — | — | :open |
 
+## Surfaced by attack-surface enumeration
+
+| LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
+|---|---|---|---|---|---|---|
+| LL-015 | adversary-class-A3 out of scope | Boundary | none | — | — | :open |
+| LL-016 | sensor-authenticity requirement | Core | none | — | — | :open |
+| LL-017 | verification no-oracle requirement | Core | none | — | — | :open |
+
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 14
+- Total: 17
 - `:proved`: 0
 - `:tested`: 0
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0
-- `:open`: 14
+- `:open`: 17
 
 ## Cross-audit A1–A6 self-check (initial)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (14 of 14).
+  here. ✓ (17 of 17).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
 - **A3 — Evidence exists.** No Test/Proof or Source files yet —
   concept-stage; this becomes meaningful once implementation
