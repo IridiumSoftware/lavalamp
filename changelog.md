@@ -5,6 +5,72 @@ messages match entry summaries.
 
 ---
 
+## 0.0.2 — 2026-05-01 — Language-plan correction
+
+Pattern-match correction on the priority-stack language assignments.
+0.0.1 inherited the triadic-coordination-engine's "Haskell core +
+Lean 4 formalisation" stack via pattern-matching, without checking
+whether it fit LavaLamp's actual technical needs. Aaron flagged
+the mismatch: LavaLamp is continuous-numerical / real-time /
+sensor-coupled, which is Julia's natural register, not Haskell's.
+
+### Changed
+
+- **`CLAUDE.md`** — new "Language tiers and phase discipline"
+  section between "Honest tier framing" and "Workflow rules".
+  Codifies the explore / verify-or-obstruct / prove-compositional
+  / prove-formal / harden methodology, with stage-appropriate
+  language choices and the rationale for each tier.
+- **`dashboard.md`** — priority stack restated. P3 was previously
+  "Language-track infrastructure (Haskell + Lean)"; now split
+  into P3 (Julia prototype core), P4 (Haskell compositional-
+  completeness via spec-as-types + QuickCheck), P5 (Lean 4 formal
+  verification of structural security claims), P6 (C/C++ future
+  hardening from proven spec), P7 (decoupled visual skin).
+- **`README.md`** — layout-comment updated to reflect the language
+  plan; placeholder src-subdirectory map shows
+  `src/{julia, haskell, lean4, cpp}` rather than just
+  `src/{haskell, lean4}`, with which-language-for-which-priority
+  explicit.
+- **`docs/synthesis_team_round1_companion.md`** — new §7
+  capturing the language-plan revision, including Aaron's
+  articulated stage-tiered methodology and the rationale for the
+  Julia / Haskell / Lean split.
+
+### Why
+
+LavaLamp's prototype core needs to live where the chaos / SDE /
+real-time-numerical community has done the algorithmic work, which
+is Julia's `DifferentialEquations.jl` + `DynamicalSystems.jl` +
+`ChaosTools.jl` stack. Haskell still has a role — but a *different*
+role from the engine project: as the **compositional-completeness
+checker** at the prove stage, expressing the spec as types and
+running QuickCheck-style universal coverage to catch corollaries
+the example tests miss. The S-026 `semanticSimilarity` symmetry
+bug in the engine is the canonical example of why this stage
+matters: hand-built example tests passed; QuickCheck immediately
+falsified symmetry. Without that stage, an unspotted universal
+sails into Lean and any C/C++ rewrite. Lean stays at "prove
+(formal) — is the theorem true," which is a different job from
+"prove (compositional) — did we enumerate everything."
+
+C/C++ stays as future hardening from the proven spec, not from the
+exploratory code.
+
+### Spec impact
+
+None. LL-001 through LL-014 are unchanged. The correction is
+about *which language implements each stage of the methodology*,
+not about the architectural claims themselves. All entries remain
+`:open` at this commit.
+
+### Counts
+
+Unchanged: 14 entries, all `:open`. The revision is about how
+those entries get implemented and verified, not what they assert.
+
+---
+
 ## 0.0.1 — 2026-04-30 — Concept-stage foundation
 
 Bootstrap the project's discipline scaffolding before any code or

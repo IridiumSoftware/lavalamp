@@ -125,6 +125,77 @@ practice; not unconditional.
 QKD-flavored language is permitted in marketing register only,
 never in formal claims.
 
+## Language tiers and phase discipline
+
+LavaLamp is structured by **stage-appropriate language choice** —
+each phase uses the language whose strengths match the *kind of
+risk* that phase is reducing. The methodology generalises from the
+broader corpus discipline:
+
+| Phase | Language | Risk reduced |
+|---|---|---|
+| **Explore** | Python (maybe Julia) | Conceptual — does the idea even work? |
+| **Verify / obstruct** | Julia (`DifferentialEquations.jl`, `DynamicalSystems.jl`, `ChaosTools.jl`) | Computational — do the numbers come out, and where do they refuse to? |
+| **Prove (compositional)** | Haskell (types as spec; QuickCheck for universal coverage) | Compositional — did we *miss a corollary or universal* the spec implies? |
+| **Prove (formal)** | Lean 4 | Mathematical — is the theorem actually *true*? |
+| **Harden (future)** | C / C++, rewriting from the proven spec | Supply-chain / dependency / long-term-stability |
+
+**Rationale per tier:**
+
+- **Julia is the prototype core.** The SDE solver (`DiffEq.jl`),
+  the Lyapunov-spectrum residue audit (`ChaosTools.jl`), the
+  chaos-guard (real-time `λ_max` estimation), and the sensor
+  coupling all live where the chaos community has done the
+  algorithmic work. Reaching for Haskell or Python at this layer
+  is rebuilding from scratch what's a one-liner in Julia.
+- **Haskell is the compositional-completeness checker, not the
+  prototype.** Property tests in Julia cover *example* space; they
+  don't formally cover *composition* space. The spec implies
+  corollaries and universals that example tests will pass over
+  silently. Haskell's type system + QuickCheck force enumeration
+  of compositions and structure what "complete coverage" means.
+  Catching an unspotted universal at the Haskell stage is cheap;
+  catching it after a Lean proof has been written against a flawed
+  spec is expensive. (See triadic-coordination-engine S-026: the
+  hand-built suite passed; QuickCheck immediately falsified
+  symmetry on `"force-force-spec"` vs `"force_c-c-spec"`.)
+- **Lean 4 is for formal truth on theorems**, not for compositional
+  enumeration. Lean catches "is this true"; Haskell catches "did
+  we enumerate everything." Complementary, not redundant.
+- **C/C++ is hardening from the proven spec, not from
+  exploratory code.** Once Haskell + Lean have closed the spec,
+  the rewrite is a translation exercise from a formal
+  specification. Reaching for C/C++ before the spec is closed
+  collapses to refactoring tangled exploratory code.
+
+**Phase discipline:**
+
+- "Explore → verify → prove → harden" is the canonical order, but
+  feedback loops backward are normal. A Lean obstruction can send
+  you back to verify; a verify obstruction can send you back to
+  explore.
+- "Obstruct" is a first-class result at every stage, not a failure.
+  When verification or proof doesn't close, two valid forward
+  moves: (a) refine the claim until it does close, or (b) accept
+  the obstruction as a structural boundary and document.
+- Edge-witness review fits naturally between phases (especially
+  explore → verify and verify → prove). The synthesis-seat /
+  edge-witness-seat protocol applies.
+
+**For LavaLamp specifically (priority order):**
+
+1. Attack-surface enumeration document (P1 in `dashboard.md`).
+2. Architectural design pass (P2): formalise the residue audit,
+   the resolution-bounded security claim, the chaos-guard, the
+   sensor-coupling potential field.
+3. Julia prototype implementing the architecture (P3).
+4. Haskell spec-as-types + QuickCheck against the Julia
+   prototype (compositional completeness check).
+5. Lean 4 formal proofs of the structural security claims.
+6. (Future) C/C++ hardening rewrite from the proven spec.
+7. Decoupled visual skin throughout (per LL-002, low priority,
+   any RNG / animation framework).
+
 ## Workflow rules
 
 - **One task per conversation.** Don't combine architecture work

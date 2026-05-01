@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-04-30 (initial commit).
+Last updated: 2026-05-01 (0.0.2 — language-plan correction).
 
 ## Status summary
 
@@ -63,14 +63,35 @@ P2 — **Architectural design pass.** Formalise:
     SDE parameters, sampling rate vs Nyquist).
   - Registration / onboarding / cold-start protocols.
 
-P3 — **Language-track infrastructure.** Mirror the
-  triadic-coordination-engine pattern: Haskell core + Lean 4
-  formalisation (with optional Mathlib cross-validation). Lockfile
-  discipline from day 1. No code shipped before P1 + P2 land.
+P3 — **Julia prototype core.** Implement the architecture (LL-001
+  through LL-008 substantively) using Julia's chaos-and-SDE stack:
+  `DifferentialEquations.jl` for the SDE solver,
+  `DynamicalSystems.jl` / `ChaosTools.jl` for Lyapunov-spectrum
+  estimation and basin diagnostics, native sensor FFI for
+  configuration coupling. Lockfile discipline (`Manifest.toml`)
+  from day 1. No code shipped before P1 + P2 land.
 
-P4 — **Visual-skin scaffolding.** Decorative-only animation. Can
+P4 — **Haskell compositional-completeness layer.** Spec-as-types
+  + QuickCheck against the Julia prototype. Catches corollaries
+  and universals the example-tested suite would miss. Haskell's
+  job is *composition-space coverage*, not implementation —
+  prevents an unspotted universal sailing into Lean / production.
+  Same discipline that caught S-026 in the triadic-coordination-
+  engine.
+
+P5 — **Lean 4 formal verification.** Machine-verify the structural
+  security claims (resolution-bounded unclonability theorem,
+  ergodicity-assumption discipline, detection-probability bound).
+  Lean track only justified once Haskell has closed compositional
+  completeness against the Julia prototype.
+
+P6 — **C/C++ production hardening.** Rewrite from the proven spec,
+  not from the exploratory code. Reach only after P3–P5 close.
+
+P7 — **Visual-skin scaffolding.** Decorative-only animation. Can
   be canned / `Math.random()`-driven / Cloudflare-style RNG-blob.
-  Decoupled from security primitive per LL-002. Low priority.
+  Decoupled from security primitive per LL-002. Low priority,
+  can land any time.
 
 ## Spec status (per LAVALAMP_SPEC.md)
 

@@ -333,3 +333,56 @@ All entries `:open` at this commit.
   Aaron's via Possibilistic Security and stays in that vocabulary
   in the spec. ORSIΩ language is fine in conversation; should not
   migrate into formal artefacts.
+
+## §7 — Language-plan revision (2026-05-01, 0.0.2)
+
+After this companion's initial commit, Aaron pushed back on the
+language plan: I had pattern-matched the triadic-coordination-
+engine's "Haskell core + Lean 4 formalisation" stack into LavaLamp's
+priority list without checking whether it fit the project's actual
+technical needs. Aaron correctly noted that LavaLamp is
+continuous-numerical / real-time / sensor-coupled work — different
+problem class from the engine's discrete categorical pattern-
+matching. SDEs and chaos analysis live in **Julia**
+(`DifferentialEquations.jl`, `DynamicalSystems.jl`,
+`ChaosTools.jl`), not in Haskell. Reaching for Haskell at the
+prototype layer here would mean rebuilding from scratch what's a
+one-liner in Julia.
+
+Aaron's broader articulated methodology:
+
+| Phase | Language | Risk reduced |
+|---|---|---|
+| Explore | Python (maybe Julia) | Conceptual |
+| Verify / obstruct | Julia | Computational |
+| Prove (compositional) | Haskell | Compositional / corollary completeness |
+| Prove (formal) | Lean 4 | Mathematical truth |
+| Harden | C / C++ from proven spec | Supply-chain / dependency |
+
+The "prove" phase splits into two distinct jobs: Haskell catches
+"did we miss a universal the spec implies" via types-as-spec +
+QuickCheck; Lean catches "is the theorem actually true" via formal
+proof. Complementary. The S-026 `semanticSimilarity` symmetry bug
+in the triadic-coordination-engine is the canonical example of why
+the Haskell compositional-completeness stage matters: hand-built
+example tests passed; QuickCheck immediately falsified symmetry on
+specific duplicate-token inputs. Without that stage the bug would
+have sailed into Lean and any C/C++ rewrite.
+
+LavaLamp's revised priority stack (in `dashboard.md`):
+
+- P1 — Attack-surface enumeration document
+- P2 — Architectural design pass
+- P3 — **Julia** prototype core (SDE, residue audit, chaos-guard,
+  sensor coupling)
+- P4 — **Haskell** spec-as-types + QuickCheck against Julia
+  prototype (compositional completeness)
+- P5 — **Lean 4** formal verification of structural security claims
+- P6 — C/C++ production hardening (future, from proven spec)
+- P7 — Decoupled visual skin (any framework, low priority)
+
+The discipline scaffold (CLAUDE.md, LAVALAMP_SPEC.md,
+artifact_registry.md, dashboard.md, this companion) does not
+change with the language correction; only the priority-stack
+language assignments do. Spec entries LL-001..LL-014 remain
+unchanged.

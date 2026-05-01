@@ -79,10 +79,16 @@ lavalamp/
 │   └── synthesis_team_round1_companion.md
 └── .gitignore
 
-# src/ (haskell, lean4, etc.) created when code lands — pending P3
-# in the dashboard's priority stack. Concept-stage repo; no code
-# until attack-surface enumeration + architectural design pass
-# complete.
+# Source-code subdirectories created when code lands. Per the
+# dashboard's priority stack, the language plan is:
+#   P3  src/julia/   — prototype core (SDE, residue audit, chaos-guard, sensor coupling)
+#   P4  src/haskell/ — spec-as-types + QuickCheck for compositional completeness
+#   P5  src/lean4/   — formal verification of structural security claims
+#   P6  src/cpp/     — production hardening (from proven spec; far future)
+#   P7  visual/      — decoupled decorative skin (per LL-002; any framework)
+#
+# No code until attack-surface enumeration (P1) + architectural
+# design pass (P2) complete.
 
 ```
 
