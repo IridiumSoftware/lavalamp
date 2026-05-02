@@ -1,7 +1,7 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.6 — P3 prototype core, Lorenz-96
-baseline).
+Last updated: 2026-05-02 (0.0.7 — P3 baseline companion + dev-host
+field observations).
 
 ## Status summary
 
@@ -269,6 +269,41 @@ Remaining `:open` entries fall into two classes:
   (`test/runtests.jl`, 8 assertions) verifies λ₁ ≈ 1.66 vs
   literature, n_pos ∈ [11, 16], h_KS ≈ 10.5, IC-invariance per
   Oseledec. LL-003 closes to `:tested`.
+- **`docs/p3_baseline_companion.md`** (0.0.7) — P3 baseline
+  companion + dev-host field observations. §2.1 documents the
+  Lorenz-96 reproduction of literature; §2.2 records empirical
+  test robustness against host non-stationarity (a real
+  thermal-climb + AC-plug-in + battery-state-shift event
+  occurred during the canonical baseline run, all 8 assertions
+  still passed); §2.3 frames this as a substrate-coupling
+  self-demonstration previewing P3a test design; §2.4 reframes
+  compute load as a *structural indicator* of h_KS-margin, not
+  a tax on the security primitive. §5 captures lessons for
+  P3a/b/c/d sub-tasks. No spec status moves; positioning
+  language captured for future paper.
+
+## Live empirical observations
+
+- **Compute and h_KS are structurally linked** (per
+  `p3_baseline_companion.md` §2.4). The chaos-production rate
+  S_production = h_KS sets the resolution-boundary margin Δh
+  per LL-008/LL-018. Producing h_KS at the rate required for a
+  meaningful margin requires sustained integration cost. A
+  measurable thermal signature on the genuine device under load
+  is *expected*, not a bug. Pitch language must reflect this.
+- **Dev host is a free test-scenario source for P3a.** Thermal
+  climb, AC plug-in, USB plug-in events on the developer's
+  workstation are real substrate events of exactly the
+  categories design §2.4 enumerates. P3a's synthetic
+  sensor-stream stub should mirror these statistics; the dev
+  host itself becomes a usable real-sensor test platform once
+  IOKit / SMC FFI work is in scope.
+- **Test bounds robust to real-world non-stationarity.** The
+  ±15% bound on λ₁ and the ±25% bound on h_KS in
+  `runtests.jl` absorbed a real configuration event during the
+  canonical 0.0.6 run without false-failing. Future bound
+  tightenings should keep this margin to preserve real-world
+  robustness.
 
 ## Out of scope (explicit)
 

@@ -5,6 +5,139 @@ messages match entry summaries.
 
 ---
 
+## 0.0.7 — 2026-05-02 — P3 baseline companion + dev-host field observations
+
+Late-landing companion for the 0.0.6 P3 baseline session, plus
+three empirical observations from the development host that
+surfaced during the canonical baseline test run. The 0.0.6
+commit was a "large session" per CLAUDE.md workflow rules and
+should have included its companion in the same commit; 0.0.7
+corrects the omission. The empirical observations are field
+signal worth pinning before they get lost between sessions.
+
+### Added
+
+- **`docs/p3_baseline_companion.md`** — P3 baseline companion.
+  - **§1 Computational basis.** Files, build commands, dev-host
+    wall-clock metrics (~200s first instantiate, ~20s test).
+  - **§2.1 Lorenz-96 baseline reproduces literature.** Numbers
+    table: λ₁ = 1.6577 (literature ≈ 1.66, 0.2% match);
+    n_pos = 14 (literature 13–14); h_KS = 10.27 (literature
+    ≈ 10.5); λ_min = -4.90; Kaplan-Yorke dim = 27.11
+    (literature ≈ 27).
+  - **§2.2 Empirical robustness against host non-stationarity.**
+    Documents that a real configuration event occurred during
+    the canonical seed=42 baseline run on the dev M5 Max Pro:
+    thermal climb to fan-on threshold + AC adapter plug-in
+    (battery had dropped below 15%) + battery state-of-charge
+    shift. All 8 test assertions still passed. The bounds
+    calibrated for finite-window estimator variance + IC
+    randomness also absorbed real-world non-stationarity. This
+    is stronger evidence for LL-003 than a clean-machine pass.
+  - **§2.3 Substrate-coupling self-demonstration.** The §2.2
+    events match the architecture-design §2.4 sensor categories
+    one-for-one (high-bandwidth thermal noise; discrete-state
+    AC-adapter binary; slow-drift battery SOC). Lorenz-96 in
+    0.0.6 ignored them because sensor coupling is P3a; once
+    P3a lands, repeating with these triggers would propagate
+    the events into the trajectory via U(s, x; t) and would
+    require LL-013 cross-config classification to distinguish
+    legitimate config change from spoofing. The unintended
+    self-demo previews the canonical P3a test scenario shape.
+  - **§2.4 Compute load and h_KS are structurally linked.**
+    Reframes the dev-host fan-spin event from a "compute cost
+    concern" to a *structural indicator*: S_production = h_KS
+    sets the resolution-boundary margin Δh per LL-008/LL-018,
+    and producing h_KS at a meaningful rate requires sustained
+    integration cost. A "warm box" is the security primitive
+    operating in the chaos-production regime its claim depends
+    on; not a tax on security but a signature of it. Three
+    sub-implications: (i) hardware deployment is not free, and
+    that is correct; (ii) chaos-guard (P3c) is much cheaper
+    than residue audit (P3b) — single exponent vs full
+    spectrum, O(N) vs O(N²); (iii) P3b benchmarking budget
+    will multiply per-trajectory cost across many synthetic
+    adversaries, so inner loops likely use smaller N (10 or
+    20) with N=40 reserved for headline assertions.
+  - **§3 Verification.** LL-003 already :tested in 0.0.6; the
+    §2.2/§2.3/§2.4 observations are `manual` evidence and do
+    not move other entries on their own.
+  - **§4 Spec impact.** No new entries; no further status
+    moves. Positioning language captured for future paper /
+    pitch use.
+  - **§5 Followups.** P3a/b/c/d test-design and budgeting
+    lessons distilled from the observations.
+
+### Changed
+
+- **`dashboard.md`** — version bumped to 0.0.7.
+  - Recent companion docs section gains
+    `p3_baseline_companion.md` entry.
+  - **New section: "Live empirical observations".** Three
+    bullets capturing the structural h_KS↔compute link, the
+    dev host as a free P3a test-scenario source, and the test
+    bounds' demonstrated real-world non-stationarity
+    robustness.
+
+### Why
+
+Two independent reasons drove this commit:
+
+1. **Workflow discipline.** The 0.0.6 commit introduced the
+   Julia track substantively — a "large session" by CLAUDE.md
+   criteria — and should have landed with a companion doc in
+   the same commit. 0.0.6 missed step 6 of the large-session
+   checklist; 0.0.7 closes that gap. Future sessions: keep the
+   companion inside the substantive commit.
+
+2. **Field observations worth pinning.** Three observations
+   from the dev host during the 0.0.6 baseline test run are
+   not faults but useful signal:
+   - The test passed under documented host non-stationarity,
+     strengthening LL-003's evidence (§2.2).
+   - The host events match the design-§2.4 sensor categories
+     one-for-one and preview P3a test design (§2.3).
+   - Compute cost and h_KS are structurally linked: a warm
+     box indicates the security primitive is producing entropy
+     at a rate commensurate with its security margin claim
+     (§2.4).
+   The third observation is the most consequential: it
+   reframes pitch language ("LavaLamp runs cheaply in the
+   background" would mis-describe the primitive) and informs
+   the P3b benchmarking budget directly.
+
+### Spec impact
+
+None. No new spec entries; no status moves. LL-003 was already
+:tested in 0.0.6. The §2.2/§2.3/§2.4 observations are `manual`
+evidence supporting LL-003 / LL-004 / LL-016 but do not move
+those entries — LL-004 / LL-016 close to :tested only when P3a
+implements sensor coupling.
+
+### Counts
+
+Unchanged from 0.0.6: 18 entries total; 1 :tested (LL-003);
+12 :argued; 5 :open; 0 :proved / :verified / :benchmarked.
+
+### Followup recommendations
+
+- **Companion doc inside the same commit as the substantive
+  work.** The 0.0.6 → 0.0.7 split is honest but slightly out
+  of sync; future large-session commits include the companion.
+- **CI integration before P3a.** Recommended in the §5.5
+  followup; currently the only thing protecting LL-003 is a
+  manual `Pkg.test()` on the dev host. GitHub Actions running
+  tests on push gives the test suite a real chance to catch
+  regressions.
+- **P3a sensor coupling slice scoping.** §5.1 distills the
+  test-design lessons; the natural minimal P3a slice is a
+  synthetic sensor stream coupling to U(s, x; t), exercised by
+  a test that injects a sensor event mid-run and asserts the
+  trajectory tracks it. Real-sensor IOKit / SMC FFI work
+  defers to a later sub-task (or P6 hardening).
+
+---
+
 ## 0.0.6 — 2026-05-02 — P3 prototype core (bootstrap + Lorenz-96 baseline)
 
 First substantive Julia prototype work. Establishes the
