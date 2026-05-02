@@ -5,6 +5,112 @@ messages match entry summaries.
 
 ---
 
+## 0.0.4 — 2026-05-01 — Methodology + positioning refinements
+
+Two related refinements landed in the same session: (1) Catlab.jl
+inserted as a fifth tier in the formal stack between numerical
+verification and Haskell compositional completeness, motivated by
+the Closure v5 corpus's `:catlab` evidence-type precedent (9 of
+145 `:proved` entries); (2) a positioning companion capturing the
+QKD / PQC / possibilistic-identity complementarity worked through
+earlier in the session.
+
+### Added
+
+- **`docs/language_plan_catlab_tier_companion.md`** — captures the
+  Catlab tier insertion. Establishes the three-jobs distinction
+  (Catlab computational-categorical / Haskell compositional /
+  Lean formal), the productivity ordering rationale (Catlab
+  iterates faster than Haskell or Lean for "does the model close
+  at all"), and the LavaLamp-specific decision rule (skip Catlab
+  by default; revisit if P2 verification-protocol design surfaces
+  categorical structure). Anchors the tier on Closure v5
+  corpus precedent — `:catlab` is an audited evidence type with
+  9 `:proved` entries currently in the corpus.
+
+- **`docs/qkd_pqc_complementarity_companion.md`** — captures the
+  positioning analysis: LavaLamp is not QKD (different problem,
+  different security tier — resolution-bounded computational,
+  not information-theoretic); is defensive-postured (detect via
+  Lyapunov-spectrum residue, not prevent observation); composes
+  with PQC rather than replacing it (PQC defends transit
+  confidentiality; possibilistic identity defends authentication
+  — different layers); replaces MFA under identity-as-closure;
+  and inherits the C-conjugate adversary from the Closure v5
+  cross-sector autopoiesis result (0/5202 on primary seed,
+  v156). Records the resolution of an earlier misreading by
+  Claude of the Possibilistic Security paper's PQC claim. Adds
+  a §2.6 noting the implication of the Q₅₁-as-autopoietic
+  reframing (Closure v5 v157, S157) for the identity layer:
+  identity is Q₅₁-tier, and the residue audit is a spectrum
+  check, not a checkpoint trace match.
+
+### Changed
+
+- **`CLAUDE.md`** — "Language tiers and phase discipline" section
+  revised. Catlab.jl / GATlab inserted between verify / obstruct
+  and prove (compositional). The three-jobs distinction (Catlab /
+  Haskell / Lean) made explicit with explicit "do not collapse"
+  warnings for each pairwise collapse. LavaLamp-specific priority
+  list updated: P4 is now Catlab (gated on P2), P5–P8 are the
+  former P4–P7 (Haskell, Lean, C / C++, visual skin) renumbered.
+
+- **`dashboard.md`** — recent companion docs section updated with
+  the two new companions; priority stack renumbered to match
+  CLAUDE.md (P1–P8 instead of P1–P7); Catlab decision rule noted
+  in P4.
+
+### Why
+
+The 0.0.2 language plan correction (Haskell + Lean → Julia /
+Haskell / Lean) covered the prototype-core mistake. It missed the
+Catlab tier, which has independent corpus precedent (Closure v5
+has 9 `:catlab` `:proved` entries via CatLab.jl) and serves a
+distinct job: *computational* category theory that fits between
+numerical verification and Haskell's compositional-completeness
+check.
+
+The three-jobs distinction is load-bearing: collapsing Catlab into
+Haskell (or vice versa) loses content. Catlab computes with
+categorical objects; Haskell enumerates composition space; Lean
+proves theorems formally. Closure v5's evidence taxonomy already
+treats `:catlab` as a distinct evidence type capable of
+proved-tier status, so this is precedent, not speculation.
+
+The productivity ordering — Catlab iterates faster than Haskell
+or Lean for "does the model close at all" questions — means by
+the time a result reaches Haskell the morphisms are known to
+compose, and by the time it reaches Lean the theorem statement is
+known to be right. Cheaper iteration buys correctness gradient
+before more expensive tiers see the work.
+
+The positioning companion is independent of the methodology
+refinement but lands in the same session because the conversation
+covered both. It captures conclusions about LavaLamp's security
+tier, defensive posture, and complementarity with QKD / PQC /
+identity-as-closure that were settled earlier in the session and
+risked being lost to chat history. The §2.6 connection between
+LavaLamp identity and the Q₅₁-as-autopoietic Closure v5 result
+is new — it grounds the residue audit's spectrum-vs-trace
+distinction in a corpus reframing, which strengthens the
+conceptual argument behind LL-006.
+
+### Spec impact
+
+None. Both refinements are methodology / positioning, not
+security-primitive claims. Spec entry counts unchanged (still 17
+entries, all `:open`). No new LL-IDs; no `LAVALAMP_SPEC.md`
+change; no `artifact_registry.md` change. The
+`artifact_registry.md` cross-audit A1 coverage check still passes
+at 17/17.
+
+### Counts
+
+Unchanged: 17 entries, all `:open`. The revisions land in
+governance and companion-doc files only.
+
+---
+
 ## 0.0.3 — 2026-05-01 — Attack-surface enumeration (P1)
 
 The load-bearing technical artefact: formal threat tree against

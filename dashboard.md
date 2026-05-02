@@ -1,6 +1,7 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-01 (0.0.3 — attack-surface enumeration).
+Last updated: 2026-05-01 (0.0.4 — methodology + positioning
+refinements).
 
 ## Status summary
 
@@ -75,7 +76,20 @@ P3 — **Julia prototype core.** Implement the architecture (LL-001
   configuration coupling. Lockfile discipline (`Manifest.toml`)
   from day 1. No code shipped before P1 + P2 land.
 
-P4 — **Haskell compositional-completeness layer.** Spec-as-types
+P4 — **Catlab categorical realisation** (optional, gated on P2).
+  Use Julia + Catlab.jl / GATlab to verify the categorical
+  structure of the verification protocol if P2's design pass
+  surfaces enough categorical content to warrant it
+  (registration ceremony LL-011, cross-config transitions
+  LL-013, no-oracle response LL-017 — these are morphisms in
+  a category of device-states with admissible transitions). The
+  SDE / sensor-coupling primitive is dynamical-systems work and
+  probably under-pulls Catlab's weight; the verification
+  protocol may be different. **Decision rule:** skip by default;
+  revisit when registration / cross-config transition designs
+  are concrete. See `docs/language_plan_catlab_tier_companion.md`.
+
+P5 — **Haskell compositional-completeness layer.** Spec-as-types
   + QuickCheck against the Julia prototype. Catches corollaries
   and universals the example-tested suite would miss. Haskell's
   job is *composition-space coverage*, not implementation —
@@ -83,16 +97,16 @@ P4 — **Haskell compositional-completeness layer.** Spec-as-types
   Same discipline that caught S-026 in the triadic-coordination-
   engine.
 
-P5 — **Lean 4 formal verification.** Machine-verify the structural
+P6 — **Lean 4 formal verification.** Machine-verify the structural
   security claims (resolution-bounded unclonability theorem,
   ergodicity-assumption discipline, detection-probability bound).
   Lean track only justified once Haskell has closed compositional
   completeness against the Julia prototype.
 
-P6 — **C/C++ production hardening.** Rewrite from the proven spec,
-  not from the exploratory code. Reach only after P3–P5 close.
+P7 — **C/C++ production hardening.** Rewrite from the proven spec,
+  not from the exploratory code. Reach only after P3–P6 close.
 
-P7 — **Visual-skin scaffolding.** Decorative-only animation. Can
+P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
   be canned / `Math.random()`-driven / Cloudflare-style RNG-blob.
   Decoupled from security primitive per LL-002. Low priority,
   can land any time.
@@ -169,6 +183,26 @@ plus the three surfaced by 0.0.3 attack-surface enumeration
   attack vectors V-001..V-010, defenses by LL-ID, residual
   risks, spec-impact recommendations. Maintained artefact (not
   a session companion); will be updated as architecture evolves.
+- **`docs/language_plan_catlab_tier_companion.md`** (0.0.4) —
+  methodology refinement inserting Catlab.jl / GATlab as a
+  fifth tier between numerical verification and Haskell
+  compositional completeness. Anchors on Closure v5 corpus
+  precedent (`:catlab` evidence type, 9 of 145 `:proved`
+  entries). Establishes the three-jobs distinction: Catlab
+  (computational categorical), Haskell (compositional), Lean
+  (formal). Default for LavaLamp: skip Catlab; revisit if P2
+  surfaces categorical structure in the verification protocol.
+- **`docs/qkd_pqc_complementarity_companion.md`** (0.0.4) —
+  positioning analysis. LavaLamp is not QKD (different problem,
+  different security tier); is defensive-postured (detect via
+  residue audit, not prevent observation); composes with PQC
+  rather than replacing it; replaces MFA under
+  identity-as-closure; inherits the C-conjugate adversary
+  structurally from Closure v5's cross-sector autopoiesis
+  failure (0/5202 on primary seed). §2.6 connects identity to
+  the Q₅₁-as-autopoietic reframing (Closure v5 v157, S157):
+  identity is Q₅₁-tier; the residue audit is a spectrum check,
+  not a checkpoint trace match.
 
 ## Out of scope (explicit)
 

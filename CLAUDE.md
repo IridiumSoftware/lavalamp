@@ -135,10 +135,33 @@ broader corpus discipline:
 | Phase | Language | Risk reduced |
 |---|---|---|
 | **Explore** | Python (maybe Julia) | Conceptual — does the idea even work? |
-| **Verify / obstruct** | Julia (`DifferentialEquations.jl`, `DynamicalSystems.jl`, `ChaosTools.jl`) | Computational — do the numbers come out, and where do they refuse to? |
+| **Verify / obstruct** | Julia (`DifferentialEquations.jl`, `DynamicalSystems.jl`, `ChaosTools.jl`) | Computational (numerical) — do the numbers come out, and where do they refuse to? |
+| **Categorical realise** *(when applicable)* | Julia + Catlab.jl / GATlab | Computational (categorical) — does the categorical structure actually close, do the diagrams commute on concrete instances? |
 | **Prove (compositional)** | Haskell (types as spec; QuickCheck for universal coverage) | Compositional — did we *miss a corollary or universal* the spec implies? |
 | **Prove (formal)** | Lean 4 | Mathematical — is the theorem actually *true*? |
 | **Harden (future)** | C / C++, rewriting from the proven spec | Supply-chain / dependency / long-term-stability |
+
+**Three distinct jobs in the formal stack** (load-bearing
+distinction; do not collapse):
+
+- **Catlab** — *computational* category theory. Builds the
+  categorical model concretely, lets you compute with morphisms,
+  verifies diagrams commute on instances. Over exact types this
+  produces algebraic / `:catlab` evidence (the Closure v5 corpus
+  has 9 of 145 `:proved` entries carrying this evidence type, so
+  this is precedent, not speculation).
+- **Haskell** — *compositional* coverage. Spec as types +
+  QuickCheck enumerating universals example tests miss. Catches
+  corollaries you didn't know you implied.
+- **Lean 4** — *formal* proof. Machine-verified theorem in
+  dependent type theory.
+
+These are not interchangeable. Collapse Haskell into "another way
+to write Julia or Lean" and it earns its keep nowhere. Collapse
+Lean into "property tests but more rigorous" and you get
+pseudo-formality without the actual logical guarantee. Collapse
+Catlab into "a slow Haskell" and you lose the productivity
+gradient that makes the tier worthwhile.
 
 **Rationale per tier:**
 
@@ -148,6 +171,16 @@ broader corpus discipline:
   coupling all live where the chaos community has done the
   algorithmic work. Reaching for Haskell or Python at this layer
   is rebuilding from scratch what's a one-liner in Julia.
+- **Catlab fits between numerical verification and Haskell** when
+  the architecture has non-trivial categorical content. Multiple-
+  dispatch + concrete computation iterates faster than Haskell
+  typeclass plumbing or Lean tactics. By the time you reach
+  Haskell, you already know the morphisms compose; by the time
+  you reach Lean, you already know the theorem statement is
+  right. **Optional per project** — skip when the categorical
+  content is shallow (pure SDE / numerical work); use when there
+  are functors, natural transformations, universal constructions,
+  or multicategory-style composition to verify.
 - **Haskell is the compositional-completeness checker, not the
   prototype.** Property tests in Julia cover *example* space; they
   don't formally cover *composition* space. The spec implies
@@ -170,10 +203,10 @@ broader corpus discipline:
 
 **Phase discipline:**
 
-- "Explore → verify → prove → harden" is the canonical order, but
-  feedback loops backward are normal. A Lean obstruction can send
-  you back to verify; a verify obstruction can send you back to
-  explore.
+- "Explore → verify → realise (categorical, when applicable) →
+  prove → harden" is the canonical order, but feedback loops
+  backward are normal. A Lean obstruction can send you back to
+  verify; a verify obstruction can send you back to explore.
 - "Obstruct" is a first-class result at every stage, not a failure.
   When verification or proof doesn't close, two valid forward
   moves: (a) refine the claim until it does close, or (b) accept
@@ -184,16 +217,23 @@ broader corpus discipline:
 
 **For LavaLamp specifically (priority order):**
 
-1. Attack-surface enumeration document (P1 in `dashboard.md`).
+1. Attack-surface enumeration document (P1 in `dashboard.md`) —
+   *landed in 0.0.3*.
 2. Architectural design pass (P2): formalise the residue audit,
    the resolution-bounded security claim, the chaos-guard, the
    sensor-coupling potential field.
 3. Julia prototype implementing the architecture (P3).
-4. Haskell spec-as-types + QuickCheck against the Julia
+4. Catlab categorical realisation **only if** the verification
+   protocol design (P2) surfaces enough categorical structure to
+   warrant it. Default: skip; revisit when registration ceremony /
+   cross-config transition designs are concrete. The SDE /
+   sensor-coupling primitive is dynamical-systems work, not
+   categorical; the verification protocol may be different.
+5. Haskell spec-as-types + QuickCheck against the Julia
    prototype (compositional completeness check).
-5. Lean 4 formal proofs of the structural security claims.
-6. (Future) C/C++ hardening rewrite from the proven spec.
-7. Decoupled visual skin throughout (per LL-002, low priority,
+6. Lean 4 formal proofs of the structural security claims.
+7. (Future) C/C++ hardening rewrite from the proven spec.
+8. Decoupled visual skin throughout (per LL-002, low priority,
    any RNG / animation framework).
 
 ## Workflow rules
