@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.10 — P3c chaos-guard).
+Last updated: 2026-05-02 (0.0.11 — GitHub Actions CI workflow).
 
 ## Status summary
 
@@ -119,9 +119,12 @@ P3 — **Julia prototype core.** ◐ In progress.
     §2.1 bound's constants (K, c, δ_A(ε_A)) against the existing
     detection-probability surface; verify empirical curve is
     above the bound prediction.
-  - **CI workflow.** GitHub Actions running `Pkg.test()` on
-    push. Recommended before P3c — test wall-clock now ~78s,
-    manual reruns starting to feel slow.
+  - **CI workflow.** ✓ Landed in 0.0.11
+    (`.github/workflows/test.yml`). Julia 1.12 on
+    ubuntu-latest; runs `Pkg.test()` on every push to master
+    and on PRs. 20-minute job timeout. Lockfile-respecting
+    install via `julia-actions/julia-buildpkg`. Workflow fires
+    automatically on this commit's push.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical

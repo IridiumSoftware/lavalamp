@@ -5,6 +5,65 @@ messages match entry summaries.
 
 ---
 
+## 0.0.11 — 2026-05-02 — GitHub Actions CI workflow
+
+Lands the CI workflow flagged as a follow-up since 0.0.7. With
+the test suite at 82 assertions and ~47s local wall clock,
+manual reruns after every change had become a discipline gap;
+CI closes that gap by running `Pkg.test()` on every push to
+master and on every PR.
+
+### Added
+
+- **`.github/workflows/test.yml`** — single-job workflow:
+  Julia 1.12 on ubuntu-latest, 20-minute job timeout. Steps:
+  `actions/checkout@v4` → `julia-actions/setup-julia@v2` (with
+  `version: 1.12`) → `julia-actions/cache@v2` (caches the
+  Julia depot across runs) → `julia-actions/julia-buildpkg@v1`
+  with `project: src/julia` (runs `Pkg.instantiate()`,
+  respecting the committed Manifest.toml — lockfile discipline
+  preserved) → `julia-actions/julia-runtest@v1` with
+  `project: src/julia` (runs `Pkg.test()`). Triggered on
+  `push` to master and on `pull_request`. Permissions block
+  `contents: read` (least privilege).
+
+### Why
+
+The lavalamp CLAUDE.md package-management rule requires
+"verify a clean checkout + lockfile install builds before
+committing"; CI mechanically enforces this on every commit
+rather than relying on local discipline. For the 82-assertion
+test suite, manual rerun on every edit had become slow enough
+to be a real friction; CI removes that.
+
+The workflow uses a single Julia version (1.12 to match dev)
+on a single OS (ubuntu-latest) — minimal matrix to start.
+Project.toml [compat] declares `julia = "1.10"` so the matrix
+can expand later without forcing a recheck-everything
+session.
+
+The workflow file is the smallest YAML that exercises
+`Pkg.test()` against the committed lockfile. No bells, no
+benchmarks, no codecov yet — those are follow-ups if the
+prototype's wall clock or cost-tracking discipline ever
+warrants them.
+
+### Spec impact
+
+None. Workflow is project tooling, not a security claim.
+Counts unchanged: 18 total; 4 `:tested`; 9 `:argued`; 5
+`:open`.
+
+### Known gaps
+
+- Workflow has not yet been observed to pass on a remote
+  runner — this commit triggers its first run. Expected
+  outcome: 82/82 assertions pass; wall clock 5-8 minutes
+  including precompile (vs ~47s local) on the GitHub-hosted
+  ubuntu-latest runner.
+
+---
+
 ## 0.0.10 — 2026-05-02 — P3c chaos-guard (LL-007 :tested)
 
 Implements the periodic-window safety signal per architecture-

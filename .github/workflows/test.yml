@@ -1,0 +1,43 @@
+# LavaLamp Julia test suite — runs on every push to master and on PRs.
+#
+# Lockfile discipline (per CLAUDE.md package-management rule):
+#   julia-buildpkg uses Pkg.instantiate() which installs from the
+#   committed Manifest.toml. CI verifies that a clean checkout +
+#   lockfile install builds and that 82/82 assertions pass.
+#
+# Julia version: 1.12 to match the dev environment. Project.toml
+# [compat] declares julia = "1.10" so older versions should also
+# work; expand the matrix when there's a reason to support them.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Julia ${{ matrix.julia-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        julia-version: ['1.12']
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+        with:
+          project: src/julia
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          project: src/julia
