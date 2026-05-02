@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.9 (P3b residue audit + detection benchmark, 2026-05-02)
+Version: 0.0.10 (P3c chaos-guard, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -202,23 +202,35 @@ LL-ID, not the Key.
 ### LL-007 — chaos-guard
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
 - Logic tier: Operational
-- Description: A background thread estimates the largest Lyapunov
-  exponent in real time (Benettin recommended; Rosenstein / Wolf
-  alternatives). If `λ̂₁ < τ_λ ≈ 0.1·λ₁_expected` over a sliding
-  window W ≈ 100/λ₁_expected, the entropy stream is marked
-  INVALID, the SDE state is perturbed by ~1× attractor diameter
-  via host TRNG (`/dev/urandom`, `getrandom(2)`, `RDRAND`), and a
-  warmup of duration 2W must elapse with λ̂₁ above 5·τ_λ before
-  entropy is re-marked VALID. Reseed events are logged. Turns
-  periodic-window failure mode into a safety signal rather than a
-  vulnerability.
-- Evidence type: manual
-- Status: :argued
-- Source: docs/architecture_design_companion.md §2.3, §3.4.
+- Description: A background process estimates the largest
+  Lyapunov exponent in real time using the Wolf single-trajectory
+  algorithm (`DynamicalSystems.lyapunov`) — O(N) per step rather
+  than O(N²) for full Benettin spectrum (~400× faster at N=40).
+  If `λ̂₁ < τ_λ` (default 0.1·λ₁_expected ≈ 0.166), the entropy
+  stream is marked INVALID immediately; `update!` returns the
+  post-update state. Recovery requires `warmup_steps` consecutive
+  samples ≥ recovery_threshold (default 5·τ_λ ≈ 0.83). Reseed
+  perturbs the SDE state via TRNG-derived unit-vector × magnitude
+  (default magnitude=1.0 ≈ attractor diameter); reset to WARMUP;
+  `reseed_count` increments. Initial state is WARMUP not VALID
+  (security primitive must not assume entropy is good before
+  observation). Public predicate `is_valid` returns Bool only
+  (LL-017 no-oracle).
+- Evidence type: example-tested
+- Status: :tested
+- Source: src/julia/src/ChaosGuard.jl.
+- Test: src/julia/test/runtests.jl (chaos-guard @testsets — 35
+  assertions: state-machine logic with synthetic λ̂₁ sequences,
+  Lorenz-96 chaotic vs sub-chaotic integration, reseed flow with
+  exact magnitude verification). Passes via Pkg.test() in ~47s
+  total wall clock.
 - Notes: Decoupling from visual layer (LL-002) preserved — the
-  visual continues animating from its independent RNG during
-  reseed events. Concrete λ₁_expected for the chosen SDE,
-  reseed-magnitude calibration, and warmup tuning are P3 work.
+  guard module has no visual-layer references; reseed events are
+  internal to the security primitive. Cost analysis: Wolf method
+  ~1.3 ms per call vs Benettin ~507 ms; suitable for always-on
+  ambient monitoring at sub-1% CPU. Concrete λ₁_expected for the
+  chosen SDE is set per-deployment; the prototype uses 1.66 from
+  the Lorenz-96 N=40, F=8 baseline.
 
 ### LL-008 — resolution-bounded-security
 - Key: S_production > S_measurement
@@ -457,16 +469,16 @@ LL-ID, not the Key.
 
 - Total: 18
 - `:proved`: 0
-- `:tested`: 3 (LL-003, LL-004, LL-006)
+- `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 10 (LL-005, LL-007, LL-008, LL-011, LL-012,
-  LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
+  LL-014, LL-016, LL-017, LL-018)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage. Lorenz-96 baseline (LL-003), sensor coupling
-layer (LL-004), and residue audit (LL-006) all example-tested;
-10 entries argued at design level; 5 remain open: LL-001/002
-await Lean / type-level enforcement (P5/P6); LL-009/010/015
-are corpus-boundary declarations that close to :argued under
-future small-session companions.**
+**Prototype-stage. Four entries (LL-003 Lorenz-96 baseline,
+LL-004 sensor coupling, LL-006 residue audit, LL-007 chaos-
+guard) example-tested via the Julia prototype; 9 entries
+argued at design level; 5 remain open: LL-001/002 await Lean
+/ type-level enforcement (P5/P6); LL-009/010/015 are corpus-
+boundary declarations.**

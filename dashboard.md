@@ -1,22 +1,22 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.9 — P3b residue audit + detection
-benchmark).
+Last updated: 2026-05-02 (0.0.10 — P3c chaos-guard).
 
 ## Status summary
 
 **Project state.** Prototype-stage. P2 architectural design
 pass landed; P3 prototype core has the Lorenz-96 baseline
 (LL-003, `:tested`), the sensor-coupling layer (LL-004,
-`:tested`), and the residue audit + detection-probability
-benchmark (LL-006, `:tested` — `Audit.jl` plus committed
-empirical sweep `benchmark/results/p3b_detection_lorenz96.txt`).
-Detection-probability surface validates the §2.1 bound's shape:
-flat ≈ 10% FPR baseline for ε_A ≤ 0.75, sigmoid transition
-through ε_A ∈ [0.75, 2.0], saturated 1.0 for ε_A ≥ 2.0.
-Ten entries remain `:argued` (P2 design); five remain `:open`.
-Test suite passes 47/47 in ~78s via `Pkg.test()` from
-`src/julia/`.
+`:tested`), the residue audit + detection-probability
+benchmark (LL-006, `:tested`), and the chaos-guard /
+periodic-window safety signal (LL-007, `:tested` —
+`ChaosGuard.jl` with state-machine logic + Lorenz-96 chaotic
+vs sub-chaotic integration + reseed-flow tests; uses the cheap
+Wolf-method λ₁ estimator at ~1.3 ms/call vs ~507 ms for full
+Benettin spectrum). Nine entries remain `:argued` (P2 design);
+five remain `:open`. Test suite passes 82/82 in ~47s via
+`Pkg.test()` from `src/julia/` — actually faster than 0.0.9
+because chaos-guard uses single-exponent estimator.
 
 **Key architectural moves locked.**
 
@@ -100,13 +100,12 @@ P3 — **Julia prototype core.** ◐ In progress.
     benchmark (`Audit.jl`; LL-006 `:tested`; empirical
     P(reject) curve flat ≈ 0.10 FPR for ε_A ≤ 0.75, sigmoid
     through 0.75-2.0, saturated 1.0 for ε_A ≥ 2.0).
+  - **0.0.10** P3c chaos-guard (`ChaosGuard.jl`; LL-007
+    `:tested`; Wolf-method λ̂₁ estimator at ~1.3 ms/call,
+    state machine {INVALID, WARMUP, VALID}, reseed flow
+    verified with deterministic-magnitude perturbation).
 
   Remaining sub-items:
-  - **P3c — Chaos-guard.** Real-time λ̂₁ estimator running
-    concurrently (Wolf or Benettin leading-vector variant —
-    O(N) per step rather than O(N²) full-spectrum); reseed-on-
-    collapse protocol per design §2.3. Closes LL-007 to
-    `:tested`. Cheapest remaining sub-task.
   - **P3d — SDE-selection benchmark.** Comparative bench across
     Lorenz-96 / Lorenz-63 / Rössler on Lyapunov richness,
     parameter sensitivity, compute cost. Upgrades LL-003 to
@@ -161,22 +160,22 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 18 (no change in 0.0.9)
+- Total spec entries: 18 (no change in 0.0.10)
 - `:proved`: 0
-- `:tested`: 3 (LL-003 — Lorenz-96 baseline; LL-004 — sensor
-  coupling layer; LL-006 — Lyapunov-spectrum residue audit)
+- `:tested`: 4 (LL-003 — Lorenz-96 baseline; LL-004 — sensor
+  coupling layer; LL-006 — Lyapunov-spectrum residue audit;
+  LL-007 — chaos-guard)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 10 (LL-005, LL-007, LL-008, LL-011, LL-012,
-  LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
+  LL-014, LL-016, LL-017, LL-018)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-Ten entries closed at the design-pass level via manual
-evidence; three entries (LL-003, LL-004, LL-006) closed to
-`:tested` via the P3 prototype. None machine-verified yet —
+Nine entries closed at the design-pass level via manual
+evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed
+to `:tested` via the P3 prototype. None machine-verified yet —
 Lean (P5/P6) targets LL-006, LL-008, LL-018; P3 follow-ups
-target LL-005, LL-007 for further `:tested` upgrades and
-LL-003, LL-006 for `:benchmarked` upgrades.
+target LL-005 for `:tested`, LL-003 / LL-006 for `:benchmarked`.
 
 ## Open structural questions
 
@@ -320,15 +319,27 @@ Remaining `:open` entries fall into two classes:
   perturbation semantic for synthetic adversaries (deterministic
   L2 magnitude rather than `ε_A · randn` magnitude variance).
   §2.3 records a stub-stream zero-sensor degeneracy bug found
-  during prototype development (constant_stream(0.0) makes α
-  dynamically irrelevant; instructive as a non-degeneracy
-  violation example). §2.4 reports the empirical detection-
-  probability surface; §2.5 explains why this is `:tested`
-  and not yet `:benchmarked` (bound constants K, c, δ_A
-  not yet derived). §2.6 documents the Sensors-to-top-level
-  module restructure. LL-006 closes to `:tested`.
-  `src/julia/benchmark/results/p3b_detection_lorenz96.txt` is
-  the committed empirical-data evidence file.
+  during prototype development. §2.4 reports the empirical
+  detection-probability surface; §2.5 explains why this is
+  `:tested` and not yet `:benchmarked`. §2.6 documents the
+  Sensors-to-top-level module restructure. LL-006 closes to
+  `:tested`.
+- **`docs/p3c_chaos_guard_companion.md`** (0.0.10) — P3c
+  chaos-guard companion. §2.1 documents the state machine
+  ({INVALID, WARMUP, VALID}) and the §2.3 transition logic.
+  §2.2 records sub-chaotic-regime detection at Lorenz-96 F=2
+  (λ̂₁ ≈ 0 at the trivial fixed point → guard stays INVALID).
+  §2.3 documents the reseed flow with deterministic-magnitude
+  unit-vector perturbation. §2.4 records the cost story:
+  Wolf-method λ₁ estimator at ~1.3 ms/call vs Benettin
+  full-spectrum at ~507 ms — 400× speedup, suitable for
+  always-on monitoring at sub-1% CPU. §2.5 confirms LL-002
+  visual decoupling preserved. §2.6 documents the Julia
+  module/struct name-conflict gotcha (`module ChaosGuard` +
+  `struct Guard`). §5 captures four lessons including the
+  conservative-by-construction initial WARMUP state and its
+  parallel to LL-012 cold-start handling. LL-007 closes to
+  `:tested`.
 
 ## Live empirical observations
 

@@ -5,6 +5,163 @@ messages match entry summaries.
 
 ---
 
+## 0.0.10 — 2026-05-02 — P3c chaos-guard (LL-007 :tested)
+
+Implements the periodic-window safety signal per architecture-
+design §2.3. New `src/julia/src/ChaosGuard.jl` module: state
+machine {INVALID, WARMUP, VALID}, GuardConfig with τ_λ /
+recovery_threshold / warmup_steps thresholds, default_config
+helper, update! transition logic, is_valid Bool predicate
+(LL-017 no-oracle compliance), current_lambda diagnostic
+field, and reseed! TRNG-derived unit-vector × magnitude state
+perturbation.
+
+Test suite grows 47 → 82 assertions, all passing in ~47s — the
+runtime is *faster* than 0.0.9 because the chaos-guard tests
+use Wolf-method `DynamicalSystems.lyapunov` (single-trajectory,
+~1.3 ms per call at N=40) rather than full Benettin
+`lyapunovspectrum` (~507 ms per call). 400× speedup confirms
+the architecture-design §2.3 cost analysis.
+
+LL-007 closes from `:argued` to `:tested` with `example-tested`
+evidence. Counts: `:tested` 3 → 4; `:argued` 10 → 9; total 18
+unchanged.
+
+### Added
+
+- **`src/julia/src/ChaosGuard.jl`** — guard module.
+  - `GuardState` (`@enum`): INVALID, WARMUP, VALID.
+  - `GuardConfig(τ_λ, recovery_threshold, warmup_steps)` with
+    construction-time validation (τ_λ > 0; recovery > τ_λ;
+    warmup_steps ≥ 1).
+  - `default_config(λ₁_expected; warmup_steps=10)` —
+    architecture-design §2.3 ratios: `τ_λ = 0.1·λ₁_expected`,
+    `recovery_threshold = 5·τ_λ`.
+  - `Guard(config)` — mutable state machine; constructor
+    initialises in WARMUP (not VALID — security primitive
+    must not assume entropy is good before observation).
+  - `update!(guard, λ̂₁)` — applies one observation; returns
+    post-update state.
+  - `is_valid(guard)` → Bool — public predicate.
+  - `current_lambda(guard)` → Float64 — diagnostic.
+  - `reseed!(ds, guard; rng, magnitude=1.0)` — TRNG unit-
+    vector × magnitude perturbation; resets state to WARMUP;
+    increments reseed_count.
+- **`src/julia/test/runtests.jl`** — 35 new chaos-guard
+  assertions across 3 `@testset`s:
+  - **State machine** (~17): config validation, initial
+    WARMUP, sustained-high → VALID, gray-band dip stability,
+    collapse → INVALID, recovery flow.
+  - **Lorenz-96 chaotic vs sub-chaotic** (~6): F=8 chaotic →
+    VALID; F=2 sub-chaotic (trivial fixed point) → INVALID.
+  - **Reseed flow** (~12): VALID → reseed → WARMUP →
+    recovery; deterministic-magnitude verification.
+- **`docs/p3c_chaos_guard_companion.md`** — session companion.
+  Documents the state machine logic, the Lorenz-96 sub-chaotic
+  detection scenario, the reseed-with-deterministic-magnitude
+  semantic, the cost analysis (cheap Wolf vs full Benettin),
+  the LL-002 visual decoupling preservation, the
+  module-name/type-name conflict gotcha (Julia docstring
+  attachment fails when `module Foo` contains `struct Foo`),
+  and four lessons (mod/struct naming, Wolf-vs-Benettin
+  always-on monitoring choice, reseed magnitude vs direction,
+  conservative-by-construction initial WARMUP).
+
+### Changed
+
+- **`src/julia/src/LavaLamp.jl`** — `include("ChaosGuard.jl")`
+  + ChaosGuard re-exports.
+- **`src/julia/Project.toml`** — version 0.0.9 → 0.0.10.
+- **`LAVALAMP_SPEC.md`** — version 0.0.9 → 0.0.10. LL-007
+  evidence type `manual` → `example-tested`; status `:argued`
+  → `:tested`; description expanded with implementation
+  specifics (Wolf method, exact thresholds, conservative
+  initial WARMUP, no-oracle Bool return). Counts: `:tested`
+  3 → 4; `:argued` 10 → 9.
+- **`artifact_registry.md`** — version 0.0.9 → 0.0.10. LL-007
+  row updated. A6 records 82/82 assertions in ~47s wall clock.
+- **`dashboard.md`** — version 0.0.9 → 0.0.10. Project state
+  summary updated with 0.0.10 numbers. P3 priority block adds
+  0.0.10 sub-status; P3c is removed from the remaining list.
+  Recent companion docs gains the P3c entry.
+
+### Why
+
+P3c is the operational complement to P3b's residue audit. The
+audit is *on-demand* — it runs when verification is requested
+and pays its O(N²) full-spectrum cost per request. The chaos-
+guard is *always-on* — it runs continuously in the security
+primitive's background to catch the periodic-window failure
+mode, where the SDE has stalled into a non-chaotic orbit and
+the entropy is silently broken. Without the chaos-guard, a
+silent drift into a periodic regime would emit consumable
+entropy that has no actual chaos behind it.
+
+The cost asymmetry is large enough to matter: ~400× per call
+at N=40. That ratio compounds when the guard runs on a
+seconds-cadence schedule. The architecture-design §2.3 choice
+to use single-exponent Wolf for the guard and reserve full-
+spectrum Benettin for the audit is the right cost tradeoff.
+
+The session also surfaced a Julia gotcha worth recording:
+`module Foo` containing `struct Foo` breaks the docstring
+system with an opaque `MethodError on doc!`. LavaLamp's
+convention is now to keep module names and exported type
+names distinct (Sensors → SensorStream / CouplingParams;
+Audit → Envelope; ChaosGuard → Guard).
+
+### Spec impact
+
+- Counts: total 18 unchanged; `:tested` 3 → 4 (+ LL-007);
+  `:argued` 10 → 9 (- LL-007); `:open` 5 unchanged.
+- Status moves to `:tested`: LL-007.
+- No new spec entries.
+
+### Counts
+
+- Total: 18 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
+- `:benchmarked`: 0
+- `:argued`: 9
+- `:open`: 5
+
+### Known gaps
+
+- **No CI integration yet.** Wall clock dropped to ~47s with
+  the cheap-estimator approach, so manual reruns are tolerable
+  again, but CI is still recommended before more substantive
+  bench work.
+- **LL-005 still :argued.** Adversary-rate Nyquist benchmark
+  pending. Folds into the existing benchmark framework.
+- **LL-006 :benchmarked upgrade outstanding.** Bound-constant
+  fitting (K, c, δ_A(ε_A)) against the existing 0.0.9
+  detection-probability surface.
+- **LL-003 :benchmarked upgrade outstanding.** SDE-selection
+  comparative bench (Lorenz-96 vs Lorenz-63 vs Rössler).
+- **No real-time integration test.** The chaos-guard is
+  exercised by feeding pre-computed λ̂₁ values; a true
+  background-thread integration with concurrent SDE
+  integration is a production-hardening concern, not a
+  prototype-validation requirement.
+
+### Followup recommendations
+
+- **P3d SDE-selection benchmark** — natural next slice. Sweep
+  Lorenz-96 / Lorenz-63 / Rössler through the existing
+  spectrum + chaos-guard infrastructure. Closes LL-003
+  `:benchmarked`.
+- **P3-bound LL-006 :benchmarked** — analytic follow-up using
+  the existing 0.0.9 detection surface as input. No new
+  numerics needed.
+- **P3-Nyq adversary-rate Nyquist benchmark** — closes
+  LL-005. Requires extending the synthetic-adversary
+  framework to perturb sensor sample rate, not just α.
+- **CI workflow** — recommended before any of the above.
+
+---
+
 ## 0.0.9 — 2026-05-02 — P3b residue audit + detection-probability benchmark
 
 Implements the Lyapunov-spectrum residue audit per

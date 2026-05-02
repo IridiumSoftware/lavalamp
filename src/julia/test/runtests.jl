@@ -2,7 +2,7 @@ using Test
 using Random
 using Statistics: mean
 using LavaLamp
-using DynamicalSystems: trajectory
+using DynamicalSystems: trajectory, current_state, lyapunov as cheap_lyap
 
 # Helper used by the sensor-stream primitive tests; using a local
 # definition rather than pulling in a heavier statistics dependency.
@@ -308,6 +308,139 @@ end
         res_adv = residue(λs_adv, env)
         max_k_adv = maximum(res_adv ./ max.(env.σ, 1e-10))
         @test max_k_adv > 5.0
+    end
+
+    # ─── Chaos-guard / periodic-window safety signal (LL-007 / LL-002) ──
+
+    @testset "ChaosGuard config + state machine (LL-007)" begin
+        # GuardConfig validation
+        cfg = default_config(1.66; warmup_steps=5)
+        @test cfg.τ_λ ≈ 0.166
+        @test cfg.recovery_threshold ≈ 0.83
+        @test cfg.warmup_steps == 5
+
+        @test_throws ArgumentError GuardConfig(-0.1, 0.5, 5)  # τ_λ ≤ 0
+        @test_throws ArgumentError GuardConfig(0.5, 0.3, 5)  # recovery ≤ τ_λ
+        @test_throws ArgumentError GuardConfig(0.1, 0.5, 0)  # warmup_steps < 1
+
+        # Initial state must be WARMUP, not VALID — security primitive
+        # cannot assume entropy is good before observation.
+        g = Guard(cfg)
+        @test g.state == WARMUP
+        @test !is_valid(g)
+        @test isnan(current_lambda(g))
+        @test g.reseed_count == 0
+
+        # Sustained high λ̂₁ → WARMUP → VALID after warmup_steps updates
+        # at or above recovery_threshold = 0.83.
+        for i in 1:cfg.warmup_steps
+            update!(g, 1.7)
+        end
+        @test g.state == VALID
+        @test is_valid(g)
+        @test current_lambda(g) ≈ 1.7
+
+        # VALID survives a brief gray-band dip (between τ_λ and recovery_threshold).
+        update!(g, 0.5)
+        @test g.state == VALID  # 0.5 > τ_λ=0.166, no rejection
+
+        # VALID → INVALID on collapse below τ_λ.
+        update!(g, 0.05)
+        @test g.state == INVALID
+        @test !is_valid(g)
+
+        # INVALID → WARMUP on first sample above recovery_threshold;
+        # then graduate after sustained recovery.
+        update!(g, 1.6)
+        @test g.state == WARMUP
+        for i in 1:cfg.warmup_steps - 1
+            update!(g, 1.6)
+        end
+        @test g.state == VALID
+
+        # update! returns the post-update state
+        update!(g, 0.04)
+        ret = update!(g, 1.6)
+        @test ret == WARMUP
+
+        # update! returns Bool-friendly via is_valid (LL-017 no-oracle:
+        # public predicate is Bool only; current_lambda is internal).
+        @test is_valid(g) isa Bool
+    end
+
+    @testset "ChaosGuard with Lorenz-96 (chaotic vs sub-chaotic)" begin
+        # Chaotic regime (F=8): λ̂₁ ≈ 1.66, well above recovery_threshold;
+        # guard reaches VALID after warmup_steps updates.
+        Random.seed!(42)
+        ds_chaotic = lorenz96(40; F=8.0)
+        g_chaotic = Guard(default_config(1.66; warmup_steps=3))
+        for i in 1:5
+            Random.seed!(40 + i)
+            λ̂₁ = cheap_lyap(ds_chaotic, 60.0; Ttr=10.0)
+            update!(g_chaotic, λ̂₁)
+        end
+        @test g_chaotic.state == VALID
+        @test is_valid(g_chaotic)
+        @test current_lambda(g_chaotic) > 1.0  # well above recovery threshold
+
+        # Sub-chaotic regime (F=2): λ₁ ≈ 0 at the trivial fixed point;
+        # guard stays INVALID.
+        Random.seed!(50)
+        ds_sub = lorenz96(40; F=2.0)
+        g_sub = Guard(default_config(1.66; warmup_steps=3))
+        for i in 1:3
+            Random.seed!(60 + i)
+            λ̂₁ = cheap_lyap(ds_sub, 60.0; Ttr=10.0)
+            update!(g_sub, λ̂₁)
+        end
+        @test g_sub.state == INVALID
+        @test !is_valid(g_sub)
+        @test abs(current_lambda(g_sub)) < 0.5  # near zero
+    end
+
+    @testset "ChaosGuard reseed flow" begin
+        # Build a chaotic system, drive guard to VALID, then reseed and
+        # verify state cycles through WARMUP back to VALID.
+        Random.seed!(70)
+        ds = lorenz96(40; F=8.0)
+        g = Guard(default_config(1.66; warmup_steps=2))
+
+        # Pre-reseed: drive to VALID
+        for i in 1:3
+            Random.seed!(70 + i)
+            update!(g, cheap_lyap(ds, 60.0; Ttr=10.0))
+        end
+        @test g.state == VALID
+        @test g.reseed_count == 0
+
+        # Capture state pre-reseed for comparison
+        u_before = copy(current_state(ds))
+
+        # Reseed
+        ret = reseed!(ds, g; rng=Random.Xoshiro(99), magnitude=2.0)
+        @test ret == WARMUP
+        @test g.state == WARMUP
+        @test g.reseed_count == 1
+        @test g.consecutive_recovery == 0
+
+        # State has been perturbed by ~magnitude=2.0 (L2 norm of diff)
+        u_after = copy(current_state(ds))
+        diff_norm = sqrt(sum((u_after .- u_before) .^ 2))
+        @test isapprox(diff_norm, 2.0; atol=1e-10)
+
+        # Recovery: chaotic dynamics post-reseed → guard transitions back to VALID
+        for i in 1:3
+            Random.seed!(80 + i)
+            update!(g, cheap_lyap(ds, 60.0; Ttr=10.0))
+        end
+        @test g.state == VALID
+        @test is_valid(g)
+
+        # Empty-state reseed throws
+        ds_empty_factory = () -> error("not used")
+        # (we don't have an easy way to construct an empty CoupledODEs;
+        # the reseed! validation is exercised on an empty Vector via a
+        # direct construction would require building a custom DS. Skip.)
     end
 
     @testset "Coupling strength sweep: λ₁ varies with α (LL-006 ∂λ/∂s ≠ 0)" begin

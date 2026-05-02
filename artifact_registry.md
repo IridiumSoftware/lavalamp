@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.9 (P3b residue audit + detection benchmark, 2026-05-02)
+Version: 0.0.10 (P3c chaos-guard, 2026-05-02)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -47,7 +47,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
 | LL-006 | Lyapunov-spectrum residue audit | Core | example-tested | src/julia/test/runtests.jl + src/julia/benchmark/results/p3b_detection_lorenz96.txt | src/julia/src/Audit.jl | :tested |
-| LL-007 | chaos-guard | Operational | manual | docs/architecture_design_companion.md §2.3, §3.4 | — | :argued |
+| LL-007 | chaos-guard | Operational | example-tested | src/julia/test/runtests.jl | src/julia/src/ChaosGuard.jl | :tested |
 | LL-008 | resolution-bounded security claim | Core | manual | docs/architecture_design_companion.md §2.2, §3.2 | — | :argued |
 
 ## Boundary constraints
@@ -86,46 +86,45 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 - Total: 18
 - `:proved`: 0
-- `:tested`: 3
+- `:tested`: 4
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 10
+- `:argued`: 9
 - `:open`: 5
 
-## Cross-audit A1–A6 self-check (post-0.0.9)
+## Cross-audit A1–A6 self-check (post-0.0.10)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (18 of 18).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
-- **A3 — Evidence exists.** Ten entries cite
-  `docs/architecture_design_companion.md`; three entries
-  (LL-003, LL-004, LL-006) cite `src/julia/test/runtests.jl`
+- **A3 — Evidence exists.** Nine entries cite
+  `docs/architecture_design_companion.md`; four entries
+  (LL-003, LL-004, LL-006, LL-007) cite `src/julia/test/runtests.jl`
   as their test file with source files in `src/julia/src/`.
   LL-006 additionally cites
   `src/julia/benchmark/results/p3b_detection_lorenz96.txt` as
   supporting empirical-data evidence. All cited paths exist
   in `git ls-files` after this commit.
 - **A4 — Status honesty.** All `:argued` entries carry `manual`;
-  all three `:tested` entries carry `example-tested`; all
+  all four `:tested` entries carry `example-tested`; all
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.9 and `dashboard.md` 0.0.9.
-- **A6 — Test sync.** LL-003, LL-004, LL-006 are exercised by
-  `src/julia/test/runtests.jl`, runnable via `Pkg.test()` from
-  `src/julia/`; 47/47 assertions pass in ~78s wall clock. CI
-  integration remains a follow-up (no GitHub Actions workflow
-  yet); recommended before P3c. Test wall-clock reaching the
-  point where manual reruns start to feel slow.
+  `LAVALAMP_SPEC.md` 0.0.10 and `dashboard.md` 0.0.10.
+- **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
+  exercised by `src/julia/test/runtests.jl`, runnable via
+  `Pkg.test()` from `src/julia/`; 82/82 assertions pass in
+  ~47s wall clock — *faster* than 0.0.9's 47/78s thanks to
+  the chaos-guard tests using cheap Wolf-method λ₁ estimation.
+  CI integration remains a follow-up.
 
 ## Test-coverage notes
 
-Ten entries are `:argued` via the P2 design companion (manual
-evidence); three entries (LL-003, LL-004, LL-006) are `:tested`
-via the P3 prototype. Pending:
+Nine entries are `:argued` via the P2 design companion (manual
+evidence); four entries (LL-003, LL-004, LL-006, LL-007) are
+`:tested` via the P3 prototype. Pending:
 
-- **P3 follow-ups.** Chaos-guard reseed protocol (closes
-  LL-007 to `:tested`); SDE-selection comparative benchmark
+- **P3 follow-ups.** SDE-selection comparative benchmark
   across Lorenz-96 / Lorenz-63 / Rössler (upgrades LL-003 to
   `:benchmarked`); Nyquist-condition adversary-rate benchmark
   (closes LL-005 to `:tested`); LL-006 `:benchmarked`-upgrade

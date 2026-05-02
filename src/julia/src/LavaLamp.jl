@@ -19,15 +19,21 @@ module LavaLamp
 
 # Submodule load order matters: Sensors first (Engine and Audit
 # both reference Sensors types via ..Sensors), then Engine, then
-# Audit (which depends on both Sensors types and Engine.lyapunov_spectrum).
+# Audit (which depends on Engine.lyapunov_spectrum), then
+# ChaosGuard (which is self-contained on DynamicalSystems but
+# benefits from sitting alongside the others).
 include("Sensors.jl")
 include("Engine.jl")
 include("Audit.jl")
+include("ChaosGuard.jl")
 
 using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
 using .Engine: lorenz96, lyapunov_spectrum, lorenz96_coupled
 using .Audit: Envelope, register_envelope, residue, verify, synthetic_adversary
+using .ChaosGuard: GuardState, INVALID, WARMUP, VALID
+using .ChaosGuard: GuardConfig, default_config
+using .ChaosGuard: Guard, update!, is_valid, current_lambda, reseed!
 
 # Engine + spectrum estimator (LL-003).
 export lorenz96, lyapunov_spectrum
@@ -39,5 +45,10 @@ export constant_stream, binary_step_stream, gaussian_noise_stream
 
 # Residue audit / verifier (LL-006 / LL-017).
 export Envelope, register_envelope, residue, verify, synthetic_adversary
+
+# Chaos-guard / periodic-window safety signal (LL-007 / LL-002).
+export GuardState, INVALID, WARMUP, VALID
+export GuardConfig, default_config
+export Guard, update!, is_valid, current_lambda, reseed!
 
 end # module LavaLamp
