@@ -213,6 +213,103 @@ end
         @test 0.02 < Δ < 0.6
     end
 
+    # ─── Residue-audit verifier (LL-006 / LL-017) ──────────────────
+
+    @testset "Audit module: mechanism + envelope smoke (LL-006)" begin
+        # Mechanism tests — these exercise the verifier API in
+        # isolation, no spectrum estimation cost.
+
+        # Direct Envelope construction smoke.
+        env = LavaLamp.Audit.Envelope([1.0, 0.5, -0.3], [0.1, 0.1, 0.1], 5,
+                                       Dict{Symbol,Any}(:dim => 3))
+        @test length(env.spectrum) == 3
+        @test env.n_trials == 5
+
+        # residue() correctness.
+        res_zero = residue([1.0, 0.5, -0.3], env)
+        @test all(iszero, res_zero)
+        res_offset = residue([1.5, 1.0, 0.2], env)
+        @test all(≈(0.5), res_offset)
+
+        # verify() returns Bool only (LL-017 no-oracle):
+        @test verify([1.0, 0.5, -0.3], env; k=1.0) isa Bool
+        @test verify([1.0, 0.5, -0.3], env; k=1.0) == true
+        @test verify([1.0, 0.5, -0.3] .+ 100.0, env; k=1.0) == false
+
+        # synthetic_adversary preserves L2 magnitude exactly.
+        N = 20
+        b = ones(N)
+        p = CouplingParams(8.0, [constant_stream(1.0; t_max=10.0)], [1.0], [b])
+        rng = Random.Xoshiro(1)
+        p_adv = synthetic_adversary(p, 2.5; rng=rng)
+        diff = p_adv.alphas .- p.alphas
+        @test isapprox(sqrt(sum(diff .^ 2)), 2.5; atol=1e-10)
+
+        # ε_A=0 returns unperturbed.
+        p_zero = synthetic_adversary(p, 0.0; rng=Random.Xoshiro(1))
+        @test p_zero.alphas == p.alphas
+
+        # Wrong-length λs throws.
+        @test_throws ArgumentError residue([1.0, 0.5], env)
+    end
+
+    @testset "Audit: register, self-accept, strong-adversary reject (LL-006)" begin
+        # End-to-end exercise: calibrate an envelope from 10
+        # genuine-system trials; verify a fresh genuine run accepts
+        # at conservative k; verify a strong adversary (ε_A=3.0)
+        # rejects at the working k=5.0. N=20 to keep wall clock
+        # reasonable per the 0.0.7 §2.4 budget analysis.
+
+        Random.seed!(101)
+        N = 20
+        F_base = 8.0
+        b = ones(N)
+        s_const = constant_stream(1.0; t_max=2000.0)
+        p_genuine = CouplingParams(F_base, [s_const], [1.0], [b])
+        ds_factory = () -> lorenz96_coupled(N; F=F_base, coupling=p_genuine)
+
+        Random.seed!(101)
+        env = register_envelope(ds_factory;
+                                 n_trials=10, N=1200, Δt=0.05, Ttr=200.0)
+
+        # Envelope structure
+        @test length(env.spectrum) == N
+        @test all(env.σ .>= 0)
+        @test env.n_trials == 10
+        @test env.metadata[:N] == 1200
+        @test env.metadata[:dim] == N
+
+        # Self-acceptance at conservative k=10. With n_trials=10
+        # calibration the empirical σ has substantial sampling
+        # variance; k=10 well above any single-trial residue makes
+        # this test deterministic. (Working k=5.0 has empirical
+        # FPR ≈ 0.1 per the P3b benchmark, suitable for the
+        # benchmarked detection-probability curve but not for a
+        # deterministic test assertion.)
+        Random.seed!(5001)
+        ds_check = ds_factory()
+        λs_check = lyapunov_spectrum(ds_check; N=1200, Δt=0.05, Ttr=200.0)
+        @test verify(λs_check, env; k=10.0)
+
+        # Strong adversary: ε_A=3.0 (3σ-magnitude perturbation in
+        # alpha-space) at k=5.0 is deterministically rejected on
+        # this configuration — the spectrum gap δ_A is well above
+        # any single-trial estimator noise.
+        rng_adv = Random.Xoshiro(7001)
+        p_adv = synthetic_adversary(p_genuine, 3.0; rng=rng_adv)
+        Random.seed!(7001)
+        ds_adv = lorenz96_coupled(N; F=F_base, coupling=p_adv)
+        λs_adv = lyapunov_spectrum(ds_adv; N=1200, Δt=0.05, Ttr=200.0)
+        @test !verify(λs_adv, env; k=5.0)
+
+        # Mechanism: residue magnitude > envelope σ for the strong
+        # adversary, confirming the test is rejecting on signal not
+        # on a degenerate corner case.
+        res_adv = residue(λs_adv, env)
+        max_k_adv = maximum(res_adv ./ max.(env.σ, 1e-10))
+        @test max_k_adv > 5.0
+    end
+
     @testset "Coupling strength sweep: λ₁ varies with α (LL-006 ∂λ/∂s ≠ 0)" begin
         # Constant sensor at value 1.0 with uniform coupling b = ones(N)
         # makes the effective forcing F_base + α uniformly across all

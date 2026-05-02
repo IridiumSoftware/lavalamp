@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.8 (P3a sensor-coupling layer, 2026-05-02)
+Version: 0.0.9 (P3b residue audit + detection benchmark, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -165,22 +165,39 @@ LL-ID, not the Key.
   an adversary can spoof location on the attractor more easily
   than they can spoof local stretching/folding rates across
   multiple timescales simultaneously. Test is *vector* per-exponent,
-  not scalar: M̂ accepted iff |λ̂ᵢ - λᵢ_registered| < τᵢ for every i.
-  Detection-probability bound (manually argued, Lean target for
-  P6): P(detect) ≥ 1 - K·exp(-c·T·δ_A²) where δ_A is adversary
-  spectrum gap and T is observation window.
-- Evidence type: manual
-- Status: :argued
-- Source: docs/architecture_design_companion.md §2.1, §3.1.
-  Structural-separation prior anchors on Closure v5
-  catlab_spec.jl Thm_Q51_autopoietic / Thm_Q102_structure
-  (cross-sector autopoiesis fails 0/5202 across 5 ICs at
-  threshold 0.999) — see qkd_pqc_complementarity_companion.md
-  §2.5.
-- Notes: Bound is vacuous as adversary precision ε_A → 0 (honest
-  resolution-bounded scoping). Concrete τᵢ values, estimator
-  selection (Wolf vs Benettin vs Rosenstein), and numerical
-  benchmarks are P3 work.
+  not scalar: M̂ accepted iff |λ̂ᵢ - λᵢ_registered| < k·σᵢ for every i,
+  where σᵢ is the per-exponent estimator standard deviation
+  calibrated from n_trials registration runs. Detection-probability
+  bound shape (manually argued, Lean target for P6):
+  P(detect) ≥ 1 - K·exp(-c·T·δ_A²) where δ_A is adversary
+  spectrum gap and T is observation window. Empirical
+  detection-probability surface at N=20, n_trials=10, k=5: flat
+  ≈ FPR (0.10) for ε_A ≤ 0.75; sigmoid transition through
+  ε_A ∈ [0.75, 2.0]; saturated 1.00 for ε_A ≥ 2.0. Shape matches
+  the bound; constants K, c, δ_A(ε_A) not yet derived.
+- Evidence type: example-tested
+- Status: :tested
+- Source: src/julia/src/Audit.jl (Envelope, register_envelope,
+  residue, verify, synthetic_adversary).
+- Test: src/julia/test/runtests.jl (audit @testsets — 18
+  assertions covering mechanism, register, self-acceptance,
+  strong-adversary rejection). Passes via Pkg.test() in ~78s
+  total wall clock. Backed by
+  src/julia/benchmark/results/p3b_detection_lorenz96.txt — the
+  committed detection-probability sweep produced by
+  src/julia/benchmark/p3b_detection_probability.jl (~25s wall
+  clock).
+- Notes: Bound is vacuous as adversary precision ε_A → 0
+  (honest resolution-bounded scoping). Mechanism upgraded from
+  scalar to vector per-exponent test; SNR is much better than
+  scalar — see docs/p3a_sensor_coupling_companion.md §2.4 for
+  trajectory-vs-spectrum comparison. Calibration of the §2.1
+  bound's constants (K, c, δ_A(ε_A) mapping) is the
+  :benchmarked-upgrade follow-up. Structural-separation prior
+  anchors on Closure v5 catlab_spec.jl Thm_Q51_autopoietic /
+  Thm_Q102_structure (cross-sector autopoiesis fails 0/5202
+  across 5 ICs at threshold 0.999) — see
+  qkd_pqc_complementarity_companion.md §2.5.
 
 ### LL-007 — chaos-guard
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
@@ -440,16 +457,16 @@ LL-ID, not the Key.
 
 - Total: 18
 - `:proved`: 0
-- `:tested`: 2 (LL-003, LL-004)
+- `:tested`: 3 (LL-003, LL-004, LL-006)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 11 (LL-005, LL-006, LL-007, LL-008, LL-011,
-  LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:argued`: 10 (LL-005, LL-007, LL-008, LL-011, LL-012,
+  LL-013, LL-014, LL-016, LL-017, LL-018)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage. Lorenz-96 baseline (LL-003) and sensor
-coupling layer (LL-004) example-tested; 11 entries argued at
-design level; 5 remain open: LL-001/002 await Lean / type-level
-enforcement (P5/P6); LL-009/010/015 are corpus-boundary
-declarations that close to :argued under future small-session
-companions.**
+**Prototype-stage. Lorenz-96 baseline (LL-003), sensor coupling
+layer (LL-004), and residue audit (LL-006) all example-tested;
+10 entries argued at design level; 5 remain open: LL-001/002
+await Lean / type-level enforcement (P5/P6); LL-009/010/015
+are corpus-boundary declarations that close to :argued under
+future small-session companions.**

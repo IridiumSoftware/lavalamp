@@ -1,18 +1,21 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.8 — P3a sensor-coupling layer).
+Last updated: 2026-05-02 (0.0.9 — P3b residue audit + detection
+benchmark).
 
 ## Status summary
 
 **Project state.** Prototype-stage. P2 architectural design
-pass landed (`docs/architecture_design_companion.md`); P3 Julia
-prototype core has both the Lorenz-96 baseline (LL-003,
-`:tested` against literature) and the sensor-coupling layer
-(LL-004, `:tested` with synthetic stub-stream fixtures —
-`Sensors.jl` plus `Engine.lorenz96_coupled`). Empirical
-non-degeneracy (∂λ₁/∂α ≠ 0): Δλ₁ ≈ +0.30 at α=1, +0.59 at α=2.
-Eleven entries remain `:argued` (P2 design); five remain
-`:open`. Test suite passes 29/29 in ~40s via `Pkg.test()` from
+pass landed; P3 prototype core has the Lorenz-96 baseline
+(LL-003, `:tested`), the sensor-coupling layer (LL-004,
+`:tested`), and the residue audit + detection-probability
+benchmark (LL-006, `:tested` — `Audit.jl` plus committed
+empirical sweep `benchmark/results/p3b_detection_lorenz96.txt`).
+Detection-probability surface validates the §2.1 bound's shape:
+flat ≈ 10% FPR baseline for ε_A ≤ 0.75, sigmoid transition
+through ε_A ∈ [0.75, 2.0], saturated 1.0 for ε_A ≥ 2.0.
+Ten entries remain `:argued` (P2 design); five remain `:open`.
+Test suite passes 47/47 in ~78s via `Pkg.test()` from
 `src/julia/`.
 
 **Key architectural moves locked.**
@@ -89,26 +92,21 @@ P2 — **Architectural design pass.** ✓ Landed in 0.0.5
 
 P3 — **Julia prototype core.** ◐ In progress.
   - **0.0.6** Bootstrap + Lorenz-96 baseline (LL-003 `:tested`
-    against literature: λ₁ ≈ 1.66, n_pos ≈ 14, h_KS ≈ 10.5).
-  - **0.0.8** P3a sensor-coupling layer landed (`Sensors.jl` +
-    `Engine.lorenz96_coupled`; LL-004 `:tested` with
-    smoothness, sanity, and α-sweep non-degeneracy assertions).
-    Empirical δ_A > 0 ⇔ ε_A > 0 demonstrated: Δλ₁ ≈ +0.30 at
-    α=1, +0.59 at α=2. P3e (∂λ/∂s non-degeneracy benchmark)
-    folded into P3a's test suite — closed in 0.0.8.
+    against literature).
+  - **0.0.8** P3a sensor-coupling layer (`Sensors.jl` +
+    `Engine.lorenz96_coupled`; LL-004 `:tested`; empirical
+    non-degeneracy Δλ₁ ≈ +0.30 at α=1, +0.59 at α=2).
+  - **0.0.9** P3b residue audit + detection-probability
+    benchmark (`Audit.jl`; LL-006 `:tested`; empirical
+    P(reject) curve flat ≈ 0.10 FPR for ε_A ≤ 0.75, sigmoid
+    through 0.75-2.0, saturated 1.0 for ε_A ≥ 2.0).
 
   Remaining sub-items:
-  - **P3b — Residue audit.** Implement the vector per-exponent
-    threshold test from design §2.1, with synthetic adversary
-    trajectories and detection-probability benchmark vs
-    observation window T. Closes LL-006 to `:tested` /
-    `:benchmarked`. Inner-loop N likely 10–20 to manage
-    compute; headline assertions at N=40.
   - **P3c — Chaos-guard.** Real-time λ̂₁ estimator running
     concurrently (Wolf or Benettin leading-vector variant —
     O(N) per step rather than O(N²) full-spectrum); reseed-on-
     collapse protocol per design §2.3. Closes LL-007 to
-    `:tested`. Cheaper than P3b.
+    `:tested`. Cheapest remaining sub-task.
   - **P3d — SDE-selection benchmark.** Comparative bench across
     Lorenz-96 / Lorenz-63 / Rössler on Lyapunov richness,
     parameter sensitivity, compute cost. Upgrades LL-003 to
@@ -117,11 +115,14 @@ P3 — **Julia prototype core.** ◐ In progress.
   - **P3-Nyq — Nyquist-condition adversary-rate benchmark.**
     Demonstrate that an adversary at sub-Nyquist sampling cannot
     reconstruct the genuine sensor stream. Closes LL-005 to
-    `:tested`. Folds naturally into P3b's adversary-trajectory
-    framework.
+    `:tested`. Folds into the existing benchmark framework.
+  - **P3-bound — LL-006 `:benchmarked` upgrade.** Calibrate the
+    §2.1 bound's constants (K, c, δ_A(ε_A)) against the existing
+    detection-probability surface; verify empirical curve is
+    above the bound prediction.
   - **CI workflow.** GitHub Actions running `Pkg.test()` on
-    push. Recommended before P3b — once a non-trivial benchmark
-    suite exists, manual reruns become burdensome.
+    push. Recommended before P3c — test wall-clock now ~78s,
+    manual reruns starting to feel slow.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical
@@ -160,22 +161,22 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 18 (no change in 0.0.8)
+- Total spec entries: 18 (no change in 0.0.9)
 - `:proved`: 0
-- `:tested`: 2 (LL-003 — Lorenz-96 baseline; LL-004 — sensor
-  coupling layer)
+- `:tested`: 3 (LL-003 — Lorenz-96 baseline; LL-004 — sensor
+  coupling layer; LL-006 — Lyapunov-spectrum residue audit)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 11 (LL-005, LL-006, LL-007, LL-008, LL-011,
-  LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:argued`: 10 (LL-005, LL-007, LL-008, LL-011, LL-012,
+  LL-013, LL-014, LL-016, LL-017, LL-018)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-Eleven entries closed at the design-pass level via manual
-evidence; two entries (LL-003, LL-004) closed to `:tested` via
-the P3 prototype. None machine-verified yet — Lean (P5/P6)
-targets LL-006, LL-008, LL-018; P3 follow-ups target LL-005
-through LL-007 substantively for further
-`:tested`/`:verified`/`:benchmarked` upgrades.
+Ten entries closed at the design-pass level via manual
+evidence; three entries (LL-003, LL-004, LL-006) closed to
+`:tested` via the P3 prototype. None machine-verified yet —
+Lean (P5/P6) targets LL-006, LL-008, LL-018; P3 follow-ups
+target LL-005, LL-007 for further `:tested` upgrades and
+LL-003, LL-006 for `:benchmarked` upgrades.
 
 ## Open structural questions
 
@@ -312,6 +313,22 @@ Remaining `:open` entries fall into two classes:
   fixed-point ⟨x⟩ ≠ chaotic-regime ⟨x⟩ subtlety for future SDE
   prototyping, and the lockfile-discipline subtlety of
   `[deps]` vs `[extras]` for module-level imports.
+- **`docs/p3b_residue_audit_companion.md`** (0.0.9) — P3b
+  residue-audit companion. §2.1 documents the Audit.jl
+  verifier (Envelope + register_envelope + residue + verify
+  + synthetic_adversary). §2.2 records the unit-vector
+  perturbation semantic for synthetic adversaries (deterministic
+  L2 magnitude rather than `ε_A · randn` magnitude variance).
+  §2.3 records a stub-stream zero-sensor degeneracy bug found
+  during prototype development (constant_stream(0.0) makes α
+  dynamically irrelevant; instructive as a non-degeneracy
+  violation example). §2.4 reports the empirical detection-
+  probability surface; §2.5 explains why this is `:tested`
+  and not yet `:benchmarked` (bound constants K, c, δ_A
+  not yet derived). §2.6 documents the Sensors-to-top-level
+  module restructure. LL-006 closes to `:tested`.
+  `src/julia/benchmark/results/p3b_detection_lorenz96.txt` is
+  the committed empirical-data evidence file.
 
 ## Live empirical observations
 

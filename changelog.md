@@ -5,6 +5,181 @@ messages match entry summaries.
 
 ---
 
+## 0.0.9 — 2026-05-02 — P3b residue audit + detection-probability benchmark
+
+Implements the Lyapunov-spectrum residue audit per
+architecture-design §2.1. New `Audit.jl` module: Envelope
+(spectrum + per-exponent estimator σ + n_trials calibration),
+register_envelope, residue, verify (vector per-exponent test,
+Bool-only return per LL-017 no-oracle), synthetic_adversary
+(unit-vector L2-magnitude perturbation in α-space). New
+benchmark script `benchmark/p3b_detection_probability.jl` and
+its committed result file
+`benchmark/results/p3b_detection_lorenz96.txt`.
+
+LL-006 closes from `:argued` to `:tested` with `example-tested`
+evidence — 18 new test assertions exercising the audit
+mechanism, plus the empirical detection-probability surface as
+supporting data. Test suite grows 29 → 47 assertions, all
+passing in ~78s via `Pkg.test()`.
+
+### Added
+
+- **`src/julia/src/Audit.jl`** — verifier module.
+  - `Envelope(spectrum, σ, n_trials, metadata)` immutable
+    struct.
+  - `register_envelope(ds_factory; n_trials=3, N=1500, Δt=0.05,
+    Ttr=300.0, lyapunov_fn=lyapunov_spectrum)` — calibrates
+    envelope from independent runs of the genuine system.
+    Per-exponent σ is the Bessel-corrected sample standard
+    deviation across calibration trials.
+  - `residue(λs, env)` — per-exponent absolute differences.
+  - `verify(λs, env; k=4.0)` — vector per-exponent test;
+    returns `Bool` only (LL-017 no-oracle compliance).
+  - `synthetic_adversary(p, ε_A; rng, direction=nothing)` —
+    unit-vector + L2-magnitude perturbation in α-space.
+- **`src/julia/test/runtests.jl`** — 18 new audit assertions
+  across 2 `@testset`s: Audit module mechanism (residue
+  correctness, verify Bool semantics, synthetic_adversary
+  L2-magnitude preservation, error handling); end-to-end
+  exercise (envelope structure, self-acceptance at k=10
+  conservative, strong-adversary rejection at k=5 with ε_A=3.0,
+  residue-magnitude sanity check).
+- **`src/julia/benchmark/p3b_detection_probability.jl`** —
+  detection-probability sweep script. Sweeps ε_A ∈ {0.0, 0.1,
+  0.3, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0} with 10 trials per
+  point; deterministic seeds; writes plain-text result to
+  benchmark/results/.
+- **`src/julia/benchmark/results/p3b_detection_lorenz96.txt`**
+  — committed benchmark output. Empirical detection-probability
+  curve at the prototype's working point (Lorenz-96 N=20, F=8,
+  k=5, n_trials=10): flat ≈ 10% FPR baseline for ε_A ≤ 0.75;
+  sigmoid transition through ε_A ∈ [0.75, 2.0]; saturated
+  1.00 detection for ε_A ≥ 2.0. Shape matches the §2.1 bound
+  P(detect) ≥ 1 - K·exp(-c·T·δ²); constants not yet derived
+  (followup for `:benchmarked` upgrade).
+- **`docs/p3b_residue_audit_companion.md`** — session companion.
+  §2.1 documents the verifier mechanism. §2.2 records the
+  unit-vector + L2 perturbation semantic (vs the noisier
+  ε_A·randn alternative). §2.3 records a zero-sensor degeneracy
+  bug found during smoke tests (a useful non-degeneracy
+  violation example for future sessions). §2.4 reports the
+  empirical detection-probability surface. §2.5 explains why
+  this lands as `:tested`, not `:benchmarked`. §2.6 documents
+  the Sensors-to-top-level module restructure. §5 captures
+  three lessons.
+
+### Changed
+
+- **`src/julia/src/LavaLamp.jl`** — submodule load order
+  restructured. `Sensors` is now a top-level submodule of
+  `LavaLamp` (was nested inside `Engine`); `Engine` and
+  `Audit` both reference Sensors via `..Sensors`. New audit
+  re-exports.
+- **`src/julia/src/Engine.jl`** — `using ..Sensors` instead of
+  including Sensors locally.
+- **`LAVALAMP_SPEC.md`** — version 0.0.8 → 0.0.9. LL-006
+  evidence type `manual` → `example-tested`; status `:argued`
+  → `:tested`; description expanded with the vector
+  per-exponent test definition and the empirical detection-
+  probability surface summary; Source/Test paths added; notes
+  reference the bound-constant calibration follow-up. Counts:
+  `:tested` 2 → 3; `:argued` 11 → 10. Total still 18.
+- **`artifact_registry.md`** — version 0.0.8 → 0.0.9. LL-006
+  row updated with `src/julia/test/runtests.jl` +
+  `src/julia/benchmark/results/p3b_detection_lorenz96.txt` test
+  paths and `src/julia/src/Audit.jl` source. Cross-audit A6
+  records 47/47 assertions passing in ~78s wall clock; CI
+  recommendation reiterated.
+- **`dashboard.md`** — version 0.0.8 → 0.0.9. Project state
+  summary updated with P3b numbers. P3 priority block adds
+  0.0.9 sub-status; P3-bound (LL-006 `:benchmarked` upgrade)
+  added as a new sub-item. Spec status counts updated. Recent
+  companion docs gains the P3b entry.
+
+### Why
+
+P3b is the natural next slice after P3a's sensor-coupling
+layer. The residue audit is the *security-decision* layer: it
+takes the spectrum produced by the coupled SDE and produces
+ACCEPT/REJECT decisions. Without it, the substrate-coupled
+trajectory has nothing to compare against; with it, the device
+identity has structural meaning.
+
+The session validated three claims empirically:
+
+1. **Mechanism correctness.** Envelope, residue, verify, and
+   synthetic_adversary all behave as specified (residue is
+   per-component abs differences; verify is Bool-only;
+   synthetic_adversary preserves L2 magnitude exactly). 18
+   new assertions cover this.
+2. **Self-acceptance.** At conservative k=10, fresh genuine
+   runs against the registered envelope deterministically
+   accept. (At working k=5, FPR ≈ 0.10 — characterized in
+   the benchmark output.)
+3. **Adversary detection.** Strong adversaries (ε_A=3.0)
+   deterministically reject at k=5. Weaker adversaries
+   transition smoothly: ε_A=1.0 detects 50%; ε_A=0.5
+   detects ≈ FPR. Curve shape matches §2.1 bound.
+
+The transition from `:argued` to `:tested` is honest: the
+audit *mechanism* is exercised; the *bound's constants* (K, c,
+δ_A as a function of ε_A) are not yet derived from the
+empirical curve. A future session can fit those constants and
+verify the empirical curve is above the bound prediction;
+that closes LL-006 to `:benchmarked`.
+
+### Spec impact
+
+- Counts: total 18 unchanged; `:tested` 2 → 3 (+ LL-006);
+  `:argued` 11 → 10 (- LL-006); `:open` 5 unchanged.
+- Status moves to `:tested`: LL-006.
+- No new spec entries.
+
+### Counts
+
+- Total: 18 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 3 (LL-003, LL-004, LL-006)
+- `:benchmarked`: 0
+- `:argued`: 10
+- `:open`: 5
+
+### Known gaps
+
+- **LL-006 `:benchmarked` upgrade outstanding.** Requires
+  fitting the §2.1 bound's constants K, c, δ_A(ε_A) from the
+  empirical curve and demonstrating the empirical P(detect)
+  is above the bound prediction. The committed benchmark
+  output has the empirical curve; the fit is the missing
+  step.
+- **No CI integration yet.** Test wall clock now ~78s; manual
+  reruns starting to feel slow. Recommended before P3c.
+- **LL-005 (sensor Nyquist) still `:argued`.** Adversary-rate
+  benchmark folds into the existing benchmark framework but
+  hasn't been run.
+- **LL-007 chaos-guard untouched.** Cheaper than P3b
+  (single-exponent vs full spectrum); should be next.
+- **Stub-stream layer only.** Real-sensor FFI deferred per
+  the 0.0.8 followups.
+
+### Followup recommendations
+
+- **P3c chaos-guard** is the natural next slice. Cheapest
+  remaining sub-task per the 0.0.7 §2.4 cost analysis (single
+  exponent vs full spectrum; O(N) vs O(N²)). Closes LL-007 to
+  `:tested`.
+- **CI workflow** before P3c. With test wall-clock at ~78s,
+  manual reruns are getting expensive. GitHub Actions
+  `Pkg.test()` on push closes the gap; small lift.
+- **P3-bound LL-006 `:benchmarked` upgrade.** Can land in
+  parallel with P3c; uses the existing benchmark output as
+  input. Modest analytical work to fit (K, c) and predict
+  δ_A(ε_A); compare empirical to fitted prediction.
+
+---
+
 ## 0.0.8 — 2026-05-02 — P3a sensor-coupling layer
 
 Implements the smooth sensor-to-SDE coupling layer per

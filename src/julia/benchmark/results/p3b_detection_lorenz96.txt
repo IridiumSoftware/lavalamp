@@ -1,0 +1,40 @@
+# LavaLamp P3b — Detection-Probability Benchmark
+# ===============================================
+# Date: 2026-05-02
+# Reproducibility: deterministic (Random.seed! = 101 for calibration;
+#                   adversary seeds = Xoshiro(2000 + trial·100 + ε_A·100);
+#                   trial IC seeds = 3000 + trial)
+#
+# System: Lorenz-96 N=20, F=8.0
+# Sensor: constant_stream(1.0)
+# Coupling: α=[1.0], b=ones(20)
+# Calibration: n_trials=10, N_benettin=1200, Δt=0.05, Ttr=200.0
+# Verifier: k=5.0, vector per-exponent test
+# Adversary: unit-vector perturbation in α-space, magnitude ε_A
+# Trials per ε_A point: 10
+#
+# Result columns:
+#   ε_A             — adversary perturbation magnitude (L2 in α-space)
+#   p_reject        — empirical detection probability over 10 trials
+#   max_residue_max — worst-case per-component residue across trials
+#   max_residue_mean — mean of per-trial worst-component residues
+#   wall_s          — wall-clock seconds for this ε_A point
+#
+ε_A     p_reject   max_residue_max   max_residue_mean   wall_s
+-----   --------   ---------------   ----------------   ------
+ 0.00       0.10            0.4567             0.2256      1.5
+ 0.10       0.00            0.2935             0.2062      1.5
+ 0.30       0.10            0.4089             0.2432      1.5
+ 0.50       0.10            0.3802             0.2472      1.5
+ 0.75       0.10            0.5301             0.3716      1.5
+ 1.00       0.50            0.8103             0.4569      1.5
+ 1.50       0.60            0.6795             0.5118      1.6
+ 2.00       1.00            0.9870             0.7783      1.4
+ 3.00       1.00            1.2547             1.0962      1.4
+ 5.00       1.00            2.0832             1.7910      1.6
+
+# Observed pattern: P(reject) ≈ FPR (≈ 0.1) for ε_A ≲ 0.5 (signal
+# below noise floor); transition around ε_A ≈ 1.0; saturates at 1.0
+# for ε_A ≳ 2.0. Empirically validates the §2.1 detection bound
+# shape P(detect) ≥ 1 - K·exp(-c·T·δ²) at the prototype's working
+# (T, k, n_trials_calibration) point.

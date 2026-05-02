@@ -26,13 +26,13 @@ module Engine
 
 using DynamicalSystems
 
-include("Sensors.jl")
-using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
-using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
+# Sensors is a sibling submodule under LavaLamp; this module
+# references its types via the parent namespace. This keeps
+# Audit and Engine on equal footing as consumers of Sensors.
+using ..Sensors: SensorStream, evaluate, CouplingParams, no_coupling
+using ..Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
 
 export lorenz96, lyapunov_spectrum, lorenz96_coupled
-export SensorStream, evaluate, CouplingParams, no_coupling
-export constant_stream, binary_step_stream, gaussian_noise_stream
 
 """
     lorenz96_eom!(du, u, p, t)
