@@ -5,6 +5,169 @@ messages match entry summaries.
 
 ---
 
+## 0.0.6 — 2026-05-02 — P3 prototype core (bootstrap + Lorenz-96 baseline)
+
+First substantive Julia prototype work. Establishes the
+`src/julia/` track with pinned dependencies (lockfile discipline)
+and exercises Lorenz-96 (the leading single-attractor candidate
+per the design pass) end-to-end against literature reference
+values. LL-003 (single-attractor chaotic engine) moves from
+`:open` to `:tested` with `example-tested` evidence; project
+state moves from design-stage to prototype-stage.
+
+### Added
+
+- **`src/julia/Project.toml`** — package manifest. Name
+  `LavaLamp`, UUID `706f996e-…-8ce7c656a42c`, version 0.0.6.
+  Pinned direct dependencies (semver compat in `[compat]`):
+  - DifferentialEquations 7
+  - DynamicalSystems 3
+  - StaticArrays 1
+  - Statistics (stdlib)
+  Test extras: Random, Test (stdlib).
+- **`src/julia/Manifest.toml`** — full transitive lockfile,
+  resolved against the local registry. Pins 481 transitive
+  packages including DifferentialEquations 7.17.0,
+  DynamicalSystems 3.6.7, StaticArrays 1.9.18. Committed
+  per the lavalamp CLAUDE.md package-management discipline:
+  the Manifest IS the reproducibility lockfile in Julia.
+- **`src/julia/src/LavaLamp.jl`** — top-level package module.
+  Re-exports `lorenz96` and `lyapunov_spectrum` from `Engine`.
+  Documents the conventions in force (real-valued math per
+  LL-009; bounded-window analysis per LL-010; security-only,
+  visual-decoupled per LL-002).
+- **`src/julia/src/Engine.jl`** — Lorenz-96 implementation +
+  Benettin spectrum estimator.
+  - `lorenz96(N=40; F=8.0, u0=nothing)` constructs a
+    `CoupledODEs` from `DynamicalSystems.jl` with the in-place
+    Lorenz (1996) right-hand side, periodic boundary by 1-based
+    modular index arithmetic.
+  - `lyapunov_spectrum(ds; N=5000, Δt=0.05, Ttr=1000.0)`
+    estimates the full Lyapunov spectrum via QR
+    re-orthonormalization. Defaults calibrated for Lorenz-96
+    at N=40, F=8.
+  - File-level docstring documents the convention set, the
+    "why this primitive" rationale (Lorenz-96's high λ₁,
+    parameter sensitivity, and rich spectrum vs Lorenz-63 /
+    Rössler), the literature reference values, and the
+    performance assumption (memory-fits-in-RAM at N ≤ ~10⁴).
+- **`src/julia/test/runtests.jl`** — test suite, 8 assertions
+  across three `@testset`s:
+  - Lorenz-96 construction smoke.
+  - Spectrum length = 40, sorted decreasing.
+  - λ₁ ∈ [1.4, 1.9] (literature ≈ 1.66; Lorenz, 1996 +
+    Karimi-Paul 2010).
+  - Number of positive exponents ∈ [11, 16] (literature 13–14).
+  - h_KS = Σ max(λᵢ, 0) ∈ [8.0, 12.5] (literature ≈ 10.5).
+  - λ_min < -3.0 (strange attractor has contraction).
+  - IC-invariance: |λ₁(seed=7) - λ₁(seed=13)| < 0.2 (Oseledec).
+  Run via `Pkg.test()` from `src/julia/`. Wall clock ~20s on
+  Apple Silicon (M-class). All 8 assertions pass.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.5 → 0.0.6. LL-003
+  evidence type `none` → `example-tested`; status `:open` →
+  `:tested`; Source/Test paths added; description expanded with
+  Lorenz-96 reference values (λ₁ ≈ 1.66, ~14 positive exponents,
+  h_KS ≈ 10.5, Kaplan-Yorke dim ≈ 27). Counts: `:tested` 0 → 1;
+  `:open` 6 → 5. Total still 18.
+- **`artifact_registry.md`** — version 0.0.5 → 0.0.6. LL-003
+  row updated (evidence type, Test/Proof file, Source file,
+  status). Counts updated. Cross-audit A6 (test sync)
+  meaningful for the first time: LL-003 has a runnable test
+  exercising it. A1 coverage 18/18 unchanged.
+- **`dashboard.md`** — version 0.0.5 → 0.0.6. Project state
+  moves from "design-stage" to "prototype-stage." P3 marked
+  ◐ in progress with sub-items P3a..P3e enumerated. Spec
+  status counts updated. Open structural questions reduced
+  (LL-003 leaves the list). Recent companion docs / formal
+  artefacts gains a `src/julia/` entry.
+- **`.gitignore`** — Julia build/coverage artefact patterns
+  added with comment that Project.toml + Manifest.toml ARE
+  committed (lockfile discipline).
+
+### Why
+
+P3 is gated on P2 (closed in 0.0.5). The first slice of P3 is
+the lockfile + the smallest substantive numerical result that
+exercises the toolchain — Lorenz-96 with literature-comparison
+test bounds. The bootstrap and the baseline land in one commit
+because the bootstrap is the *first* lockfile (no diff to slip
+past); the lavalamp CLAUDE.md "lockfiles in their own commit"
+rule is about *subsequent* updates, where lockfile changes
+without rationale are the failure mode being prevented.
+
+The Lorenz-96 baseline produces concrete numbers cited
+elsewhere in the spec:
+- **LL-003** is `:tested` against λ₁ ≈ 1.66.
+- **LL-007** chaos-guard's λ₁_expected baseline (and τ_λ ≈
+  0.1·λ₁_expected ≈ 0.17 reseed threshold) flows from this
+  number.
+- **LL-008 / LL-018** S_production = h_KS ≈ 10.5 is the
+  device's chaos-production rate, which feeds the
+  resolution-boundary margin computation per adversary class.
+- **LL-006** detection bound P(detect) ≥ 1 - K·exp(-c·T·δ²)
+  has c implicitly bounded by the Lyapunov spectrum's
+  estimator-variance; concrete c calibration is a P3b
+  follow-up.
+
+Honest framing: LL-003 is `:tested`, not `:verified` or
+`:proved`. The test exercises one set of parameters with
+deterministic seeds and asserts against literature ranges.
+QuickCheck-style property tests over the parameter space
+(`:verified`) and Lean proofs of structural claims (`:proved`)
+remain follow-ups in P4 / P6.
+
+### Spec impact
+
+- Counts: total 18 unchanged; `:tested` 0 → 1; `:open` 6 → 5;
+  `:argued` 12 unchanged; `:proved` / `:verified` /
+  `:benchmarked` all 0.
+- Status moves to `:tested`: LL-003.
+- No new spec entries; no removed entries.
+
+### Counts
+
+- Total: 18 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 1 (LL-003)
+- `:benchmarked`: 0
+- `:argued`: 12
+- `:open`: 5
+
+### Known gaps
+
+- **No CI integration yet.** Tests run via `Pkg.test()` from a
+  local checkout. GitHub Actions workflow is a follow-up.
+- **No sensor coupling yet.** LL-004 / LL-005 / LL-016 still
+  `:argued` only. P3a is the next slice.
+- **No residue audit yet.** LL-006 still `:argued` only.
+  Detection-probability benchmark (P3b) is the next big
+  numerical result after sensor coupling lands.
+- **No chaos-guard yet.** LL-007 still `:argued` only.
+- **SDE-selection benchmark not yet run.** Lorenz-96 is
+  committed as the prototype default; comparative bench (P3d)
+  upgrades LL-003 to `:benchmarked` once it lands.
+
+### Followup recommendations
+
+- **P3a — sensor coupling implementation** is the natural next
+  step. Touches LL-004 / LL-005 / LL-016. Concrete deliverables:
+  potential-field U(s, x; t) functional form (Gaussian-ramp for
+  discrete inputs, multiplicative for broadband-noise inputs);
+  per-sensor coupling vector calibration; Nyquist analysis for
+  the chosen coupling under realistic sensor bandwidths.
+- **P3d — SDE selection benchmark** could land in parallel with
+  P3a since they touch different files. Lorenz-63 and Rössler
+  baselines for comparison.
+- **CI workflow** (GitHub Actions running `Pkg.test()` on
+  push) is small lift; recommend adding before P3a so the
+  test suite is the regression discipline from now on.
+
+---
+
 ## 0.0.5 — 2026-05-02 — P2 architectural design pass
 
 P2 closure: the architectural design pass formalising the

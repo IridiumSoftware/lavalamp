@@ -14,6 +14,18 @@ dist-newstyle/
 **/.lake/
 **/build/
 
+# Julia build / coverage artefacts
+# Project.toml + Manifest.toml ARE committed (lockfile discipline);
+# only build/coverage byproducts are ignored.
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+**/deps/build.log
+**/deps/build.log.txt
+**/deps/deps.jl
+**/deps/usr/
+LocalPreferences.toml
+
 # LaTeX build artefacts (if any paper-shaped artefact lands later)
 *.aux
 *.log

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.5 (P2 architectural design pass, 2026-05-02)
+Version: 0.0.6 (P3 prototype core — Lorenz-96 baseline, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -81,13 +81,24 @@ LL-ID, not the Key.
   jerk-equation systems), not a multi-basin reaction-diffusion
   structure. Single-attractor is now viable because LL-002
   decouples visual richness from security, removing the constraint
-  that would have pulled toward multi-basin systems.
-- Evidence type: none
-- Status: :open
-- Notes: Final SDE choice pending attack-surface enumeration and
-  benchmark of Lyapunov exponent vs. compute cost. Lorenz-96 is the
-  current candidate (high-dimensional, high Lyapunov, parameter-
-  sensitive — good for hardware fingerprint amplification).
+  that would have pulled toward multi-basin systems. Lorenz-96
+  (N=40, F=8) is the prototype's default: λ₁ ≈ 1.66, ~14 positive
+  exponents, h_KS ≈ 10.5, Kaplan-Yorke dimension ≈ 27.
+- Evidence type: example-tested
+- Status: :tested
+- Source: src/julia/src/Engine.jl (Lorenz-96 implementation +
+  Benettin spectrum estimator).
+- Test: src/julia/test/runtests.jl (8 assertions: spectrum
+  length, sortedness, λ₁ ∈ [1.4, 1.9], n_pos ∈ [11, 16],
+  h_KS ∈ [8.0, 12.5], λ_min < -3.0, IC-invariance of λ₁
+  under Oseledec). Run via `Pkg.test()` from
+  `src/julia/`; passes 8/8 in ~20s wall clock on Apple Silicon.
+- Notes: SDE-selection benchmark across Lorenz-96 / Lorenz-63 /
+  Rössler is a follow-up; Lorenz-96 is committed as the
+  prototype default. Final selection upgrades to `:benchmarked`
+  when the comparative bench lands. Stochastic perturbation
+  (the σ dW term in §2.4 design) and sensor coupling land in
+  subsequent modules.
 
 ### LL-004 — continuous-sensor-coupling
 - Key: sensor data couples to SDE as continuous potential field, not discrete kicks
@@ -415,16 +426,15 @@ LL-ID, not the Key.
 
 - Total: 18
 - `:proved`: 0
-- `:tested`: 0
+- `:tested`: 1 (LL-003)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 12 (LL-004, LL-005, LL-006, LL-007, LL-008,
   LL-011, LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
-- `:open`: 6 (LL-001, LL-002, LL-003, LL-009, LL-010, LL-015)
+- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Design-stage. Twelve entries closed at the design-pass level
-with manual evidence; no Lean/type/algebraic verification yet.
-Six remain :open: LL-001/002/003 await P6 / Lean enforcement and
-P3 SDE selection benchmarks; LL-009/010/015 are corpus-boundary
-declarations that close to :argued under future small-session
-companions. P3 (Julia prototype core) unblocked.**
+**Prototype-stage. Lorenz-96 baseline (LL-003) example-tested
+against literature; 12 entries argued at design level; 5 remain
+open: LL-001/002 await Lean / type-level enforcement (P5/P6);
+LL-009/010/015 are corpus-boundary declarations that close to
+:argued under future small-session companions.**

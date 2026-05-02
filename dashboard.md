@@ -1,15 +1,19 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.5 — P2 architectural design pass).
+Last updated: 2026-05-02 (0.0.6 — P3 prototype core, Lorenz-96
+baseline).
 
 ## Status summary
 
-**Project state.** Design-stage. P2 architectural design pass
-landed (`docs/architecture_design_companion.md`). Twelve of
-eighteen spec entries are `:argued` with `manual` evidence; six
-remain `:open` (LL-001/002/003 await Lean / type-level enforcement
-or P3 SDE benchmarks; LL-009/010/015 are corpus-policy boundary
-declarations). P3 (Julia prototype core) unblocked. No code yet.
+**Project state.** Prototype-stage. P2 architectural design pass
+landed (`docs/architecture_design_companion.md`); P3 Julia
+prototype core started (`src/julia/`) with Lorenz-96 (N=40, F=8)
+baseline reproducing literature: λ₁ ≈ 1.66 (estimated 1.658 at
+seed 42, 2000 Benettin steps), 14 positive exponents, h_KS ≈
+10.27, Kaplan-Yorke dimension ≈ 27.1. LL-003 closes to `:tested`
+with `example-tested` evidence. Twelve entries remain `:argued`
+(P2 design); five remain `:open`. Test suite passes 8/8 in ~20s
+via `Pkg.test()` from `src/julia/`.
 
 **Key architectural moves locked.**
 
@@ -83,18 +87,31 @@ P2 — **Architectural design pass.** ✓ Landed in 0.0.5
     cross-config transitions; vector + no-oracle + rate-limited
     threshold discipline.
 
-P3 — **Julia prototype core.** Implement the architecture (LL-001
-  through LL-008 substantively) using Julia's chaos-and-SDE stack:
-  `DifferentialEquations.jl` for the SDE solver,
-  `DynamicalSystems.jl` / `ChaosTools.jl` for Lyapunov-spectrum
-  estimation and basin diagnostics, native sensor FFI for
-  configuration coupling. Lockfile discipline (`Manifest.toml`)
-  from day 1. **Unblocked by 0.0.5.** Entry points: SDE
-  selection benchmark (Lorenz-96 vs Lorenz-63 vs Rössler);
-  Benettin / Rosenstein / Wolf estimator implementation;
-  potential-field U(s, x; t) concrete form and α_i calibration;
-  ∂λ/∂s non-degeneracy benchmark; baseline τᵢ = 3·σ(λ̂ᵢ | T)
-  threshold calibration.
+P3 — **Julia prototype core.** ◐ In progress. Bootstrap +
+  Lorenz-96 baseline landed in 0.0.6 (`src/julia/`); LL-003
+  closes to `:tested` against literature (λ₁ ≈ 1.66, n_pos ≈ 14,
+  h_KS ≈ 10.5). Remaining sub-items, in approximate order of
+  dependence:
+  - **P3a — Sensor coupling.** Implement the smooth potential
+    field U(s, x; t) per design §2.4. Per-sensor Nyquist and
+    bandwidth analysis. Closes LL-004 / LL-005 to `:tested` once
+    the coupling is exercised end-to-end.
+  - **P3b — Residue audit.** Implement the vector per-exponent
+    threshold test from design §2.1, with synthetic adversary
+    trajectories and detection-probability benchmark vs
+    observation window T. Closes LL-006 to `:tested` /
+    `:benchmarked`.
+  - **P3c — Chaos-guard.** Real-time λ̂₁ estimator running
+    concurrently; reseed-on-collapse protocol per design §2.3.
+    Closes LL-007 to `:tested`.
+  - **P3d — SDE-selection benchmark.** Comparative bench across
+    Lorenz-96 / Lorenz-63 / Rössler on Lyapunov richness,
+    parameter sensitivity, compute cost. Upgrades LL-003 to
+    `:benchmarked` with the comparative artefact pinned in the
+    registry.
+  - **P3e — Non-degeneracy benchmark.** ∂λ/∂s rank check that
+    the §2.1 detection bound's δ_A > 0 condition holds for the
+    chosen coupling.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical
@@ -133,21 +150,21 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 18 (was 17 in 0.0.4; +1 in 0.0.5:
-  LL-018 adversary-resolution-bound-formalisation)
+- Total spec entries: 18 (no change in 0.0.6)
 - `:proved`: 0
-- `:tested`: 0
+- `:tested`: 1 (LL-003 — Lorenz-96 baseline against literature)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 12 (LL-004, LL-005, LL-006, LL-007, LL-008,
   LL-011, LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
-- `:open`: 6 (LL-001, LL-002, LL-003, LL-009, LL-010, LL-015)
+- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
 Twelve entries closed at the design-pass level via manual
-evidence. None machine-verified yet — Lean (P5/P6) targets
-LL-006, LL-008, LL-018; P3 prototype targets LL-003 through
-LL-008 substantively for `:tested`/`:verified`/`:benchmarked`
-upgrades.
+evidence; one entry (LL-003) closes to `:tested` via the P3
+prototype's Lorenz-96 baseline. None machine-verified yet —
+Lean (P5/P6) targets LL-006, LL-008, LL-018; P3 follow-ups
+target LL-004 through LL-007 substantively for further
+`:tested`/`:verified`/`:benchmarked` upgrades.
 
 ## Open structural questions
 
@@ -155,16 +172,13 @@ The protocol-layer questions from 0.0.1–0.0.3 (LL-011..LL-014,
 LL-016, LL-017) closed at design level in 0.0.5 (`:argued`).
 Remaining `:open` entries fall into two classes:
 
-**Awaiting P3 / P5–P6 verification (3 entries):**
+**Awaiting P5–P6 verification (2 entries):**
 
 - **LL-001** substrate-bound identity primitive — closed in
   spirit by LL-006 detection bound; awaits Lean enforcement.
 - **LL-002** visual ↔ security decoupling — invariant; awaits
   type-level / Lean enforcement to demonstrate the architectural
   separation cannot be re-coupled by accident.
-- **LL-003** single-attractor chaotic engine — SDE choice
-  (Lorenz-96 candidate) framed but not benchmarked; P3 SDE-
-  selection benchmark closes it.
 
 **Corpus-policy boundaries (3 entries):**
 
@@ -245,6 +259,16 @@ Remaining `:open` entries fall into two classes:
   LL-018 added for per-class A1..A6 quantification of the
   resolution-boundary margin. P3 unblocked. Round-2
   synthesis-team review trigger now met.
+- **`src/julia/`** (0.0.6) — P3 prototype core bootstrap +
+  Lorenz-96 baseline. Pinned Julia project (`Project.toml` +
+  `Manifest.toml`) on DifferentialEquations 7.17,
+  DynamicalSystems 3.6.7, StaticArrays 1.9.18.
+  `src/julia/src/{LavaLamp.jl, Engine.jl}` implements Lorenz-96
+  (N=40, F=8) and the Benettin Lyapunov spectrum estimator
+  (LL-003 / LL-006 / LL-007 substrate). Test suite
+  (`test/runtests.jl`, 8 assertions) verifies λ₁ ≈ 1.66 vs
+  literature, n_pos ∈ [11, 16], h_KS ≈ 10.5, IC-invariance per
+  Oseledec. LL-003 closes to `:tested`.
 
 ## Out of scope (explicit)
 
