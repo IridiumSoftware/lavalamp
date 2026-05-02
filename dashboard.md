@@ -1,13 +1,15 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-01 (0.0.4 — methodology + positioning
-refinements).
+Last updated: 2026-05-02 (0.0.5 — P2 architectural design pass).
 
 ## Status summary
 
-**Project state.** Concept-stage. Architecture has been
-synthesized through one round of synthesis-seat (Gemini) +
-edge-witness-seat (Grok) review on 2026-04-30. No code yet.
+**Project state.** Design-stage. P2 architectural design pass
+landed (`docs/architecture_design_companion.md`). Twelve of
+eighteen spec entries are `:argued` with `manual` evidence; six
+remain `:open` (LL-001/002/003 await Lean / type-level enforcement
+or P3 SDE benchmarks; LL-009/010/015 are corpus-policy boundary
+declarations). P3 (Julia prototype core) unblocked. No code yet.
 
 **Key architectural moves locked.**
 
@@ -58,15 +60,28 @@ P1 — **Attack-surface enumeration document.** ✓ Landed in 0.0.3
   Document doubles as load-bearing technical content of the
   eventual LavaLamp paper.
 
-P2 — **Architectural design pass.** Formalise:
-  - Lyapunov-spectrum residue audit (probabilistic detection
-    bound).
-  - Resolution-Bounded Security claim (Lean-tractable
-    formulation).
-  - Chaos-Guard implementation specifics.
-  - Sensor-coupling potential field (which sensors, how mapped to
-    SDE parameters, sampling rate vs Nyquist).
-  - Registration / onboarding / cold-start protocols.
+P2 — **Architectural design pass.** ✓ Landed in 0.0.5
+  (`docs/architecture_design_companion.md`). Five sub-items
+  closed at design level (manual evidence, `:argued` status):
+  - Lyapunov-spectrum residue audit (LL-006): vector
+    per-exponent threshold; detection bound P(detect) ≥
+    1 - K·exp(-c·T·δ_A²) with structural-separation prior from
+    Closure v5 cross-sector autopoiesis 0/5202 result.
+  - Resolution-Bounded Security claim (LL-008) + per-class
+    A1..A6 quantification (new LL-018).
+  - Chaos-Guard (LL-007): Benettin estimator over W ≈
+    100/λ₁_expected; reseed via host TRNG on λ̂₁ < 0.1·λ₁_expected;
+    2W warmup before re-mark VALID.
+  - Sensor-coupling potential field (LL-004 / LL-005): smooth
+    U(s, x; t) with ramped discrete-sensor smoothing and
+    broadband-noise contribution; per-sensor Nyquist with f_SDE
+    ≈ 10 kHz baseline; sensor authenticity (LL-016) via
+    cross-validation + anomaly-flagging + TPM where available.
+  - Protocol layer (LL-011 / LL-012 / LL-013 / LL-014 / LL-017):
+    TPM+secret-mixing registration default; single-envelope
+    WARMUP-state cold-start; per-config registered envelopes for
+    cross-config transitions; vector + no-oracle + rate-limited
+    threshold discipline.
 
 P3 — **Julia prototype core.** Implement the architecture (LL-001
   through LL-008 substantively) using Julia's chaos-and-SDE stack:
@@ -74,7 +89,12 @@ P3 — **Julia prototype core.** Implement the architecture (LL-001
   `DynamicalSystems.jl` / `ChaosTools.jl` for Lyapunov-spectrum
   estimation and basin diagnostics, native sensor FFI for
   configuration coupling. Lockfile discipline (`Manifest.toml`)
-  from day 1. No code shipped before P1 + P2 land.
+  from day 1. **Unblocked by 0.0.5.** Entry points: SDE
+  selection benchmark (Lorenz-96 vs Lorenz-63 vs Rössler);
+  Benettin / Rosenstein / Wolf estimator implementation;
+  potential-field U(s, x; t) concrete form and α_i calibration;
+  ∂λ/∂s non-degeneracy benchmark; baseline τᵢ = 3·σ(λ̂ᵢ | T)
+  threshold calibration.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical
@@ -113,60 +133,73 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 17 (was 14 in 0.0.2; +3 from attack-surface
-  enumeration: LL-015 A3-out-of-scope, LL-016 sensor-authenticity,
-  LL-017 verification-no-oracle)
+- Total spec entries: 18 (was 17 in 0.0.4; +1 in 0.0.5:
+  LL-018 adversary-resolution-bound-formalisation)
 - `:proved`: 0
 - `:tested`: 0
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:open`: 17
-- `:argued`: 0
+- `:argued`: 12 (LL-004, LL-005, LL-006, LL-007, LL-008,
+  LL-011, LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:open`: 6 (LL-001, LL-002, LL-003, LL-009, LL-010, LL-015)
 
-All entries `:open`. Concept-stage.
+Twelve entries closed at the design-pass level via manual
+evidence. None machine-verified yet — Lean (P5/P6) targets
+LL-006, LL-008, LL-018; P3 prototype targets LL-003 through
+LL-008 substantively for `:tested`/`:verified`/`:benchmarked`
+upgrades.
 
 ## Open structural questions
 
-The four `:open`-protocol-level entries from 0.0.1 (LL-011..LL-014)
-plus the three surfaced by 0.0.3 attack-surface enumeration
-(LL-015..LL-017) that block any production deployment:
+The protocol-layer questions from 0.0.1–0.0.3 (LL-011..LL-014,
+LL-016, LL-017) closed at design level in 0.0.5 (`:argued`).
+Remaining `:open` entries fall into two classes:
 
-- **Registration ceremony** (LL-011). How does verifier acquire
-  device's registered Lyapunov-spectrum envelope without holding
-  the device? Trust-root attack surface (V-007).
-- **Cold-start window** (LL-012). Just-booted device behavior
-  before SDE has converged. Authentication during warmup
-  (V-008).
-- **Cross-config transitions** (LL-013). Distinguishing
-  legitimate USB-plug (or AC adapter, or thermal) shift from
-  adversarial spoofing attempt at the verifier (V-009).
-- **Threshold calibration** (LL-014). False-positive vs
-  false-negative tradeoff in the Lyapunov-spectrum divergence
-  threshold (V-010).
-- **Sensor authenticity** (LL-016). The largest residual risk:
-  hardware sensors can be manipulated at the source (V-006).
-  Solution requires multi-sensor cross-validation, hardware
-  attestation, or accepted-deployment-context risk.
-- **Verification no-oracle** (LL-017). Verification protocol
-  must not expose accept/reject feedback usable for threshold
-  probing.
-- **A3 (root) explicitly out of scope** (LL-015). Honest scoping
-  boundary; prevents drift toward overclaiming.
+**Awaiting P3 / P5–P6 verification (3 entries):**
+
+- **LL-001** substrate-bound identity primitive — closed in
+  spirit by LL-006 detection bound; awaits Lean enforcement.
+- **LL-002** visual ↔ security decoupling — invariant; awaits
+  type-level / Lean enforcement to demonstrate the architectural
+  separation cannot be re-coupled by accident.
+- **LL-003** single-attractor chaotic engine — SDE choice
+  (Lorenz-96 candidate) framed but not benchmarked; P3 SDE-
+  selection benchmark closes it.
+
+**Corpus-policy boundaries (3 entries):**
+
+- **LL-009** no complex numbers in security math — invariant
+  honored by §2.4 design; closes to `:argued` under a future
+  small-session companion articulating the boundary locally.
+- **LL-010** no open-ended simulation — invariant honored
+  (bounded-window static analysis only); same companion path.
+- **LL-015** A3 (root) explicitly out of scope — scoping
+  declaration, not a claim with verifiable evidence; remains
+  `:open` as the honest framing of what LavaLamp does *not*
+  cover.
 
 ## Live discipline notes
 
 - **Asymmetry-trap watch is engaged.** Visual ↔ security
   decoupling (LL-002) is precisely the kind of move that future
-  "tidying" might re-couple for performance reasons. If that
-  re-coupling is ever proposed, the basin-spoofing attack surface
-  returns. Refactors in this area must be checked against
-  load-bearing chirality.
-- **No-complex-numbers boundary** (LL-009) is in force. The
-  initial Gemini skeleton used Stochastic Ginzburg-Landau (complex-
-  valued); that violated the boundary and was rejected in favor of
-  staying real-valued. Future implementation work must be checked.
-- **No open-ended simulation** (LL-010) is in force. Bounded-time
-  windows only.
+  "tidying" might re-couple for performance reasons. The 0.0.5
+  design pass preserves the decoupling: chaos-guard reseeds do
+  not signal to the visual; high f_SDE / sensor sampling does
+  not couple into the visual layer. If re-coupling is ever
+  proposed, the basin-spoofing attack surface (V-002) returns.
+- **No-complex-numbers boundary** (LL-009) honored by §2.4 — the
+  potential field U(s, x; t) is real-valued throughout; the SDE
+  is real-valued; the residue audit operates on real Lyapunov
+  exponents.
+- **No open-ended simulation** (LL-010) honored — observation
+  windows are bounded T; the Oseledec / Pesin / Eckmann-Ruelle
+  results invoked in §2.1 apply within the bounded ergodic
+  regime, not over open-ended simulation.
+- **Sensor-authenticity residual** (V-006 / LL-016) remains the
+  largest residual risk even after 0.0.5. The design pass
+  identifies four authenticity strategies and recommends a
+  default; no strategy fully eliminates V-006. High-assurance
+  deployments must specify which A4 capability level they assume.
 
 ## Recent companion docs / formal artefacts
 
@@ -203,6 +236,15 @@ plus the three surfaced by 0.0.3 attack-surface enumeration
   the Q₅₁-as-autopoietic reframing (Closure v5 v157, S157):
   identity is Q₅₁-tier; the residue audit is a spectrum check,
   not a checkpoint trace match.
+- **`docs/architecture_design_companion.md`** (0.0.5) — P2
+  architectural design pass. Five sub-sections closing the design
+  questions for the residue audit, resolution-bounded security,
+  chaos-guard, sensor coupling, and protocol layer (registration
+  / cold-start / cross-config / no-oracle). Twelve spec entries
+  move from `:open` to `:argued` (manual evidence); new entry
+  LL-018 added for per-class A1..A6 quantification of the
+  resolution-boundary margin. P3 unblocked. Round-2
+  synthesis-team review trigger now met.
 
 ## Out of scope (explicit)
 

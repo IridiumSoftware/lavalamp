@@ -5,6 +5,187 @@ messages match entry summaries.
 
 ---
 
+## 0.0.5 — 2026-05-02 — P2 architectural design pass
+
+P2 closure: the architectural design pass formalising the
+Lyapunov-spectrum residue audit, the resolution-bounded security
+claim, the chaos-guard, the sensor-coupling potential field, and
+the protocol layer (registration / cold-start / cross-config /
+no-oracle). Twelve spec entries move from `:open` to `:argued`
+with `manual` evidence; one new entry (LL-018) added for
+per-adversary-class quantification of the resolution-boundary
+margin. P3 (Julia prototype core) unblocked.
+
+### Added
+
+- **`docs/architecture_design_companion.md`** — P2 companion.
+  Five §2 sub-sections corresponding to dashboard P2 sub-items:
+  - **§2.1 Lyapunov-spectrum residue audit (LL-006).** Vector
+    per-exponent threshold τᵢ, not scalar. Detection-probability
+    bound P(detect) ≥ 1 - K·exp(-c·T·δ_A²) on observation
+    window T and adversary spectrum gap δ_A; structural-separation
+    prior anchored on Closure v5 catlab_spec.jl
+    Thm_Q51_autopoietic / Thm_Q102_structure (cross-sector
+    autopoiesis fails 0/5202 across 5 ICs at threshold 0.999;
+    cross_sector_autopoiesis_v1.py is the source).
+  - **§2.2 Resolution-Bounded Security claim (LL-008) +
+    LL-018.** S_production = h_KS = Σ max(λᵢ, 0) (Pesin); bound
+    S_production > S_measurement + log(1/η)/Δt; per-class A1..A6
+    quantification split into new LL-018 to prevent the "claim
+    shrinks under reading" failure mode. Lean theorem shape
+    pinned for P6.
+  - **§2.3 Chaos-Guard specifics (LL-007).** Benettin
+    estimator over W ≈ 100/λ₁_expected; rejection threshold
+    τ_λ ≈ 0.1·λ₁_expected; reseed via host TRNG (`/dev/urandom`
+    / `getrandom(2)` / `RDRAND`) at ~1× attractor diameter
+    magnitude; 2W warmup before re-marking VALID. Decoupling
+    from visual layer (LL-002) preserved — reseeds do not signal
+    to the visual.
+  - **§2.4 Sensor-coupling potential field (LL-004 / LL-005 /
+    LL-016).** Per-sensor catalogue (high-bandwidth noise vs
+    discrete-state configuration); SDE form
+    dx = f(x) dt + σ dW + ∇U(s, x; t) dt with smoothed ramps
+    in U for discrete-sensor inputs and broadband-noise terms
+    for high-bandwidth sensors; per-sensor Nyquist analysis;
+    f_SDE ≈ 10 kHz baseline. LL-016 sensor authenticity
+    strategies in decreasing strength: TPM attestation /
+    multi-sensor cross-validation / anomaly-flagging /
+    accepted-residual-deployment-context. Default for prototype:
+    cross-validation + anomaly-flagging.
+  - **§2.5 Protocol layer (LL-011 / LL-012 / LL-013 / LL-014 /
+    LL-017).** Registration: TPM + device-derived secret mixing
+    default; multi-party threshold scheme as no-TPM fallback;
+    time-bounded re-registration as defense-in-depth.
+    Cold-start: device-reported WARMUP / OPERATIONAL /
+    DEGRADED; single-envelope default with WARMUP "retry in T"
+    response. Cross-config: per-config registered envelopes
+    (PRE) selected by sensor-authentic configuration claim;
+    UNKNOWN_CONFIGURATION rejection. No-oracle:
+    {ACCEPT, REJECT, WARMUP, TRANSITIONING,
+    UNKNOWN_CONFIGURATION, RATE_LIMITED} response set; rate
+    limit 10/min/source + 100/hour/device.
+  Companion §3 (verification) marks each result `manual`
+  evidence with the explicit argument; §4 (spec impact)
+  enumerates the status moves and the new LL-018.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version bumped to 0.0.5. Eleven
+  entries (LL-004, LL-005, LL-006, LL-007, LL-008, LL-011,
+  LL-012, LL-013, LL-014, LL-016, LL-017) move from `:open`
+  /`none` to `:argued`/`manual` with citation to the design
+  companion. New entry **LL-018** added (Core / `:argued` /
+  `manual`) for per-class A1..A6 resolution-bound quantification.
+  Counts: 17 → 18 total; 0 → 12 `:argued`; 17 → 6 `:open`.
+  No `:proved` / `:verified` / `:tested` / `:benchmarked`
+  changes.
+- **`artifact_registry.md`** — version bumped to 0.0.5. Twelve
+  registry rows updated with `manual` evidence type, design-
+  companion path, and `:argued` status. New row for LL-018.
+  Cross-audit A1 coverage now 18/18; A4 status-honesty preserved.
+- **`dashboard.md`** — version bumped to 0.0.5. Project state
+  changes from "concept-stage" to "design-stage." P2 marked
+  ✓ landed with sub-item summary. P3 marked unblocked. Spec
+  status counts updated. Open structural questions reclassified
+  into "awaiting P3 / P5–P6 verification" (LL-001/002/003) and
+  "corpus-policy boundaries" (LL-009/010/015). Live discipline
+  notes consolidated into the structural-questions section
+  rather than a separate block (the asymmetry-trap watch and
+  the no-complex-numbers / no-open-ended boundaries remain in
+  force; their wording is preserved in-place).
+
+### Why
+
+P2 is the gate for P3. The attack-surface enumeration (P1,
+0.0.3) listed ten attack vectors with "mitigation pending"
+sections naming the design work each vector required. P2
+discharges that design work for every vector except the
+fundamental sensor-authenticity gap (V-006), which is mitigated
+by LL-016's strategy menu but not eliminated — and that
+limitation is now honestly stated in the spec rather than
+implicit.
+
+The design pass produces `manual` evidence — the weakest
+upgrade-tier under the CLAUDE.md taxonomy. This is honest tier
+framing: a written argument is not a Lean proof, a Haskell
+type-check, or a benchmark. Each `:argued` entry has a clear
+upgrade path: P3 prototype produces `:tested` /
+`:verified` / `:benchmarked` evidence; P5 Haskell QuickCheck
+extends compositional coverage; P6 Lean machine-verifies the
+core structural theorems (LL-006 detection bound, LL-008
+resolution-boundary, LL-018 per-class quantification).
+
+The Closure v5 corpus citations used to ground LL-006's
+structural-separation prior were verified directly against
+`catlab_spec.jl` (lines 1855, 1858, 2415) and
+`cross_sector_autopoiesis_v1.py`. The earlier
+`qkd_pqc_complementarity_companion.md` named the citations; this
+companion ties them to specific corpus loci. The
+0/5202-on-primary-seed result is `:catlab` evidence — algebraic
+/ computational categorical proof at the source — which makes
+LavaLamp's structural-separation prior load-bearing rather than
+hand-waved.
+
+### Spec impact
+
+- Counts: total 17 → 18; `:argued` 0 → 12; `:open` 17 → 6.
+- Status moves to `:argued`: LL-004, LL-005, LL-006, LL-007,
+  LL-008, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017.
+- New entry: LL-018 (Core, `:argued`).
+- Stays `:open`: LL-001, LL-002, LL-003 (await Lean / type / P3
+  benchmarks), LL-009, LL-010, LL-015 (corpus-boundary
+  declarations).
+
+### Counts
+
+- Total: 18 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 0
+- `:benchmarked`: 0
+- `:argued`: 12
+- `:open`: 6
+
+### Known gaps
+
+- **No code yet.** P3 (Julia prototype core) unblocked but not
+  yet started. Lockfile discipline (`Manifest.toml`) from day 1
+  per CLAUDE.md rule.
+- **Sensor-authenticity residual (V-006 / LL-016)** is the
+  largest residual risk even after 0.0.5. The design pass
+  surfaces four mitigation strategies and recommends a default;
+  no strategy fully eliminates V-006. High-assurance deployments
+  must specify their A4 capability assumption.
+- **Lean theorems remain at sketch level.** §2.2 of the
+  companion pins the theorem shape for `detection_complete`;
+  the proof is P6 work. None of the `:argued` entries become
+  `:proved` until Lean verifies them.
+- **Round-2 synthesis-team review** trigger is now met (P2
+  closed); not yet invoked. Plan: forward this companion +
+  attack-surface enumeration to Gemini (synthesis seat) and
+  Grok (edge-witness seat) before P3 prototype work begins.
+
+### Followup recommendations
+
+- **P3 entry points** are listed in dashboard `Priority stack`
+  P3 paragraph: SDE selection benchmark, Benettin /
+  Rosenstein / Wolf estimator implementation, U(s, x; t)
+  concrete form, ∂λ/∂s non-degeneracy benchmark, baseline τᵢ
+  threshold calibration.
+- **Catlab tier decision (P4)** revisited with concrete
+  protocol-layer designs in hand. The protocols (registration /
+  cold-start / cross-config) are state-machine + cryptographic
+  protocol shape, not categorical structure that obviously
+  benefits from Catlab over Haskell. **Recommendation
+  unchanged: skip Catlab for LavaLamp.** Document in a
+  follow-up to `language_plan_catlab_tier_companion.md`.
+- **LL-009 / LL-010** boundary entries should close to
+  `:argued` under a small-session companion that articulates
+  each boundary in the LavaLamp-specific context. Candidates
+  for a future small task; not a P3 dependency.
+
+---
+
 ## 0.0.4 — 2026-05-01 — Methodology + positioning refinements
 
 Two related refinements landed in the same session: (1) Catlab.jl
