@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.6 (P3 prototype core — Lorenz-96 baseline, 2026-05-02)
+Version: 0.0.8 (P3a sensor-coupling layer, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -109,12 +109,26 @@ LL-ID, not the Key.
   pulling the trajectory toward configuration-specific regions of
   the attractor. Hard step-function parameter changes from discrete
   sensor reads are forbidden — they create numerical artefacts an
-  adversary could detect and resync against.
-- Evidence type: manual
-- Status: :argued
-- Source: docs/architecture_design_companion.md §2.4, §3.5.
-- Notes: Implementation must respect Nyquist condition (LL-005).
-  Concrete potential-field shape U(s, x; t) is P3 work.
+  adversary could detect and resync against. Prototype implements
+  the linear-in-x case: U(s, x; t) = Σ_k α_k · evaluate(streams[k], t)
+  · ⟨b_k, x⟩, so ∇_x U is constant in x and reduces to a sensor-
+  modulated additive forcing per dimension. Sufficient for non-zero
+  δ_A (LL-006 prerequisite).
+- Evidence type: example-tested
+- Status: :tested
+- Source: src/julia/src/Sensors.jl (SensorStream + smoothing
+  primitives + CouplingParams), src/julia/src/Engine.jl
+  (lorenz96_coupled_eom!, lorenz96_coupled).
+- Test: src/julia/test/runtests.jl (4 new @testsets / 21
+  assertions: sensor-stream primitives, no-coupling sanity,
+  stepped-sensor smoothness, α-sweep non-degeneracy). Run via
+  Pkg.test() from src/julia/; passes 29/29 in ~40s on Apple
+  Silicon.
+- Notes: Implementation respects Nyquist condition (LL-005) at
+  the parameter level (sample-rate set per stream, f_SDE via Δt).
+  State-dependent coupling (U quadratic-or-higher in x) is a
+  future enhancement, not a prerequisite. Real-sensor FFI
+  deferred to a later P3 sub-task or P6 hardening.
 
 ### LL-005 — sensor-Nyquist-condition
 - Key: sensor sampling rate vs physical noise bandwidth
@@ -426,15 +440,16 @@ LL-ID, not the Key.
 
 - Total: 18
 - `:proved`: 0
-- `:tested`: 1 (LL-003)
+- `:tested`: 2 (LL-003, LL-004)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 12 (LL-004, LL-005, LL-006, LL-007, LL-008,
-  LL-011, LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:argued`: 11 (LL-005, LL-006, LL-007, LL-008, LL-011,
+  LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage. Lorenz-96 baseline (LL-003) example-tested
-against literature; 12 entries argued at design level; 5 remain
-open: LL-001/002 await Lean / type-level enforcement (P5/P6);
-LL-009/010/015 are corpus-boundary declarations that close to
-:argued under future small-session companions.**
+**Prototype-stage. Lorenz-96 baseline (LL-003) and sensor
+coupling layer (LL-004) example-tested; 11 entries argued at
+design level; 5 remain open: LL-001/002 await Lean / type-level
+enforcement (P5/P6); LL-009/010/015 are corpus-boundary
+declarations that close to :argued under future small-session
+companions.**

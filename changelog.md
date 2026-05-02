@@ -5,6 +5,184 @@ messages match entry summaries.
 
 ---
 
+## 0.0.8 — 2026-05-02 — P3a sensor-coupling layer
+
+Implements the smooth sensor-to-SDE coupling layer per
+architecture-design §2.4. LL-004 (continuous sensor coupling)
+closes from `:argued` to `:tested` with example-tested evidence:
+a sensor-stream module + a coupled Lorenz-96 variant + 21 new
+test assertions exercising sensor primitives, the no-coupling
+sanity reduction, stepped-sensor smoothness, and α-sweep
+non-degeneracy. Test suite total grows 8 → 29 assertions, all
+passing in ~40s via `Pkg.test()`.
+
+### Added
+
+- **`src/julia/src/Sensors.jl`** — sensor stream module.
+  - `SensorStream` struct (immutable, validated at construction).
+  - `evaluate(stream, t)` — linear interpolation, clamped at
+    endpoints, O(log n) lookup via `searchsortedlast`.
+  - `constant_stream(value; t_max)` — fixed-baseline fixture.
+  - `binary_step_stream(t_step, before, after; ramp_τ, t_max,
+    n_samples)` — sigmoid-smoothed binary state transition;
+    models AC plug-in / USB plug events.
+  - `gaussian_noise_stream(σ; sample_rate, t_max, rng)` —
+    pre-sampled white-Gaussian stream; models thermal /
+    scheduler-jitter sensors.
+  - `CouplingParams(F_base, streams, alphas, coupling_vectors)` —
+    parameter bundle threaded through `CoupledODEs`. Validates
+    equal stream/alpha/coupling-vector lengths and uniform N
+    across coupling vectors.
+  - `no_coupling(F_base)` — empty `CouplingParams` reducing the
+    coupled SDE to uncoupled Lorenz-96.
+- **`src/julia/test/runtests.jl`** — 4 new `@testset` blocks
+  (21 assertions) covering: sensor-stream primitives;
+  no-coupling sanity (`lorenz96_coupled` with `no_coupling()`
+  reproduces uncoupled `lorenz96` to within 0.05 spectrum
+  tolerance); stepped-sensor smoothness (binary 0→1 step
+  smoothed by sigmoid τ=0.5; trajectory bounded throughout, no
+  step-time anomaly, time-windowed mean ⟨x⟩ shifts in predicted
+  direction); α-sweep non-degeneracy (constant sensor, sweep
+  α ∈ {0, 1, 2}, Δλ₁ measurable per step and cumulatively).
+- **`docs/p3a_sensor_coupling_companion.md`** — session
+  companion. §2.1 defines the linear-in-x potential
+  U(s, x; t) = Σ_k α_k · s_k(t) · ⟨b_k, x⟩; §2.2/§2.3
+  document sanity and smoothness results; §2.4 records the
+  corrected ⟨x⟩(F) prediction (chaotic-regime mean ≈ 2.34, not
+  fixed-point F=8) and its implication that trajectory-mean
+  detection is ~10× weaker than spectrum-based detection,
+  empirically validating round-1's architectural choice for
+  Lyapunov-spectrum residue audit; §2.5 reports non-degeneracy
+  measurements (Δλ₁ ≈ +0.30 at α=1, +0.59 at α=2). §5 captures
+  three lessons: spectrum vs trajectory-mean SNR, fixed-point
+  ⟨x⟩ ≠ chaotic-regime ⟨x⟩, and lockfile `[deps]` vs `[extras]`.
+
+### Changed
+
+- **`src/julia/src/Engine.jl`** — adds:
+  - `lorenz96_coupled_eom!(du, u, p::CouplingParams, t)` —
+    sensor-perturbed forcing per architecture-design §2.4. Per-
+    component perturbation `F_i = F_base + Σ_k α_k · s_k(t) ·
+    b_k[i]`. Sensor evaluations hoisted out of the per-component
+    loop.
+  - `lorenz96_coupled(N; F, coupling, u0)` — public constructor
+    of the coupled `CoupledODEs`.
+  - Re-exports new symbols.
+- **`src/julia/src/LavaLamp.jl`** — re-exports the coupled
+  variant + sensor primitives.
+- **`src/julia/Project.toml`** — `Random` moves from `[extras]`
+  (test-only) to `[deps]` (regular). `gaussian_noise_stream`
+  uses `Random.AbstractRNG` and `randn` at module level, so
+  Random must be a regular dep. The Manifest does not require
+  re-resolution because Random is a stdlib (already
+  transitively pinned).
+- **`LAVALAMP_SPEC.md`** — version 0.0.6 → 0.0.8. LL-004
+  evidence type `manual` → `example-tested`; status `:argued`
+  → `:tested`; Source/Test paths added; description expanded
+  with the linear-in-x prototype form. Counts: `:tested` 1 →
+  2; `:argued` 12 → 11. Total still 18.
+- **`artifact_registry.md`** — version 0.0.6 → 0.0.8. LL-004
+  row updated. Cross-audit A6 records 29/29 assertions passing
+  ~40s wall clock. CI integration explicitly recommended
+  before P3b.
+- **`dashboard.md`** — version 0.0.6 → 0.0.8. Project state
+  summary updated with P3a numbers. P3 priority block adds
+  0.0.8 sub-status; P3a marked landed; P3e (non-degeneracy
+  benchmark) folded into P3a's test suite (closed in 0.0.8).
+  P3-Nyq sub-task added explicitly. CI workflow listed as a
+  P3-level deliverable. Spec status counts updated. Recent
+  companion docs gains the P3a entry.
+
+### Why
+
+P3a is the next slice after the 0.0.6 baseline. The substrate-
+coupling layer is the *substantive* security mechanism: without
+it, Lorenz-96 is just a chaotic SDE; with it, the SDE is bound
+to the substrate's sensor reads in a way that makes the
+device's identity inseparable from its hardware envelope.
+
+The session validated three structural claims empirically:
+
+1. **Smoothness (LL-004 core content).** A discrete sensor
+   transition smoothed by a sigmoid ramp does not produce
+   numerical artefacts in the SDE integration. The §2.3 stepped-
+   sensor `@testset` confirms this directly.
+2. **Tracking.** Trajectory-mean ⟨x⟩ shifts in the predicted
+   direction with measurable magnitude. The shift is small
+   (~0.2 for α=1) — much smaller than the spectrum shift
+   (~0.30). This empirically validates round-1's architectural
+   choice to detect via the spectrum, not the trajectory.
+3. **Non-degeneracy (LL-006 prerequisite).** ∂λ₁/∂α ≠ 0 across
+   the α-sweep. For any non-zero adversary deviation in the
+   coupling parameter, the spectrum gap δ_A is non-zero, and
+   the §2.1 detection bound P(detect) ≥ 1 - K·exp(-c·T·δ²) has
+   positive content.
+
+Each of these is `manual` evidence at the design-pass level
+(P2, 0.0.5), now upgraded to `example-tested` for LL-004 by
+the prototype.
+
+### Spec impact
+
+- Counts: total 18 unchanged; `:tested` 1 → 2 (+ LL-004);
+  `:argued` 12 → 11 (- LL-004); `:open` 5 unchanged.
+- Status moves to `:tested`: LL-004.
+- Partial evidence contributed (no status move): LL-005
+  (Nyquist condition — code-level parameter support);
+  LL-006 (residue audit — non-degeneracy prerequisite
+  empirically demonstrated; detection bound itself remains
+  argued).
+- No new spec entries.
+
+### Counts
+
+- Total: 18 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 2 (LL-003, LL-004)
+- `:benchmarked`: 0
+- `:argued`: 11
+- `:open`: 5
+
+### Known gaps
+
+- **LL-005 not yet `:tested`.** Adversary-rate Nyquist benchmark
+  requires the residue-audit framework from P3b; folds in there.
+- **LL-006 detection bound not yet `:tested` / `:benchmarked`.**
+  Non-degeneracy prerequisite empirically demonstrated; the
+  P(detect) ≥ 1 - K·exp(-c·T·δ²) bound itself is the P3b
+  deliverable.
+- **LL-016 sensor authenticity unchanged.** Synthetic stub
+  layer cannot address authenticity (TPM attestation /
+  cross-validation / anomaly-flagging are deployment-time
+  questions). Real-sensor FFI deferred.
+- **No CI integration yet.** Recommended before P3b; manual
+  rerun after every change becomes burdensome once detection
+  benchmarks land.
+- **Linear-in-x coupling only.** State-dependent coupling
+  (U quadratic-or-higher in x) is a future enhancement.
+  Architecture §2.1 detection bound's structural-separation
+  prior does not require state-dependent coupling, so this is
+  not a blocker.
+
+### Followup recommendations
+
+- **P3b — Residue audit + detection-probability benchmark** is
+  the natural next slice. Synthetic adversary trajectories by
+  parameter perturbation (ε_A); sweep ε_A and observation
+  window T; populate the detection-probability surface.
+  Closes LL-006 to `:tested`/`:benchmarked` and folds in
+  LL-005's adversary-rate Nyquist content. Inner-loop N likely
+  10–20 to manage compute (per 0.0.7 §2.4 budget analysis);
+  headline assertions at N=40.
+- **CI workflow** before P3b. GitHub Actions running
+  `Pkg.test()` on push.
+- **P3c chaos-guard** can land in parallel with P3b — different
+  files, different test scenarios. Cheaper than P3b
+  (single-exponent estimator vs full spectrum).
+
+---
+
 ## 0.0.7 — 2026-05-02 — P3 baseline companion + dev-host field observations
 
 Late-landing companion for the 0.0.6 P3 baseline session, plus

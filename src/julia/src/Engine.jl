@@ -26,7 +26,13 @@ module Engine
 
 using DynamicalSystems
 
-export lorenz96, lyapunov_spectrum
+include("Sensors.jl")
+using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
+using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
+
+export lorenz96, lyapunov_spectrum, lorenz96_coupled
+export SensorStream, evaluate, CouplingParams, no_coupling
+export constant_stream, binary_step_stream, gaussian_noise_stream
 
 """
     lorenz96_eom!(du, u, p, t)
@@ -110,6 +116,64 @@ API STABILITY: stable.
 """
 function lyapunov_spectrum(ds; N::Int=5000, Δt::Float64=0.05, Ttr::Float64=1000.0)
     return lyapunovspectrum(ds, N; Δt=Δt, Ttr=Ttr)
+end
+
+"""
+    lorenz96_coupled_eom!(du, u, p::CouplingParams, t)
+
+Sensor-coupled Lorenz-96 right-hand side. Per-component perturbed
+forcing per architecture-design §2.4:
+
+```
+F_i(t) = F_base + Σ_k alphas[k] · evaluate(streams[k], t) · coupling_vectors[k][i]
+du[i]  = (u[i+1] - u[i-2]) * u[i-1] - u[i] + F_i(t)
+```
+
+Sensor evaluations are *hoisted* out of the per-component loop —
+they are per-step, not per-component. Per-step heap allocation
+of the s_vals scratch buffer is small (length = number of sensors,
+typically ≤ 10) and dominated by the integrator's internal work.
+
+Reduces to the uncoupled `lorenz96_eom!` when `p.streams` is empty.
+"""
+function lorenz96_coupled_eom!(du, u, p::CouplingParams, t)
+    N = length(u)
+    n_sensors = length(p.streams)
+    s_vals = Vector{Float64}(undef, n_sensors)
+    @inbounds for k in 1:n_sensors
+        s_vals[k] = p.alphas[k] * evaluate(p.streams[k], t)
+    end
+    @inbounds for i in 1:N
+        ip1 = i == N ? 1 : i + 1
+        im1 = i == 1 ? N : i - 1
+        im2 = i <= 2 ? (i == 1 ? N - 1 : N) : i - 2
+        F_i = p.F_base
+        for k in 1:n_sensors
+            F_i += s_vals[k] * p.coupling_vectors[k][i]
+        end
+        du[i] = (u[ip1] - u[im2]) * u[im1] - u[i] + F_i
+    end
+    return nothing
+end
+
+"""
+    lorenz96_coupled(N::Int=40; F::Float64=8.0,
+                     coupling::Union{Nothing,CouplingParams}=nothing,
+                     u0=nothing)
+
+Construct a sensor-coupled `CoupledODEs` from `lorenz96_coupled_eom!`
+with parameters from `coupling`. `coupling=nothing` uses
+`no_coupling(F)` and the system reduces exactly to uncoupled
+Lorenz-96 at parameter F.
+
+API STABILITY: experimental.
+"""
+function lorenz96_coupled(N::Int=40; F::Float64=8.0,
+                          coupling::Union{Nothing,CouplingParams}=nothing,
+                          u0=nothing)
+    state = u0 === nothing ? F .+ 0.1 .* randn(N) : copy(u0)
+    p = coupling === nothing ? no_coupling(F) : coupling
+    return CoupledODEs(lorenz96_coupled_eom!, state, p)
 end
 
 end # module Engine

@@ -1,6 +1,16 @@
 using Test
 using Random
+using Statistics: mean
 using LavaLamp
+using DynamicalSystems: trajectory
+
+# Helper used by the sensor-stream primitive tests; using a local
+# definition rather than pulling in a heavier statistics dependency.
+function std_internal(xs::AbstractVector)
+    μ = mean(xs)
+    n = length(xs)
+    return sqrt(sum((xs[i] - μ)^2 for i in 1:n) / (n - 1))
+end
 
 # Conventions in force:
 # - Tests are deterministic. Random.seed! before any random IC.
@@ -86,6 +96,159 @@ using LavaLamp
         # (the spectrum does not depend on the trajectory in the
         # support of the invariant measure) confirmed numerically.
         @test abs(λs1[1] - λs2[1]) < 0.2
+    end
+
+    # ─── Sensor coupling layer (LL-004 / LL-005 / LL-016) ──────────
+
+    @testset "Sensor stream primitives" begin
+        # Smoke tests for the SensorStream constructors.
+        s_const = constant_stream(2.5; t_max=10.0)
+        @test evaluate(s_const, 0.0) == 2.5
+        @test evaluate(s_const, 5.0) == 2.5
+        @test evaluate(s_const, 100.0) == 2.5  # clamps to endpoint
+
+        # Sigmoid step: at the step time, value is half-way; before
+        # the ramp window, value ≈ before; well after, value ≈ after.
+        s_step = binary_step_stream(5.0, 0.0, 1.0; ramp_τ=0.1, t_max=10.0)
+        @test evaluate(s_step, 0.0) < 0.01
+        @test 0.4 < evaluate(s_step, 5.0) < 0.6
+        @test evaluate(s_step, 10.0) > 0.99
+
+        # Gaussian noise: zero mean, σ magnitude over many samples.
+        rng = Random.Xoshiro(42)
+        s_noise = gaussian_noise_stream(1.0; sample_rate=1000.0, t_max=10.0, rng=rng)
+        @test length(s_noise.values) == 10000
+        @test abs(mean(s_noise.values)) < 0.05  # near zero mean
+        @test 0.9 < std_internal(s_noise.values) < 1.1  # ≈ σ
+    end
+
+    @testset "lorenz96_coupled with no sensors == uncoupled (LL-004 sanity)" begin
+        # Empty coupling reduces to uncoupled Lorenz-96. The two EOMs
+        # are mathematically identical when n_sensors == 0; spectra
+        # should match within estimator variance.
+        Random.seed!(42)
+        ds_un = lorenz96(40; F=8.0)
+        λs_un = lyapunov_spectrum(ds_un; N=1500, Δt=0.05, Ttr=300.0)
+
+        Random.seed!(42)
+        ds_co = lorenz96_coupled(40; F=8.0)  # default no_coupling
+        λs_co = lyapunov_spectrum(ds_co; N=1500, Δt=0.05, Ttr=300.0)
+
+        # Both implementations should produce the same spectrum to
+        # tight tolerance (numerically near-identical EOM computation).
+        @test abs(λs_un[1] - λs_co[1]) < 0.05
+        @test sum(abs.(λs_un .- λs_co)) / 40 < 0.05  # mean abs diff
+    end
+
+    @testset "Stepped sensor: trajectory tracks shift smoothly (LL-004)" begin
+        # Smoothness + tracking: integrate through a binary sensor step
+        # (smoothed by a sigmoid ramp) and verify (a) the integration
+        # succeeds throughout (no NaN/Inf, no integrator blow-up at the
+        # ramp event); (b) the post-step time-average ⟨x⟩ exceeds the
+        # pre-step time-average by a measurable, predicted-direction
+        # amount.
+        #
+        # IMPORTANT: For Lorenz-96 the time-averaged ⟨x_i⟩ in the
+        # chaotic regime is not the trivial fixed-point coordinate F.
+        # Empirically ⟨x⟩(F=8) ≈ 2.34 and ⟨x⟩(F=10) ≈ 2.77, so
+        # d⟨x⟩/dF ≈ 0.2. With α=1 and uniform b = ones(N), the
+        # effective F shifts by 1.0 between pre and post windows, so
+        # the predicted ⟨x⟩ shift is ≈ 0.2 (not ≈ 1).
+        Random.seed!(7)
+        N = 40
+        F_base = 8.0
+        α = 1.0
+        b = ones(N)
+        # Step at t=20, ramp_τ=0.5; total simulation T=60 so the post
+        # window has plenty of time to equilibrate after the step.
+        stream = binary_step_stream(20.0, 0.0, 1.0; ramp_τ=0.5, t_max=80.0)
+
+        p = CouplingParams(F_base, [stream], [α], [b])
+        ds = lorenz96_coupled(N; F=F_base, coupling=p)
+
+        X, t = trajectory(ds, 60.0; Δt=0.05, Ttr=5.0)
+
+        # All states finite throughout (no integrator blow-up through
+        # the ramp event = LL-004 smoothness assertion).
+        @test all(all(isfinite, x) for x in X)
+
+        # Trajectory norm bounded — Lorenz-96 attractor radius is
+        # O(N·F) roughly; allow generous bound.
+        norms = [sqrt(sum(abs2, X[i])) for i in eachindex(t)]
+        @test all(<(200.0), norms)
+
+        # No anomalous excursion at the step time vs a far-from-step
+        # window. If the ramp were too sharp / smoothing failed,
+        # |x| would spike around t=20.
+        step_idxs = findall(τ -> 19.0 <= τ <= 22.0, t)
+        far_idxs = findall(τ -> 50.0 <= τ <= 60.0, t)
+        @test maximum(norms[step_idxs]) < 1.5 * maximum(norms[far_idxs])
+
+        # Time-averaged ⟨x⟩ over a window.
+        function mean_window(X, t, t_lo, t_hi)
+            idxs = findall(τ -> t_lo <= τ <= t_hi, t)
+            !isempty(idxs) || error("empty window")
+            s = 0.0
+            for i in idxs
+                s += sum(X[i]) / length(X[i])
+            end
+            return s / length(idxs)
+        end
+
+        # Pre-step window (10 ≤ t ≤ 19): well before the ramp at t=20
+        # (ramp half-width 3·τ = 1.5). Effective F ≈ F_base = 8.0;
+        # empirical ⟨x⟩(F=8) ≈ 2.34. Bounds wide enough for chaos.
+        pre = mean_window(X, t, 10.0, 19.0)
+        @test 1.0 < pre < 4.0
+
+        # Post-step window (30 ≤ t ≤ 60): ramp finished by t=21.5;
+        # effective F ≈ F_base + α = 9.0; empirical ⟨x⟩(F=9) ≈ 2.55.
+        post = mean_window(X, t, 30.0, 60.0)
+        @test 1.0 < post < 4.5
+
+        # Shift in predicted direction (d⟨x⟩/dF > 0; F shifted up).
+        # Magnitude predicted ≈ 0.2; allow [0.02, 0.6] for a single
+        # seed run with chaotic finite-window noise.
+        Δ = post - pre
+        @test 0.02 < Δ < 0.6
+    end
+
+    @testset "Coupling strength sweep: λ₁ varies with α (LL-006 ∂λ/∂s ≠ 0)" begin
+        # Constant sensor at value 1.0 with uniform coupling b = ones(N)
+        # makes the effective forcing F_base + α uniformly across all
+        # dimensions. Lorenz-96's λ₁ depends monotonically on F in the
+        # 8 ≲ F ≲ 12 regime; sweeping α ∈ {0, 1, 2} corresponds to
+        # effective F ∈ {8, 9, 10} and should produce visibly different
+        # λ₁ values. This is the empirical demonstration of the
+        # non-degeneracy condition the §2.1 detection bound requires.
+
+        N = 40
+        F_base = 8.0
+        b = ones(N)
+        stream = constant_stream(1.0; t_max=2000.0)
+
+        λ1s = Float64[]
+        for α in [0.0, 1.0, 2.0]
+            p = CouplingParams(F_base, [stream], [α], [b])
+            Random.seed!(13)
+            ds = lorenz96_coupled(N; F=F_base, coupling=p)
+            λs = lyapunov_spectrum(ds; N=1500, Δt=0.05, Ttr=300.0)
+            push!(λ1s, λs[1])
+        end
+
+        # All measurements finite and in the chaotic-regime band.
+        @test all(λ -> 1.0 < λ < 3.0, λ1s)
+
+        # End-to-end change between α=0 and α=2 is non-trivial.
+        # At α=0 (effective F=8) λ₁ ≈ 1.66; at α=2 (effective F=10)
+        # λ₁ ≈ 2.4 per literature. Δ ≳ 0.5 expected; require ≳ 0.2
+        # to leave margin against estimator variance.
+        @test λ1s[3] - λ1s[1] > 0.2
+
+        # Per-step change is measurable (non-degeneracy at the
+        # O(α=1) scale, not just at the cumulative scale).
+        @test λ1s[2] - λ1s[1] > 0.05
+        @test λ1s[3] - λ1s[2] > 0.05
     end
 
 end

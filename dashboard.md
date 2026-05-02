@@ -1,19 +1,19 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.7 — P3 baseline companion + dev-host
-field observations).
+Last updated: 2026-05-02 (0.0.8 — P3a sensor-coupling layer).
 
 ## Status summary
 
-**Project state.** Prototype-stage. P2 architectural design pass
-landed (`docs/architecture_design_companion.md`); P3 Julia
-prototype core started (`src/julia/`) with Lorenz-96 (N=40, F=8)
-baseline reproducing literature: λ₁ ≈ 1.66 (estimated 1.658 at
-seed 42, 2000 Benettin steps), 14 positive exponents, h_KS ≈
-10.27, Kaplan-Yorke dimension ≈ 27.1. LL-003 closes to `:tested`
-with `example-tested` evidence. Twelve entries remain `:argued`
-(P2 design); five remain `:open`. Test suite passes 8/8 in ~20s
-via `Pkg.test()` from `src/julia/`.
+**Project state.** Prototype-stage. P2 architectural design
+pass landed (`docs/architecture_design_companion.md`); P3 Julia
+prototype core has both the Lorenz-96 baseline (LL-003,
+`:tested` against literature) and the sensor-coupling layer
+(LL-004, `:tested` with synthetic stub-stream fixtures —
+`Sensors.jl` plus `Engine.lorenz96_coupled`). Empirical
+non-degeneracy (∂λ₁/∂α ≠ 0): Δλ₁ ≈ +0.30 at α=1, +0.59 at α=2.
+Eleven entries remain `:argued` (P2 design); five remain
+`:open`. Test suite passes 29/29 in ~40s via `Pkg.test()` from
+`src/julia/`.
 
 **Key architectural moves locked.**
 
@@ -87,31 +87,41 @@ P2 — **Architectural design pass.** ✓ Landed in 0.0.5
     cross-config transitions; vector + no-oracle + rate-limited
     threshold discipline.
 
-P3 — **Julia prototype core.** ◐ In progress. Bootstrap +
-  Lorenz-96 baseline landed in 0.0.6 (`src/julia/`); LL-003
-  closes to `:tested` against literature (λ₁ ≈ 1.66, n_pos ≈ 14,
-  h_KS ≈ 10.5). Remaining sub-items, in approximate order of
-  dependence:
-  - **P3a — Sensor coupling.** Implement the smooth potential
-    field U(s, x; t) per design §2.4. Per-sensor Nyquist and
-    bandwidth analysis. Closes LL-004 / LL-005 to `:tested` once
-    the coupling is exercised end-to-end.
+P3 — **Julia prototype core.** ◐ In progress.
+  - **0.0.6** Bootstrap + Lorenz-96 baseline (LL-003 `:tested`
+    against literature: λ₁ ≈ 1.66, n_pos ≈ 14, h_KS ≈ 10.5).
+  - **0.0.8** P3a sensor-coupling layer landed (`Sensors.jl` +
+    `Engine.lorenz96_coupled`; LL-004 `:tested` with
+    smoothness, sanity, and α-sweep non-degeneracy assertions).
+    Empirical δ_A > 0 ⇔ ε_A > 0 demonstrated: Δλ₁ ≈ +0.30 at
+    α=1, +0.59 at α=2. P3e (∂λ/∂s non-degeneracy benchmark)
+    folded into P3a's test suite — closed in 0.0.8.
+
+  Remaining sub-items:
   - **P3b — Residue audit.** Implement the vector per-exponent
     threshold test from design §2.1, with synthetic adversary
     trajectories and detection-probability benchmark vs
     observation window T. Closes LL-006 to `:tested` /
-    `:benchmarked`.
+    `:benchmarked`. Inner-loop N likely 10–20 to manage
+    compute; headline assertions at N=40.
   - **P3c — Chaos-guard.** Real-time λ̂₁ estimator running
-    concurrently; reseed-on-collapse protocol per design §2.3.
-    Closes LL-007 to `:tested`.
+    concurrently (Wolf or Benettin leading-vector variant —
+    O(N) per step rather than O(N²) full-spectrum); reseed-on-
+    collapse protocol per design §2.3. Closes LL-007 to
+    `:tested`. Cheaper than P3b.
   - **P3d — SDE-selection benchmark.** Comparative bench across
     Lorenz-96 / Lorenz-63 / Rössler on Lyapunov richness,
     parameter sensitivity, compute cost. Upgrades LL-003 to
     `:benchmarked` with the comparative artefact pinned in the
     registry.
-  - **P3e — Non-degeneracy benchmark.** ∂λ/∂s rank check that
-    the §2.1 detection bound's δ_A > 0 condition holds for the
-    chosen coupling.
+  - **P3-Nyq — Nyquist-condition adversary-rate benchmark.**
+    Demonstrate that an adversary at sub-Nyquist sampling cannot
+    reconstruct the genuine sensor stream. Closes LL-005 to
+    `:tested`. Folds naturally into P3b's adversary-trajectory
+    framework.
+  - **CI workflow.** GitHub Actions running `Pkg.test()` on
+    push. Recommended before P3b — once a non-trivial benchmark
+    suite exists, manual reruns become burdensome.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical
@@ -150,20 +160,21 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 18 (no change in 0.0.6)
+- Total spec entries: 18 (no change in 0.0.8)
 - `:proved`: 0
-- `:tested`: 1 (LL-003 — Lorenz-96 baseline against literature)
+- `:tested`: 2 (LL-003 — Lorenz-96 baseline; LL-004 — sensor
+  coupling layer)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 12 (LL-004, LL-005, LL-006, LL-007, LL-008,
-  LL-011, LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
+- `:argued`: 11 (LL-005, LL-006, LL-007, LL-008, LL-011,
+  LL-012, LL-013, LL-014, LL-016, LL-017, LL-018)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-Twelve entries closed at the design-pass level via manual
-evidence; one entry (LL-003) closes to `:tested` via the P3
-prototype's Lorenz-96 baseline. None machine-verified yet —
-Lean (P5/P6) targets LL-006, LL-008, LL-018; P3 follow-ups
-target LL-004 through LL-007 substantively for further
+Eleven entries closed at the design-pass level via manual
+evidence; two entries (LL-003, LL-004) closed to `:tested` via
+the P3 prototype. None machine-verified yet — Lean (P5/P6)
+targets LL-006, LL-008, LL-018; P3 follow-ups target LL-005
+through LL-007 substantively for further
 `:tested`/`:verified`/`:benchmarked` upgrades.
 
 ## Open structural questions
@@ -281,6 +292,26 @@ Remaining `:open` entries fall into two classes:
   a tax on the security primitive. §5 captures lessons for
   P3a/b/c/d sub-tasks. No spec status moves; positioning
   language captured for future paper.
+- **`docs/p3a_sensor_coupling_companion.md`** (0.0.8) — P3a
+  sensor-coupling layer companion. §2.1 specifies the linear-in-x
+  potential field U(s, x; t) = Σ_k α_k · s_k(t) · ⟨b_k, x⟩
+  implementing architecture-design §2.4. §2.2 documents the
+  no-coupling sanity (mathematical reduction to baseline). §2.3
+  documents stepped-sensor smoothness (sigmoid ramp through a
+  binary sensor transition; trajectory bounded throughout, no
+  step-time excursion). §2.4 records the corrected ⟨x⟩(F)
+  prediction (chaotic-regime mean ≈ 2.34, not fixed-point F=8)
+  and the implication: trajectory-mean detection has ~10× lower
+  signal-to-noise than spectrum-based detection, *empirically
+  validating* the round-1 architectural choice to detect via the
+  Lyapunov spectrum. §2.5 demonstrates non-degeneracy
+  (∂λ₁/∂α ≠ 0): Δλ₁ ≈ +0.30 at α=1, +0.59 at α=2 — the
+  prerequisite δ_A > 0 condition for LL-006's detection bound.
+  LL-004 closes to `:tested`. Lessons §5 captures the
+  trajectory-mean vs spectrum signal/noise observation, the
+  fixed-point ⟨x⟩ ≠ chaotic-regime ⟨x⟩ subtlety for future SDE
+  prototyping, and the lockfile-discipline subtlety of
+  `[deps]` vs `[extras]` for module-level imports.
 
 ## Live empirical observations
 

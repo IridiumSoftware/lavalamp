@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.6 (P3 prototype core — Lorenz-96 baseline, 2026-05-02)
+Version: 0.0.8 (P3a sensor-coupling layer, 2026-05-02)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -39,7 +39,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-001 | substrate-bound identity primitive | Core | none | — | — | :open |
 | LL-002 | visual ↔ security decoupling invariant | Core | none | — | — | :open |
 | LL-003 | single-attractor chaotic engine | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Engine.jl | :tested |
-| LL-004 | continuous sensor coupling | Core | manual | docs/architecture_design_companion.md §2.4, §3.5 | — | :argued |
+| LL-004 | continuous sensor coupling | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Sensors.jl + src/julia/src/Engine.jl | :tested |
 | LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 | — | :argued |
 
 ## Detection / verification
@@ -86,46 +86,48 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 - Total: 18
 - `:proved`: 0
-- `:tested`: 1
+- `:tested`: 2
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 12
+- `:argued`: 11
 - `:open`: 5
 
-## Cross-audit A1–A6 self-check (post-0.0.6)
+## Cross-audit A1–A6 self-check (post-0.0.8)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (18 of 18).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
-- **A3 — Evidence exists.** Twelve entries cite
-  `docs/architecture_design_companion.md`; one entry (LL-003)
-  cites `src/julia/test/runtests.jl` as its test file and
-  `src/julia/src/Engine.jl` as its source. All cited paths exist
+- **A3 — Evidence exists.** Eleven entries cite
+  `docs/architecture_design_companion.md`; two entries (LL-003,
+  LL-004) cite `src/julia/test/runtests.jl` as their test file
+  with source files in `src/julia/src/`. All cited paths exist
   in `git ls-files` after this commit.
 - **A4 — Status honesty.** All `:argued` entries carry `manual`;
-  the one `:tested` entry carries `example-tested`; all `:open`
+  both `:tested` entries carry `example-tested`; all `:open`
   entries carry `none`. ✓. No entry has a status its evidence
   type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.6 and `dashboard.md` 0.0.6.
-- **A6 — Test sync.** LL-003 is exercised by
+  `LAVALAMP_SPEC.md` 0.0.8 and `dashboard.md` 0.0.8.
+- **A6 — Test sync.** LL-003 and LL-004 are exercised by
   `src/julia/test/runtests.jl`, runnable via `Pkg.test()` from
-  `src/julia/`; 8/8 assertions pass in ~20s wall clock. CI
-  integration is a follow-up (no GitHub Actions workflow yet).
+  `src/julia/`; 29/29 assertions pass in ~40s wall clock. CI
+  integration remains a follow-up (no GitHub Actions workflow
+  yet); recommended before P3b.
 
 ## Test-coverage notes
 
-Twelve entries are `:argued` via the P2 design companion (manual
-evidence); one entry (LL-003) is `:tested` via the P3 Julia
+Eleven entries are `:argued` via the P2 design companion (manual
+evidence); two entries (LL-003, LL-004) are `:tested` via the P3
 prototype. Pending:
 
-- **P3 follow-ups.** Sensor-coupling potential field
-  implementation (closes LL-004/LL-005 to `:tested`); residue
-  audit + detection bound benchmark (closes LL-006 to
-  `:tested` / `:benchmarked`); chaos-guard reseed protocol
-  (closes LL-007 to `:tested`); SDE-selection comparative
-  benchmark across Lorenz-96 / Lorenz-63 / Rössler (upgrades
-  LL-003 to `:benchmarked`).
+- **P3 follow-ups.** Residue audit + detection bound benchmark
+  (closes LL-006 to `:tested` / `:benchmarked`; the
+  non-degeneracy prerequisite is already empirically demonstrated
+  by the P3a α-sweep test); chaos-guard reseed protocol (closes
+  LL-007 to `:tested`); SDE-selection comparative benchmark
+  across Lorenz-96 / Lorenz-63 / Rössler (upgrades LL-003 to
+  `:benchmarked`); deeper Nyquist-condition adversary-rate
+  benchmark (closes LL-005 to `:tested`).
 - **P4 — Haskell compositional-completeness.** Spec-as-types +
   QuickCheck against the Julia prototype.
 - **P5 — Lean 4 formal verification.** Promotes structural claims

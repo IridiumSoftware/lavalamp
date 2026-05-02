@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "4b9c556f163bb19324a918008fc6920e1845cfa9"
+project_hash = "94ed9eb518f232fc4d9aea02a3cb7685ad5fc37c"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "bbc22a9a08a0ef6460041086d8a7b27940ed4ffd"
@@ -1183,10 +1183,10 @@ uuid = "73f95e8e-ec14-4e6a-8b18-0d2e271c4e55"
 version = "0.0.1"
 
 [[deps.LavaLamp]]
-deps = ["DifferentialEquations", "DynamicalSystems", "StaticArrays", "Statistics"]
+deps = ["DifferentialEquations", "DynamicalSystems", "Random", "StaticArrays", "Statistics"]
 path = "."
 uuid = "706f996e-8f63-4992-9037-8ce7c656a42c"
-version = "0.0.6"
+version = "0.0.8"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface"]

@@ -19,8 +19,16 @@ module LavaLamp
 
 include("Engine.jl")
 
-using .Engine: lorenz96, lyapunov_spectrum
+using .Engine: lorenz96, lyapunov_spectrum, lorenz96_coupled
+using .Engine: SensorStream, evaluate, CouplingParams, no_coupling
+using .Engine: constant_stream, binary_step_stream, gaussian_noise_stream
 
+# Engine + spectrum estimator (LL-003).
 export lorenz96, lyapunov_spectrum
+
+# Sensor-coupling layer (LL-004 / LL-005 / LL-016).
+export lorenz96_coupled
+export SensorStream, evaluate, CouplingParams, no_coupling
+export constant_stream, binary_step_stream, gaussian_noise_stream
 
 end # module LavaLamp
