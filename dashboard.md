@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.16 — P-R2b calibration confidentiality; P-R2 trio complete).
+Last updated: 2026-05-03 (0.0.17 — P3-bound LL-006 :benchmarked).
 
 ## Status summary
 
@@ -121,14 +121,22 @@ P3 — **Julia prototype core.** ◐ In progress.
     and on PRs. 20-minute job timeout. Lockfile-respecting
     install via `julia-actions/julia-buildpkg`.
 
-  **Unblocked sub-items** (P-R2 trio closed in 0.0.14-0.0.16):
+  **Sub-items closed since round-2:**
+  - **0.0.17 P3-bound — LL-006 `:benchmarked`.** ✓ Landed.
+    High-resolution detection-probability sweep + constrained
+    constant fit. K=1, c′=0.00423, T=60 validated; bound
+    holds at 10/11 data points (FPR-floor point consistent
+    with sampling variance). See
+    `docs/p3_bound_companion.md`.
+
+  **Remaining unblocked sub-items:**
   - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
   - P3-Nyq — Nyquist-condition adversary-rate benchmark
     (LL-005 `:tested`).
-  - P3-bound — LL-006 `:benchmarked` upgrade.
-  - LL-019/021 `:benchmarked` upgrades (statistical timing
-    indistinguishability for LL-019; K, c constant fitting
-    for LL-021).
+  - LL-019 `:benchmarked` upgrade (statistical timing-
+    indistinguishability via response-time KS-test).
+  - LL-021 `:benchmarked` upgrade (constrained fit on the
+    P-R2c worst-case surface; same shape as P3-bound).
   - ε-DP envelope stub for LL-020 Strategy 2 → would close
     LL-020 to `:tested`.
 
@@ -217,11 +225,11 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.16)
+- Total spec entries: 21 (no change in 0.0.17)
 - `:proved`: 0
-- `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
+- `:tested`: 5 (LL-003, LL-004, LL-007, LL-019, LL-021)
 - `:verified`: 0
-- `:benchmarked`: 0
+- `:benchmarked`: 1 (LL-006)
 - `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018, LL-020)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)

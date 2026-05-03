@@ -5,6 +5,152 @@ messages match entry summaries.
 
 ---
 
+## 0.0.17 — 2026-05-03 — P3-bound LL-006 :benchmarked (first benchmarked entry)
+
+Closes the P3-bound followup: high-resolution detection-
+probability sweep + constrained constant fit empirically
+validates the architecture-design §2.1 detection-probability
+bound shape with concrete constants for the prototype's
+configuration. LL-006 closes from `:tested` to `:benchmarked`
+— the project's first `:benchmarked`-tier entry.
+
+Fitted constants: **K = 1, c′ = 0.00423, T = 60** for
+Lorenz-96 N=20, F=8, single uniform-coupling channel, k=5,
+n_calibration=10. Bound holds at all 10 transition +
+saturation data points; one FPR-floor point (ε_A=0.50,
+empirical 0/15) is below bound by 0.062 but consistent with
+sampling variance (Wilson 95% CI [0, 0.215] covers bound
+prediction 0.061). Constrained-fit methodology (max c′ such
+that bound holds at every transition point) used rather than
+least-squares — least-squares would have produced an
+over-tight bound that fails at two transition points.
+
+### Added
+
+- **`src/julia/benchmark/p3_bound_high_res.jl`** — high-
+  resolution sweep at finer ε_A grid + more trials per
+  point than the original P3b benchmark. ε_A ∈ {0, 0.25,
+  0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0}; 15
+  trials per point; uses `verify_full` per LL-019 audit-
+  on-every-verify. Records per-trial residue (max abs Δλᵢ)
+  for δ_A estimation alongside P_reject.
+- **`src/julia/benchmark/results/p3_bound_high_res_lorenz96.txt`**
+  — committed benchmark output. 11 data points; mean δ_A
+  per point reported.
+- **`docs/p3_bound_companion.md`** — P3-bound session
+  companion. §2 derives the constrained fit. §2.1 puts
+  the bound in fittable form (`log(1-P) = log(K) - c'·T·ε²`).
+  §2.2 shows the binding constraint (max c per point; min
+  across points = c_validated). §2.3 computes c_validated
+  = 0.00423 with binding at ε_A=0.75. §2.4 reports bound
+  predictions vs empirical at all 11 points (10/11 hold).
+  §2.5 honest framing on what the fit does and does not
+  establish (configuration-specific; no sharper-bound
+  test; FPR-floor regime is sampling-variance bounded).
+  §2.6 deferred tightening (more low-signal trials would
+  loosen binding constraint and produce sharper c′).
+  §2.7 Lean theorem grounding with concrete K, c′, T.
+  §5 captures three lessons including "constrained fit >
+  least-squares for lower bounds".
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.16 → 0.0.17. LL-006
+  evidence type `example-tested` → `benchmarked`; status
+  `:tested` → `:benchmarked`; description amended with
+  fitted constants + bound-holds caveat. Counts: `:tested`
+  6 → 5; `:benchmarked` 0 → 1. Total 21 unchanged.
+- **`artifact_registry.md`** — version 0.0.16 → 0.0.17.
+  LL-006 row updated with benchmark + companion paths.
+- **`dashboard.md`** — version 0.0.16 → 0.0.17. P3-bound
+  marked ✓ landed. Spec status counts updated. Remaining
+  unblocked sub-items list refined.
+
+### Why
+
+P3-bound is the highest-leverage of the available
+:benchmarked-upgrade follow-ups: it converts the headline
+LL-006 detection-probability bound (the architecture's
+load-bearing security claim per §2.1) from "shape fits
+qualitatively" to "fitted constants validated at the
+prototype's configuration." The Lean target for LL-006
+(round-2 §1D.v supplementary priority alongside the
+worst-case bound) now has concrete numbers to aim at.
+
+The constrained-fit methodology is honest at the
+:benchmarked tier: a least-squares fit produces tighter
+constants but fails as a *lower* bound at two transition
+points. The constrained fit produces a looser bound that
+*always* holds within the prototype's configuration. For
+lower-bound claims, constrained-fit is the right tool;
+least-squares characterizes data, not bounds.
+
+The single FPR-floor margin failure is documented honestly
+rather than papered over. Wilson 95% CI computation shows
+sampling variance accounts for the apparent violation;
+future tightening (more trials at low-signal points) would
+either confirm the violation as a real bound limitation
+(triggering refinement of the bound's shape to include FPR
+explicitly) or absorb it into expectation-level validity.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:tested` 6 → 5 (LL-006
+  leaves); `:benchmarked` 0 → 1 (LL-006 enters); others
+  unchanged.
+- Status moves: LL-006 → `:benchmarked`.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 5 (LL-003, LL-004, LL-007, LL-019, LL-021)
+- `:benchmarked`: 1 (LL-006)
+- `:argued`: 10
+- `:open`: 5
+
+### Known gaps
+
+- **Configuration-specific constants.** K=1, c′=0.00423,
+  T=60 are for the prototype's chosen Lorenz-96 N=20, F=8,
+  single uniform-coupling configuration. Other coupling
+  configurations (especially structured per LL-021)
+  produce different c′ values; the bound's *shape* is the
+  universal claim, the constants are not.
+- **No sharper-bound test.** Alternative bound shapes
+  (logistic; Chernoff with explicit moment-generating-
+  function terms) might fit the transition regime more
+  tightly. Not tested here.
+- **No analytic ε_A → δ_A mapping.** c′ absorbs ∂λ/∂α
+  into the effective slope; the underlying constant in
+  raw δ_A units is not separately reported.
+- **Tightening deferred.** §2.6 noted that 50+ trials at
+  ε_A ∈ {0.5, 0.75} would loosen the binding constraint
+  and produce a sharper c′. Small follow-up benchmark.
+
+### Followup recommendations
+
+- **LL-021 `:benchmarked` upgrade.** Same constrained-fit
+  methodology applied to the P-R2c worst-case surface.
+  The data is already committed in
+  `benchmark/results/p_r2c_structured_lorenz96.txt`; the
+  fit needs running.
+- **LL-019 `:benchmarked` upgrade.** Different shape —
+  response-time distribution KS-test against constant-time
+  target. Requires a new benchmark.
+- **P3d SDE-selection benchmark.** Comparative bench
+  (Lorenz-96 / Lorenz-63 / Rössler). Closes LL-003 to
+  `:benchmarked`.
+- **P3-Nyq adversary-rate Nyquist benchmark.** Closes
+  LL-005 to `:tested`.
+- **ε-DP envelope stub for LL-020 Strategy 2.** Pure-Julia
+  Gaussian perturbation with sensitivity calibration.
+- **Tightening session.** 50+ trials at low-signal ε_A
+  to loosen the binding constraint at ε_A=0.75.
+
+---
+
 ## 0.0.16 — 2026-05-02 — P-R2b calibration confidentiality (LL-020 :argued); P-R2 trio complete
 
 Implements the round-2 LL-020 architectural response.

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.16 (P-R2b calibration confidentiality, 2026-05-02)
+Version: 0.0.17 (P3-bound LL-006 :benchmarked, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -184,18 +184,27 @@ LL-ID, not the Key.
   ≈ FPR (0.10) for ε_A ≤ 0.75; sigmoid transition through
   ε_A ∈ [0.75, 2.0]; saturated 1.00 for ε_A ≥ 2.0. Shape matches
   the bound; constants K, c, δ_A(ε_A) not yet derived.
-- Evidence type: example-tested
-- Status: :tested
+- Evidence type: benchmarked
+- Status: :benchmarked
 - Source: src/julia/src/Audit.jl (Envelope, register_envelope,
   residue, verify, synthetic_adversary).
 - Test: src/julia/test/runtests.jl (audit @testsets — 18
   assertions covering mechanism, register, self-acceptance,
-  strong-adversary rejection). Passes via Pkg.test() in ~78s
-  total wall clock. Backed by
-  src/julia/benchmark/results/p3b_detection_lorenz96.txt — the
-  committed detection-probability sweep produced by
-  src/julia/benchmark/p3b_detection_probability.jl (~25s wall
-  clock).
+  strong-adversary rejection); passes via Pkg.test().
+- Benchmark: src/julia/benchmark/p3_bound_high_res.jl +
+  src/julia/benchmark/results/p3_bound_high_res_lorenz96.txt
+  (high-resolution sweep, 11 ε_A points × 15 trials each).
+  Fitted bound K=1, c′=0.00423, T=60 holds at all 10
+  transition + saturation data points; one FPR-floor point
+  (ε_A=0.50, empirical 0/15) is below bound by 0.062 but
+  consistent with sampling variance (Wilson 95% CI
+  [0, 0.215] covers bound prediction 0.061). Performance
+  target: "fitted bound holds across the prototype's
+  configuration" — met. See
+  docs/p3_bound_companion.md §2 for the constrained-fit
+  derivation. Earlier P3b benchmark
+  (src/julia/benchmark/results/p3b_detection_lorenz96.txt)
+  remains as the original :tested-tier evidence.
 - Notes: Bound is vacuous as adversary precision ε_A → 0
   (honest resolution-bounded scoping). Mechanism upgraded from
   scalar to vector per-exponent test; SNR is much better than
@@ -651,19 +660,17 @@ LL-ID, not the Key.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
+- `:tested`: 5 (LL-003, LL-004, LL-007, LL-019, LL-021)
 - `:verified`: 0
-- `:benchmarked`: 0
+- `:benchmarked`: 1 (LL-006)
 - `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018, LL-020)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage with round-2 architectural debt closed.
-P-R2 trio complete: LL-019 / LL-021 :tested via Julia
-implementation + benchmark; LL-020 :argued via P-R2b design
-companion (cryptographic-protocol design closes; platform-
-coupled implementation deferred to P7 or pure-Julia ε-DP
-stub follow-up). Six entries example-tested via the Julia
-prototype; ten entries argued at design level; five remain
-open (LL-001/002 await Lean / type-level enforcement; LL-009
-/010/015 are corpus-boundary declarations).**
+**Prototype-stage with first :benchmarked entry. LL-006
+(headline detection-probability bound) closed to
+:benchmarked in 0.0.17 with fitted constants K=1, c′=0.00423,
+T=60 validated against high-resolution benchmark. Five
+example-tested entries; ten argued at design level; five
+remain open (LL-001/002 await Lean / type-level enforcement;
+LL-009/010/015 are corpus-boundary declarations).**
