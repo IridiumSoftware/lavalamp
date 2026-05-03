@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.12 — synthesis-team round 2).
+Last updated: 2026-05-02 (0.0.13 — round-2 §7 resolutions).
 
 ## Status summary
 
@@ -125,8 +125,12 @@ P3 — **Julia prototype core.** ◐ In progress.
   - P3-bound — LL-006 `:benchmarked` upgrade.
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
-  followup status to active priority by 0.0.12. Three
-  design-response sessions, similar in shape to P2 sub-items:
+  followup status to active priority by 0.0.12; Aaron's §1D
+  resolution accepted as-is on 2026-05-02 (3 new entries
+  kept as 3; P3 deferral confirmed; Gemini-framing accepted
+  as fair). Three design-response sessions, similar in shape
+  to P2 sub-items; can land in any order between now and the
+  round-3 trigger:
   - **P-R2a — LL-019 side-channel hardening.** Constant-time
     response or randomised-delay protocol on chaos-guard
     state transitions. Specification of "audit on every
@@ -144,6 +148,15 @@ P-R2 — **Round-2 architectural responses.** ◐ Promoted from
     direction in α-space). Structured-adversary benchmark
     extending the existing isotropic surface. Companion doc
     + benchmark script + spec refinement.
+
+P-R3 — **Synthesis-team round 3.** Trigger: *after the
+  `closure_forces_structure` physics-paper update lands*
+  (Aaron 2026-05-02). Parallel physics-paper work may
+  surface corpus content that informs LL-021's worst-case-
+  bound or the C-conjugate-inheritance argument; round-3
+  brief composed after the paper update incorporates
+  whatever the paper changes. P-R2a/b/c can land in any
+  order before the trigger.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical

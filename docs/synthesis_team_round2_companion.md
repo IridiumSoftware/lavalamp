@@ -343,7 +343,9 @@ amended:
   `residue_detection`, `entropy_inheritance`,
   `verify_without_oracle` stubs do not capture the bound's
   probabilistic content. They are not adopted.
-- **Adopt Grok's priorities:**
+- **Adopt Grok's priorities** (Aaron 2026-05-02, provisional —
+  "then we'll discuss"; treat as working set, not final P5/P6
+  specification):
   1. Linear-coupling worst-case bound (LL-006 + LL-021).
   2. Side-channel timing indistinguishability (LL-019).
   3. Calibration ε-DP (LL-020).
@@ -546,9 +548,20 @@ Three design sessions, similar in shape to P2 sub-items:
 
 ### §6.2 — Round 3 review trigger
 
-After LL-019 / LL-020 / LL-021 design responses land. Brief
-for round 3 should focus on whether the responses adequately
-close V-011 / V-012 / V-013 and whether new gaps emerge.
+**Resolved 2026-05-02 (Aaron):** trigger after the
+`closure_forces_structure` physics-paper update lands (not
+strictly after LL-019 / LL-020 / LL-021 design responses).
+Parallel physics-paper work may surface structural content
+that informs LL-021's worst-case-bound formulation or the
+C-conjugate-inheritance question; round-3 brief composed
+*after* the paper update so it incorporates whatever the
+paper changes. LL-019 / LL-020 / LL-021 design responses can
+land in any order between now and the round-3 trigger.
+
+Brief for round 3 should focus on whether (a) the
+LL-019/020/021 design responses adequately close V-011 /
+V-012 / V-013, (b) the updated paper revises any corpus
+result LavaLamp anchors on, and (c) new gaps emerge.
 Round-3 brief should weight edge-witness questions per §5.1.
 
 ### §6.3 — Deferred
@@ -580,20 +593,44 @@ within 2 weeks of 2026-05-02"`.
 ## §7 — Outstanding instantiator decisions
 
 Items where Aaron's call should override the AI integrator's
-proposal in §1D before subsequent work proceeds:
+proposal in §1D before subsequent work proceeds.
 
-1. **Accept the §1D resolution as-is**, or revise. Particular
-   attention to:
-   - Whether LL-019 / LL-020 / LL-021 are the right
-     three new entries or if they should consolidate to
-     fewer.
-   - Whether the deferral of P3d / P3-bound is too
-     aggressive (if hardware-bench data is needed before
-     more design work).
-   - Whether the AI integrator's framing of Gemini's review
-     as "less substantive than the brief asked for" is
-     accurate or unfair to the synthesis seat.
-2. **Lean target priorities** per §1D.v — adopt Grok's three
-   priorities, or weight them differently?
-3. **Round 3 timing** — trigger after LL-019/020/021
-   designs, or wait for implementation?
+**Resolved 2026-05-02 (Aaron):**
+
+1. **§1D resolution accepted as-is.**
+   - **1a.** AI-integrator's framing of Gemini's review as
+     "less substantive than the brief asked for" — *fair*. No
+     revision needed.
+   - **1b.** Three new spec entries (LL-019/020/021) — *kept
+     as three*. No consolidation.
+   - **1c.** Deferral of P3d / P3-bound / P3-Nyq pending
+     LL-019/020/021 design responses — *confirmed*.
+2. **Lean target priorities:** *adopt Grok's three priorities*
+   (linear-coupling worst-case bound; side-channel timing
+   indistinguishability; calibration ε-DP) as the working
+   P5/P6 target. *"Then we'll discuss"* — adoption is
+   provisional pending later refinement; treat as the round-2
+   working set, not the final P5/P6 specification. The
+   Round-1-era target (the §2.1 detection-probability bound)
+   remains the core LL-006 / LL-008 / LL-018 theorem; Grok's
+   three supplement.
+3. **Round 3 timing:** *trigger after the
+   `closure_forces_structure` physics-paper update lands*,
+   not strictly after LL-019/020/021 designs. The physics-
+   paper work is ongoing in parallel and may surface
+   structural content that informs LL-021's worst-case-bound
+   formulation or the C-conjugate-inheritance question (round
+   2 §1C-A6 / Q4-equivalent) — running round 3 against the
+   updated paper avoids a wasted round if the paper revises
+   the corpus result LavaLamp anchors on.
+
+**Workflow consequence.** P-R2a / P-R2b / P-R2c can land
+between now and the physics-paper update without triggering
+round 3. The round-3 brief itself will be written *after* the
+paper update so it incorporates whatever the paper changes.
+
+This shifts round 3 from a near-term ("after design responses
+land") trigger to a corpus-event trigger ("after paper
+update"). The two are complementary, not in tension —
+LL-019/020/021 design work is gated by Aaron's local schedule;
+round 3 is gated by the corpus.

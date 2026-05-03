@@ -5,6 +5,59 @@ messages match entry summaries.
 
 ---
 
+## 0.0.13 — 2026-05-02 — Round-2 §7 instantiator resolutions
+
+Records Aaron's resolutions of the four outstanding decisions
+the AI integrator flagged in `synthesis_team_round2_companion.md`
+§7. No spec moves; no code changes. Small follow-up commit to
+the 0.0.12 round-2 integration.
+
+### Changed
+
+- **`docs/synthesis_team_round2_companion.md`** — §7
+  rewritten from "outstanding" to "resolved 2026-05-02":
+  (1a) Gemini-framing accepted as fair; (1b) three new
+  spec entries kept as three; (1c) P3d/P3-bound/P3-Nyq
+  deferral confirmed; (2) Grok's Lean priorities adopted
+  provisionally ("then we'll discuss"); (3) round-3 trigger
+  shifted from "after LL-019/020/021 designs" to "after
+  closure_forces_structure physics-paper update lands".
+  §6.2 and §1D.v updated to reflect the resolutions.
+- **`dashboard.md`** — P-R2 priority block notes Aaron's
+  §1D resolution accepted; new P-R3 priority block added
+  noting the corpus-event trigger.
+
+### Why
+
+The §7 decisions were genuinely open after 0.0.12 lands
+because they involved Aaron's instantiator authority (which
+parts of the AI integrator's resolution to accept; how to
+weight Lean priorities; round-3 timing). Recording the
+resolutions inline keeps the workflow audit trail honest
+rather than relying on chat-history recall.
+
+The round-3 timing shift is the most consequential change.
+"After LL-019/020/021 designs" was a near-term local trigger;
+"after closure_forces_structure paper update" is a corpus-
+event trigger that depends on parallel physics work. The
+two are complementary — local design work proceeds
+independently — but the round-3 brief composition has to
+wait for the paper.
+
+### Spec impact
+
+None. Counts unchanged: 21 total; 4 :tested; 9 :argued;
+8 :open.
+
+### Followup recommendations
+
+- **P-R2a / P-R2b / P-R2c can land in any order** between now
+  and the round-3 trigger.
+- **Watch closure_forces_structure paper repos** for the
+  update event; round-3 brief composition follows.
+
+---
+
 ## 0.0.12 — 2026-05-02 — Synthesis-team round 2 (3 new attack vectors, 3 new spec entries)
 
 Captures the second round of synthesis-seat (Gemini) +
