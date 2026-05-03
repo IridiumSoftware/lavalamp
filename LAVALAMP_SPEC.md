@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.12 (synthesis-team round 2, 2026-05-02)
+Version: 0.0.14 (P-R2a side-channel hardening, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -528,19 +528,32 @@ LL-ID, not the Key.
   trajectories that match λ₁ but diverge in higher exponents
   (A4 finding from round 2). The Wolf-method guard remains
   the always-on monitor; the Benettin audit on every
-  verification closes the inter-audit window.
-- Evidence type: none
-- Status: :open
-- Source: docs/synthesis_team_round2_companion.md §1C-A1 +
-  §1D-iii; docs/attack_surface_enumeration.md V-011.
-- Notes: Mitigation strategies in decreasing strength:
-  (1) constant-time response (uniform delay matching slowest
-  legitimate verification path); (2) randomised-delay envelope
-  on all state-transition responses; (3) accepted residual
-  risk with documented deployment-context bound on A4 timing
-  precision. Implementation requires both protocol-side
-  (verifier delays state-transition emissions) and audit-side
-  (audit on every verify, not periodic) discipline.
+  verification closes the inter-audit window. Prototype
+  implementation: `verify_full(ds, env; ...)` forces full
+  Benettin at the API level (audit-on-every-verify);
+  `verify_constant_time(λs, env; target_seconds)` pads
+  response time to a uniform target (timing decorrelation).
+- Evidence type: example-tested
+- Status: :tested
+- Source: src/julia/src/Audit.jl (verify_full,
+  verify_constant_time).
+- Test: src/julia/test/runtests.jl LL-019 @testsets (12
+  assertions: verify_full forces Benettin + result equality
+  with manual lyapunov_spectrum + verify; strong adversary
+  reject; verify_constant_time elapsed ≥ target_seconds;
+  result equality with plain verify; Bool-only return;
+  argument validation).
+- Notes: Statistical *indistinguishability* of the
+  response-time distribution is deferred to a future
+  benchmark — single-call elapsed is asserted by the unit
+  test; multi-call distributional equality (KS-test or
+  Anderson-Darling) is `:benchmarked` follow-up. Production
+  constant-time-response should use an async deadline
+  scheduler rather than `sleep` (which blocks a worker
+  thread); the prototype's `sleep` demonstrates the
+  property at the design level. Lean target per round-2
+  §1D.v: side-channel timing indistinguishability theorem.
+  See docs/p_r2a_side_channel_hardening_companion.md.
 
 ### LL-020 — calibration-confidentiality
 - Key: registered envelope sealed against registration-channel observers, not just substitution
@@ -611,20 +624,20 @@ LL-ID, not the Key.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
+- `:tested`: 5 (LL-003, LL-004, LL-006, LL-007, LL-019)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018)
-- `:open`: 8 (LL-001, LL-002, LL-009, LL-010, LL-015,
-  LL-019, LL-020, LL-021)
+- `:open`: 7 (LL-001, LL-002, LL-009, LL-010, LL-015,
+  LL-020, LL-021)
 
-**Prototype-stage with round-2 architectural debt. Four
-entries (LL-003 Lorenz-96 baseline, LL-004 sensor coupling,
-LL-006 residue audit, LL-007 chaos-guard) example-tested via
-the Julia prototype; 9 entries argued at design level; 8
-remain open: LL-001/002 await Lean / type-level enforcement
-(P5/P6); LL-009/010/015 are corpus-boundary declarations;
-LL-019/020/021 are the round-2 surfaced architectural debts
-needing design responses before further prototype-extension
-work proceeds.**
+**Prototype-stage with round-2 architectural debt
+substantially closing. Five entries (LL-003 Lorenz-96
+baseline, LL-004 sensor coupling, LL-006 residue audit,
+LL-007 chaos-guard, LL-019 side-channel hardening)
+example-tested via the Julia prototype; 9 entries argued at
+design level; 7 remain open: LL-001/002 await Lean /
+type-level enforcement (P5/P6); LL-009/010/015 are corpus-
+boundary declarations; LL-020/021 are the remaining round-2
+surfaced architectural debts (P-R2b / P-R2c).**

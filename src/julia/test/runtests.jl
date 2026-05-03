@@ -310,6 +310,111 @@ end
         @test max_k_adv > 5.0
     end
 
+    # ─── LL-019: side-channel hardening (audit-on-verify + constant-time) ─
+
+    @testset "verify_full forces full-spectrum audit (LL-019 audit-on-verify)" begin
+        # verify_full takes a dynamical system, computes the Benettin
+        # spectrum internally, and verifies. Round 2 §1C-A4: the
+        # cheap Wolf-method λ̂₁ alone is insufficient for verification
+        # because adversaries can match λ₁ while diverging in higher
+        # exponents. verify_full closes that gap by mandating full-
+        # spectrum at the API level.
+        Random.seed!(101)
+        N = 20
+        F_base = 8.0
+        b = ones(N)
+        s_const = constant_stream(1.0; t_max=2000.0)
+        p_genuine = CouplingParams(F_base, [s_const], [1.0], [b])
+        ds_factory = () -> lorenz96_coupled(N; F=F_base, coupling=p_genuine)
+
+        Random.seed!(101)
+        env = register_envelope(ds_factory;
+                                 n_trials=5, N=1000, Δt=0.05, Ttr=200.0)
+
+        # Genuine system: verify_full at conservative k accepts.
+        Random.seed!(7001)
+        ds_check = ds_factory()
+        result = verify_full(ds_check, env;
+                              k=10.0, N=1000, Δt=0.05, Ttr=200.0)
+        @test result isa Bool
+        @test result == true
+
+        # Result agrees with manual lyapunov_spectrum + verify path.
+        Random.seed!(7001)
+        ds_check2 = ds_factory()
+        λs_manual = lyapunov_spectrum(ds_check2;
+                                       N=1000, Δt=0.05, Ttr=200.0)
+        result_manual = verify(λs_manual, env; k=10.0)
+        @test result == result_manual
+
+        # Strong adversary: verify_full rejects at k=5.
+        rng_adv = Random.Xoshiro(8001)
+        p_adv = synthetic_adversary(p_genuine, 3.0; rng=rng_adv)
+        Random.seed!(8001)
+        ds_adv = lorenz96_coupled(N; F=F_base, coupling=p_adv)
+        @test !verify_full(ds_adv, env;
+                           k=5.0, N=1000, Δt=0.05, Ttr=200.0)
+    end
+
+    @testset "verify_constant_time pads to target (LL-019 timing decorrelation)" begin
+        # verify_constant_time pads response time to a uniform
+        # target_seconds, so an external observer measuring response
+        # timing cannot distinguish ACCEPT from REJECT (V-011).
+        Random.seed!(101)
+        N = 20
+        F_base = 8.0
+        b = ones(N)
+        s_const = constant_stream(1.0; t_max=2000.0)
+        p_genuine = CouplingParams(F_base, [s_const], [1.0], [b])
+        ds_factory = () -> lorenz96_coupled(N; F=F_base, coupling=p_genuine)
+
+        Random.seed!(101)
+        env = register_envelope(ds_factory;
+                                 n_trials=3, N=800, Δt=0.05, Ttr=150.0)
+
+        # Pre-compute a genuine λs (fast path, would normally elapse <1ms).
+        Random.seed!(9001)
+        ds_g = ds_factory()
+        λs_g = lyapunov_spectrum(ds_g; N=800, Δt=0.05, Ttr=150.0)
+
+        # Pre-compute an adversary λs (also fast path).
+        rng_adv = Random.Xoshiro(9101)
+        p_adv = synthetic_adversary(p_genuine, 3.0; rng=rng_adv)
+        Random.seed!(9101)
+        ds_a = lorenz96_coupled(N; F=F_base, coupling=p_adv)
+        λs_a = lyapunov_spectrum(ds_a; N=800, Δt=0.05, Ttr=150.0)
+
+        target = 0.3  # seconds — chosen so test runtime stays small
+
+        # Both paths must elapse ≥ target_seconds.
+        t1 = time()
+        r_genuine = verify_constant_time(λs_g, env;
+                                          k=10.0, target_seconds=target)
+        elapsed_genuine = time() - t1
+        @test elapsed_genuine >= target
+
+        t2 = time()
+        r_adv = verify_constant_time(λs_a, env;
+                                      k=5.0, target_seconds=target)
+        elapsed_adv = time() - t2
+        @test elapsed_adv >= target
+
+        # Results must equal those of plain verify (no oracle leak,
+        # no result corruption from the timing wrapper).
+        @test r_genuine == verify(λs_g, env; k=10.0)
+        @test r_adv == verify(λs_a, env; k=5.0)
+
+        # Result types remain Bool only (LL-017 no-oracle preserved).
+        @test r_genuine isa Bool
+        @test r_adv isa Bool
+
+        # target_seconds validation
+        @test_throws ArgumentError verify_constant_time(λs_g, env;
+                                                         target_seconds=-0.1)
+        @test_throws ArgumentError verify_constant_time(λs_g, env;
+                                                         target_seconds=0.0)
+    end
+
     # ─── Chaos-guard / periodic-window safety signal (LL-007 / LL-002) ──
 
     @testset "ChaosGuard config + state machine (LL-007)" begin

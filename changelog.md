@@ -5,6 +5,126 @@ messages match entry summaries.
 
 ---
 
+## 0.0.14 — 2026-05-02 — P-R2a side-channel hardening (LL-019 :tested)
+
+Implements the round-2 LL-019 architectural response.
+`Audit.jl` gains `verify_full(ds, env; ...)` (forces full
+Benettin spectrum at the API level — audit-on-every-verify
+per round-2 §1C-A4) and `verify_constant_time(λs, env;
+target_seconds)` (pads response time to uniform target —
+timing decorrelation per round-2 §1C-A1 / V-011).
+
+12 new test assertions across two `@testset`s. Test suite
+grows 82 → 94 assertions, all passing in ~50s. LL-019 closes
+:open → :tested with example-tested evidence.
+
+### Added
+
+- **`src/julia/src/Audit.jl`** — `verify_full` (Benettin-
+  enforcing wrapper) and `verify_constant_time` (timing-
+  padding wrapper).
+- **`src/julia/src/LavaLamp.jl`** — re-exports.
+- **`src/julia/test/runtests.jl`** — 12 new LL-019
+  assertions:
+  - "verify_full forces full-spectrum audit": Bool return,
+    result agreement with manual lyapunov_spectrum +
+    verify, genuine-accept, strong-adversary-reject.
+  - "verify_constant_time pads to target": elapsed ≥
+    target_seconds for both genuine and adversary paths,
+    result equality with plain verify, Bool-only return,
+    argument validation.
+- **`docs/p_r2a_side_channel_hardening_companion.md`** —
+  P-R2a session companion. §2.1 documents the two LL-019
+  sub-requirements (audit-on-every-verify, timing
+  decorrelation); §2.2 / §2.3 document the API-level vs
+  runtime-check design and the constant-time-via-sleep
+  prototype trade-off; §2.4 explicitly defers the
+  statistical-indistinguishability benchmark; §3 honest
+  status framing. §5 captures three lessons including
+  "API-level enforcement > runtime sanity-check for
+  security-discipline requirements that have to hold under
+  code review."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.12 → 0.0.14. LL-019
+  evidence type `none` → `example-tested`; status `:open` →
+  `:tested`; description expanded with implementation
+  specifics. Counts: `:tested` 4 → 5; `:open` 8 → 7.
+- **`artifact_registry.md`** — version 0.0.12 → 0.0.14.
+  LL-019 row updated with test/source paths. Counts.
+- **`dashboard.md`** — version 0.0.13 → 0.0.14. P-R2a marked
+  ✓ landed in the priority block. Spec status counts.
+- **`src/julia/Project.toml`** — version 0.0.10 → 0.0.14.
+- **`src/julia/Manifest.toml`** — version sync.
+
+### Why
+
+P-R2a was the smallest of the three round-2 architectural
+responses by design (round-2 companion §6.1 noted "P-R2a is
+probably the smallest design lift"). Verified empirically:
+a single companion doc + two API-level wrappers + 12 test
+assertions, ~3s additional test wall-clock.
+
+The implementation is intentionally minimal — `verify_full`
+is a wrapper that controls which estimator runs, not a new
+estimator; `verify_constant_time` is a `sleep`-based padding
+wrapper, not a new scheduler. The lavalamp CLAUDE.md
+"no half-finished implementations" rule is honoured by
+documenting what's deferred (statistical
+indistinguishability benchmark, async deadline scheduler)
+rather than pretending the prototype implementation is
+production-grade.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:tested` 4 → 5 (+ LL-019);
+  `:open` 8 → 7 (- LL-019); others unchanged.
+- Status moves to `:tested`: LL-019.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 5 (LL-003, LL-004, LL-006, LL-007, LL-019)
+- `:benchmarked`: 0
+- `:argued`: 9
+- `:open`: 7
+
+### Known gaps
+
+- **Statistical indistinguishability deferred.** The
+  `verify_constant_time` test asserts elapsed ≥ target on
+  single calls; the *distributional* property (response-time
+  distributions across many calls are statistically
+  indistinguishable across accept/reject inputs) is a
+  benchmark follow-up.
+- **`sleep` blocks worker thread.** Production deployments
+  need an async deadline scheduler; the prototype's `sleep`
+  demonstrates the property but is not the production
+  implementation.
+- **LL-020 and LL-021 still :open.** P-R2b and P-R2c
+  remaining.
+
+### Followup recommendations
+
+- **P-R2c — LL-021 worst-case-adversary-bound** is the
+  natural next sub-task — analytical + benchmark work; the
+  benchmark can re-use `verify_full` from this session.
+- **P-R2b — LL-020 calibration confidentiality** is mostly
+  cryptographic-protocol design (companion doc + spec
+  refinement); can land in any order with P-R2c.
+- **Side-channel statistical benchmark** — KS-test or
+  Anderson-Darling distributional equality across many
+  verify calls. Closes the `:benchmarked` upgrade for
+  LL-019.
+- **Lean side-channel theorem** (round-2 §1D.v priority 2)
+  — now grounded in this companion's `verify_constant_time`
+  design.
+
+---
+
 ## 0.0.13 — 2026-05-02 — Round-2 §7 instantiator resolutions
 
 Records Aaron's resolutions of the four outstanding decisions

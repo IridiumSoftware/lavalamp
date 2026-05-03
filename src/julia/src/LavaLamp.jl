@@ -31,6 +31,7 @@ using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
 using .Engine: lorenz96, lyapunov_spectrum, lorenz96_coupled
 using .Audit: Envelope, register_envelope, residue, verify, synthetic_adversary
+using .Audit: verify_full, verify_constant_time
 using .ChaosGuard: GuardState, INVALID, WARMUP, VALID
 using .ChaosGuard: GuardConfig, default_config
 using .ChaosGuard: Guard, update!, is_valid, current_lambda, reseed!
@@ -43,8 +44,9 @@ export lorenz96_coupled
 export SensorStream, evaluate, CouplingParams, no_coupling
 export constant_stream, binary_step_stream, gaussian_noise_stream
 
-# Residue audit / verifier (LL-006 / LL-017).
+# Residue audit / verifier (LL-006 / LL-017 / LL-019).
 export Envelope, register_envelope, residue, verify, synthetic_adversary
+export verify_full, verify_constant_time
 
 # Chaos-guard / periodic-window safety signal (LL-007 / LL-002).
 export GuardState, INVALID, WARMUP, VALID

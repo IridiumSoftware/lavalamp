@@ -42,6 +42,7 @@ using ..Sensors: CouplingParams
 using ..Engine: lyapunov_spectrum
 
 export Envelope, register_envelope, residue, verify, synthetic_adversary
+export verify_full, verify_constant_time
 
 """
     Envelope
@@ -181,6 +182,92 @@ function verify(λs::AbstractVector{<:Real}, env::Envelope;
         end
     end
     return true
+end
+
+"""
+    verify_full(ds, env::Envelope; k::Float64=4.0,
+                N::Int=1500, Δt::Float64=0.05,
+                Ttr::Float64=300.0) -> Bool
+
+Compute the full Benettin Lyapunov spectrum from `ds` and verify
+against `env`. Returns `Bool` only (LL-017 no-oracle).
+
+**LL-019 audit-on-every-verify requirement.** The chaos-guard's
+cheap Wolf-method λ̂₁ estimator (`DynamicalSystems.lyapunov`) is
+sufficient for *always-on* monitoring — but every verification
+*request* must run the full-spectrum Benettin audit, because
+adversaries can craft trajectories that match λ₁ (passing the
+guard) while diverging in higher exponents (caught only by the
+full-spectrum residue test). Round 2 §1C-A4 documents the
+exploitable window if the audit runs less frequently than the
+guard.
+
+This function makes the requirement explicit at the API level:
+verifiers using `verify_full` cannot accidentally substitute the
+cheap single-exponent estimator for the full-spectrum audit. The
+underlying `verify(λs, env; k)` remains available for callers
+that have already computed the full spectrum.
+
+Cost: ~507 ms per call at N=40, ~50-150 ms at N=20 (per the 0.0.7
+§2.4 cost analysis; 400× more expensive than Wolf-method λ₁
+alone).
+"""
+function verify_full(ds, env::Envelope;
+                     k::Float64=4.0,
+                     N::Int=1500,
+                     Δt::Float64=0.05,
+                     Ttr::Float64=300.0)
+    λs = lyapunov_spectrum(ds; N=N, Δt=Δt, Ttr=Ttr)
+    return verify(λs, env; k=k)
+end
+
+"""
+    verify_constant_time(λs, env::Envelope;
+                         k::Float64=4.0,
+                         target_seconds::Float64=0.1) -> Bool
+
+Constant-time wrapper around `verify`. Wall-clock elapsed is
+padded to at least `target_seconds` regardless of the verify
+result, so an external observer measuring response timing
+cannot distinguish ACCEPT from REJECT (or any other internal
+state).
+
+**LL-019 timing-decorrelation requirement.** Round 2 §1C-A1
+identified V-011 (Reseed Oracle): chaos-guard state transitions
+plus naturally-fast `verify` paths produce observable timing
+that correlates with sensor-driven internal state. Padding
+to a uniform target time defeats the timing channel.
+
+Choosing `target_seconds`: must exceed the *slowest* legitimate
+verify path so that no fast-path leak occurs. For Lorenz-96 N=40
+audit-on-every-verify (`verify_full`), the verify call alone is
+~500 ms; choose `target_seconds = 0.6` or higher for
+production. For unit tests `target_seconds = 0.1` (with a fast
+pre-computed λs) is sufficient to demonstrate the property.
+
+Padding via `sleep` is the prototype's mechanism — production
+would use a wait-on-deadline scheduling primitive that does not
+block a worker thread (e.g. an async timer event). The
+correctness of the *decorrelation* property is the test target;
+the implementation choice is a deployment detail.
+
+The function returns the same `Bool` as `verify`; it does not
+itself add any oracle leak. Combine with `verify_full` for
+audit-on-every-verify + constant-time response together.
+"""
+function verify_constant_time(λs::AbstractVector{<:Real},
+                              env::Envelope;
+                              k::Float64=4.0,
+                              target_seconds::Float64=0.1)
+    target_seconds > 0 ||
+        throw(ArgumentError("target_seconds must be positive"))
+    t_start = time()
+    result = verify(λs, env; k=k)
+    elapsed = time() - t_start
+    if elapsed < target_seconds
+        sleep(target_seconds - elapsed)
+    end
+    return result
 end
 
 """

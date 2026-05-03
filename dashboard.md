@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.13 — round-2 §7 resolutions).
+Last updated: 2026-05-02 (0.0.14 — P-R2a side-channel hardening).
 
 ## Status summary
 
@@ -131,13 +131,14 @@ P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   as fair). Three design-response sessions, similar in shape
   to P2 sub-items; can land in any order between now and the
   round-3 trigger:
-  - **P-R2a — LL-019 side-channel hardening.** Constant-time
-    response or randomised-delay protocol on chaos-guard
-    state transitions. Specification of "audit on every
-    verification request" cadence (full Benettin spectrum,
-    not just Wolf-method guard pass-through). Target output:
-    small companion doc + spec entry refinement +
-    implementation in `Audit.jl` / `ChaosGuard.jl`.
+  - **P-R2a — LL-019 side-channel hardening.** ✓ Landed in
+    0.0.14. `verify_full(ds, env; ...)` forces full Benettin
+    at the API level (audit-on-every-verify);
+    `verify_constant_time(λs, env; target_seconds)` pads
+    response time to a uniform target (timing decorrelation).
+    12 new test assertions; LL-019 closes :open → :tested.
+    Statistical indistinguishability deferred to benchmark
+    follow-up. See `docs/p_r2a_side_channel_hardening_companion.md`.
   - **P-R2b — LL-020 calibration confidentiality.** Sealed-
     storage protocol for registered envelope; ε-differential-
     privacy perturbation of any published envelope statistics;
@@ -195,16 +196,15 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (was 18; +3 in 0.0.12 — LL-019,
-  LL-020, LL-021 surfaced by synthesis-team round 2)
+- Total spec entries: 21 (no change in 0.0.14)
 - `:proved`: 0
-- `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
+- `:tested`: 5 (LL-003, LL-004, LL-006, LL-007, LL-019)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018)
-- `:open`: 8 (LL-001, LL-002, LL-009, LL-010, LL-015,
-  LL-019, LL-020, LL-021)
+- `:open`: 7 (LL-001, LL-002, LL-009, LL-010, LL-015,
+  LL-020, LL-021)
 
 Nine entries closed at the design-pass level via manual
 evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed
