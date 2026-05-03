@@ -5,6 +5,134 @@ messages match entry summaries.
 
 ---
 
+## 0.0.16 — 2026-05-02 — P-R2b calibration confidentiality (LL-020 :argued); P-R2 trio complete
+
+Implements the round-2 LL-020 architectural response.
+Design-only session; no Julia code changes. LL-020 closes
+:open → :argued with manual evidence. The P-R2
+design-response trio (P-R2a + P-R2c + P-R2b) is now
+complete; round-2 architectural debt fully addressed.
+
+### Added
+
+- **`docs/p_r2b_calibration_confidentiality_companion.md`** —
+  P-R2b session companion. §1 problem statement (V-012 +
+  LL-011's TPM defends substitution but not observation).
+  §2 three design strategies analysed:
+  - Strategy 1: TPM-sealed envelope storage. Primary for
+    hardware-rooted (consumer / enterprise PC) deployments.
+    Strongest cryptographic guarantee; requires TPM 2.0 /
+    Secure Enclave / TrustZone hardware.
+  - Strategy 2: ε-differentially-private envelope. Universal
+    fallback when hardware support absent or envelope
+    publication required. Quantifiable information bound;
+    privacy-vs-detection-power trade-off.
+  - Strategy 3: Shamir-style multi-party threshold scheme.
+    Primary for federated / multi-trust-root deployments.
+    Information-theoretically secure below threshold;
+    operational coordination cost.
+  §2.3 deployment-context layering matrix documents which
+  primary + fallback applies per deployment shape. §2.4
+  composition with LL-011 (substitution) + LL-017
+  (probing). §2.6 Lean theorem shapes per round-2 §1D.v
+  priority 3 (ε-DP definition specialised to envelope;
+  TPM indistinguishability; Shamir threshold security).
+  §5 captures four lessons including "design-only work is
+  honest at :argued" and "P-R2 design-response trio is now
+  complete."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.15 → 0.0.16. LL-020
+  evidence type `none` → `manual`; status `:open` →
+  `:argued`; description expanded with the three-strategy
+  design + recommended default layering. Counts: `:argued`
+  9 → 10; `:open` 6 → 5.
+- **`artifact_registry.md`** — version 0.0.15 → 0.0.16.
+  LL-020 row updated with companion-doc path. Counts.
+- **`dashboard.md`** — version 0.0.15 → 0.0.16. P-R2b
+  marked ✓ landed; P-R2 trio fully closed. Project state
+  summary updated to "round-2 architectural debt closed."
+  Previously-deferred P3 sub-tasks (P3d / P3-bound /
+  P3-Nyq) marked unblocked. Spec status counts updated.
+
+### Why
+
+P-R2b is the design-only sub-task of the P-R2 trio per the
+round-2 §6.1 framing ("most novel design work of the three
+sub-tasks; mostly cryptographic-protocol thinking"). The
+session lands the design space + recommended defaults +
+Lean theorem shapes; the implementations are platform-
+coupled or cryptographic-library-coupled and properly
+belong in P3 hardening / P5 Haskell / P6 Lean / P7
+production tracks rather than the Julia-prototype layer
+per the language-tier discipline.
+
+The honest tier classification per the lavalamp CLAUDE.md
+"honest framing" rule is `:argued`: the design closes; no
+implementation lands. A pure-Julia ε-DP envelope stub is a
+plausible follow-up that would upgrade Strategy 2
+specifically to `:tested`, but the prototype's broader
+LL-020 claim spans all three strategies and an ε-DP-only
+upgrade would be partial.
+
+P-R2 trio across 0.0.14 / 0.0.15 / 0.0.16 collectively
+addresses round-2's three new attack vectors. Round-2
+§6.1 estimated "1-2 sessions of design work" for the trio;
+in practice the trio closed in three sequential commits
+within a single afternoon. The fast turn-around reflects
+the round-2 findings being tractable (named attack vectors
+with clear mitigation paths) vs the round-1 finding (the
+visual ↔ security architectural restructuring).
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:argued` 9 → 10 (+ LL-020);
+  `:open` 6 → 5 (- LL-020); `:tested` / others unchanged.
+- Status moves to `:argued`: LL-020.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
+- `:benchmarked`: 0
+- `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
+  LL-014, LL-016, LL-017, LL-018, LL-020)
+- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
+
+### P-R2 trio summary
+
+The full round-2 architectural-response set:
+
+| sub-task | spec entry | landed | status |
+|---|---|---|---|
+| P-R2a | LL-019 side-channel hardening | 0.0.14 | :tested |
+| P-R2c | LL-021 worst-case-adversary-bound | 0.0.15 | :tested |
+| P-R2b | LL-020 calibration confidentiality | 0.0.16 | :argued |
+
+V-011 / V-012 / V-013 (round-2 attack vectors) all have
+explicit defences / responses landed in spec.
+
+### Followup recommendations
+
+- **P3 follow-ups unblocked.** P3d (SDE-selection bench →
+  LL-003 :benchmarked); P3-Nyq (Nyquist adversary-rate →
+  LL-005 :tested); P3-bound (LL-006 :benchmarked upgrade).
+- **LL-019 / LL-021 :benchmarked upgrades.** Statistical
+  timing indistinguishability for LL-019; K, c, δ_A_worst
+  constant fitting for LL-021. Both are analytical follow-
+  ups using existing benchmark infrastructure.
+- **ε-DP envelope stub for LL-020 Strategy 2.** Plausible
+  small Julia session; would upgrade LL-020 to `:tested`
+  for Strategy 2 specifically.
+- **Round-3 trigger** unchanged — after closure_forces_structure
+  paper update lands. P-R2 trio's completion does not
+  itself trigger round 3.
+
+---
+
 ## 0.0.15 — 2026-05-02 — P-R2c worst-case-adversary-bound (LL-021 :tested)
 
 Implements the round-2 LL-021 architectural response.

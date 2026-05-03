@@ -1,28 +1,32 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.15 — P-R2c worst-case-adversary-bound).
+Last updated: 2026-05-02 (0.0.16 — P-R2b calibration confidentiality; P-R2 trio complete).
 
 ## Status summary
 
-**Project state.** Prototype-stage with round-2 architectural
-debt. P2 architectural design pass landed; P3 prototype core
-has the Lorenz-96 baseline (LL-003, `:tested`), the sensor-
-coupling layer (LL-004, `:tested`), the residue audit
-(LL-006, `:tested`), the chaos-guard (LL-007, `:tested`).
-Synthesis-team round 2 landed in 0.0.12 and surfaced three
-new attack vectors (V-011 reseed oracle, V-012 calibration
-spectrum leakage, V-013 structured α-direction attack) plus
-a structural concern (linearisability of the linear-in-x
-coupling). Three new spec entries (LL-019/020/021) opened to
-respond. Nine entries remain `:argued`; eight `:open`
-(LL-001/002/009/010/015 plus LL-019/020/021). Test suite
-passes 82/82 in ~47s via `Pkg.test()` from `src/julia/`.
+**Project state.** Prototype-stage; round-2 architectural
+debt closed. P2 architectural design pass landed; P3
+prototype core has Lorenz-96 baseline (LL-003 `:tested`),
+sensor-coupling layer (LL-004 `:tested`), residue audit
+(LL-006 `:tested`), chaos-guard (LL-007 `:tested`).
+Synthesis-team round 2 (0.0.12) surfaced three new attack
+vectors (V-011/012/013) and three new spec entries
+(LL-019/020/021); the P-R2 design-response trio closed all
+three within a single afternoon's work: LL-019 `:tested` in
+0.0.14 (P-R2a side-channel hardening — `verify_full` +
+`verify_constant_time`); LL-021 `:tested` in 0.0.15 (P-R2c
+worst-case-adversary-bound — analytic derivation +
+structured-adversary benchmark showing dramatic asymmetry);
+LL-020 `:argued` in 0.0.16 (P-R2b calibration
+confidentiality — three-strategy design with TPM-sealed
+default). Six entries `:tested`; ten `:argued`; five `:open`
+(LL-001/002 await Lean; LL-009/010/015 corpus-boundary).
+Test suite passes 94/94 in ~50s via `Pkg.test()`.
 
-**Workflow shift:** prototype-extension work (P3d, P3-bound,
-P3-Nyq) is *deferred* until LL-019/020/021 design responses
-land. Running comparative SDE benchmarks against an
-architecture marked as having known soft spots would just
-need to be re-run; design first.
+**Workflow.** P-R2 trio complete; previously-deferred P3
+follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
+review remains gated on the closure_forces_structure paper
+update.
 
 **Key architectural moves locked.**
 
@@ -117,12 +121,16 @@ P3 — **Julia prototype core.** ◐ In progress.
     and on PRs. 20-minute job timeout. Lockfile-respecting
     install via `julia-actions/julia-buildpkg`.
 
-  **Deferred sub-items** (pending LL-019/020/021 design
-  responses; see Round-2 followups below):
+  **Unblocked sub-items** (P-R2 trio closed in 0.0.14-0.0.16):
   - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
   - P3-Nyq — Nyquist-condition adversary-rate benchmark
     (LL-005 `:tested`).
   - P3-bound — LL-006 `:benchmarked` upgrade.
+  - LL-019/021 `:benchmarked` upgrades (statistical timing
+    indistinguishability for LL-019; K, c constant fitting
+    for LL-021).
+  - ε-DP envelope stub for LL-020 Strategy 2 → would close
+    LL-020 to `:tested`.
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D
@@ -139,11 +147,18 @@ P-R2 — **Round-2 architectural responses.** ◐ Promoted from
     12 new test assertions; LL-019 closes :open → :tested.
     Statistical indistinguishability deferred to benchmark
     follow-up. See `docs/p_r2a_side_channel_hardening_companion.md`.
-  - **P-R2b — LL-020 calibration confidentiality.** Sealed-
-    storage protocol for registered envelope; ε-differential-
-    privacy perturbation of any published envelope statistics;
-    multi-party threshold scheme as alternative for no-TPM
-    deployments. Companion doc + spec entry refinement.
+  - **P-R2b — LL-020 calibration confidentiality.** ✓ Landed
+    in 0.0.16. Three-strategy design space documented:
+    (1) TPM-sealed storage (primary for hardware-rooted);
+    (2) ε-differential-privacy perturbation (universal
+    fallback / open-verification); (3) Shamir-style
+    multi-party threshold (primary for federated). LL-020
+    closes :open → :argued (manual evidence). Implementation
+    platform-coupled (TPM / Secure Enclave) or
+    cryptographic-library-coupled (DP / Shamir); sits
+    outside Julia-prototype scope per language-tier
+    discipline. Lean theorem shapes per round-2 §1D.v
+    priority 3 documented in §2.6.
   - **P-R2c — LL-021 worst-case-adversary-bound.** ✓ Landed
     in 0.0.15. Analytic derivation in
     `docs/p_r2c_worst_case_adversary_companion.md` §2.1
@@ -202,14 +217,14 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.15)
+- Total spec entries: 21 (no change in 0.0.16)
 - `:proved`: 0
 - `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
-  LL-014, LL-016, LL-017, LL-018)
-- `:open`: 6 (LL-001, LL-002, LL-009, LL-010, LL-015, LL-020)
+- `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
+  LL-014, LL-016, LL-017, LL-018, LL-020)
+- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
 Nine entries closed at the design-pass level via manual
 evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed

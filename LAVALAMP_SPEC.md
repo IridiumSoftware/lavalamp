@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.15 (P-R2c worst-case-adversary-bound, 2026-05-02)
+Version: 0.0.16 (P-R2b calibration confidentiality, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -576,21 +576,33 @@ LL-ID, not the Key.
   ball, defeating LL-006 + LL-017 by knowing the threshold
   geometry exactly (V-012). LL-020 requires that the
   registered envelope and per-exponent σ be sealed against
-  observers: TPM-sealed storage on the verifier (envelope
-  never transmitted in cleartext post-registration);
-  ε-differentially-private perturbation of any published
-  envelope statistics; or multi-party threshold scheme on
-  envelope reconstruction.
-- Evidence type: none
-- Status: :open
-- Source: docs/synthesis_team_round2_companion.md §1C-A2 +
-  §1D-iii; docs/attack_surface_enumeration.md V-012.
-- Notes: LL-011 (registration ceremony) and LL-020 (calibration
-  confidentiality) are complementary requirements; production
-  deployments need both. The prototype implements neither —
-  synthetic stub streams bypass the registration channel
-  entirely. LL-020 design is the natural next architecture-
-  pass deliverable alongside LL-019 / LL-021.
+  observers via three layered strategies (P-R2b design):
+  (1) TPM-sealed storage on the verifier — primary default
+  for hardware-rooted deployments; (2) ε-differentially-
+  private perturbation of any published envelope statistics
+  — universal fallback when hardware support is absent or
+  publication is required; (3) Shamir-style multi-party
+  threshold scheme on envelope reconstruction — primary
+  default for federated / multi-trust-root deployments.
+- Evidence type: manual
+- Status: :argued
+- Source: docs/p_r2b_calibration_confidentiality_companion.md
+  §2 (three-strategy design space + recommended default
+  layering by deployment context); §2.6 (Lean theorem shapes
+  per round-2 §1D.v priority 3). Originating attack vector:
+  docs/attack_surface_enumeration.md V-012 +
+  docs/synthesis_team_round2_companion.md §1C-A2.
+- Notes: LL-011 (registration ceremony) defends substitution;
+  LL-020 defends observation; both are required for
+  production. LL-017 (verification no-oracle) defends
+  accept/reject probing; the three together close the
+  threshold-geometry leakage path. Implementation is
+  platform-coupled (TPM/Secure Enclave/TrustZone) or
+  cryptographic-library-coupled (Shamir / DP libraries)
+  and sits outside the Julia-prototype scope per the
+  language-tier discipline; ε-DP envelope stub is plausible
+  as a pure-Julia follow-up (would upgrade Strategy 2 to
+  :tested).
 
 ### LL-021 — worst-case-adversary-bound
 - Key: detection-probability claim stated against worst-case adversary direction, not isotropic
@@ -642,17 +654,16 @@ LL-ID, not the Key.
 - `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
-  LL-014, LL-016, LL-017, LL-018)
-- `:open`: 6 (LL-001, LL-002, LL-009, LL-010, LL-015, LL-020)
+- `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
+  LL-014, LL-016, LL-017, LL-018, LL-020)
+- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage with round-2 architectural debt
-substantially closing. Six entries (LL-003 Lorenz-96
-baseline, LL-004 sensor coupling, LL-006 residue audit,
-LL-007 chaos-guard, LL-019 side-channel hardening, LL-021
-worst-case-adversary-bound) example-tested via the Julia
-prototype; 9 entries argued at design level; 6 remain open:
-LL-001/002 await Lean / type-level enforcement (P5/P6);
-LL-009/010/015 are corpus-boundary declarations; LL-020 is
-the remaining round-2 surfaced architectural debt (P-R2b
-calibration confidentiality).**
+**Prototype-stage with round-2 architectural debt closed.
+P-R2 trio complete: LL-019 / LL-021 :tested via Julia
+implementation + benchmark; LL-020 :argued via P-R2b design
+companion (cryptographic-protocol design closes; platform-
+coupled implementation deferred to P7 or pure-Julia ε-DP
+stub follow-up). Six entries example-tested via the Julia
+prototype; ten entries argued at design level; five remain
+open (LL-001/002 await Lean / type-level enforcement; LL-009
+/010/015 are corpus-boundary declarations).**
