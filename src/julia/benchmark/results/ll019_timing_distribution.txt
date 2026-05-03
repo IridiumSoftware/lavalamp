@@ -1,0 +1,40 @@
+# LavaLamp LL-019 — Timing-Distribution Benchmark
+# ================================================
+# Date: 2026-05-03
+# Reproducibility: deterministic. Calibration seed=101;
+#                    genuine seeds = 5000+i for i in 1..20;
+#                    adversary seeds = 7000+i for i in 1..20.
+#
+# System: Lorenz-96 N=20, F=8.0
+# Calibration: n_trials=5, N_benettin=800, Δt=0.05, Ttr=200.0
+# Verifier k=10.0; constant-time target=0.1 s
+# Adversary: BROAD direction, ε_A=2.0
+# 20 distinct λs per bucket × 10 timed calls = 200 samples per bucket
+#
+# Hypothesis test:
+#   H0: F_accept_times = F_reject_times (no timing channel)
+#   H1: F_accept_times ≠ F_reject_times (timing channel exists)
+# Two-sample two-sided KS test, α=0.05.
+# critical = 1.358 · sqrt((n+m)/(n·m)) for the chosen α.
+#
+# Buckets: by verify RESULT (accept vs reject), not by
+# input source. This is the operationally-meaningful split
+# for timing-channel analysis.
+#
+# ─── plain verify (no padding) ──────────────────────────
+#   accept n=320  median=4.2e-8  mean=1.1961837500000048e-5  std=0.00021280712481567076
+#   reject n=80  median=4.2e-8  mean=6.042500000000001e-8  std=3.7438143075772666e-8
+#   KS_stat = 0.04062500000000002
+#   critical_α05 = 0.16975
+#   verdict = INDISTINGUISHABLE
+#
+# ─── verify_constant_time (target=0.1 s) ─────
+#   accept n=320  median=0.1020790835  mean=0.10194143009062492  std=0.0003415887215476332
+#   reject n=80  median=0.1020847705  mean=0.10188196195000002  std=0.0003253009673082273
+#   KS_stat = 0.109375
+#   critical_α05 = 0.16975
+#   verdict = INDISTINGUISHABLE
+#
+# LL-019 :benchmarked claim: verify_constant_time produces a
+# response-time distribution that is statistically
+# indistinguishable across accept/reject inputs.

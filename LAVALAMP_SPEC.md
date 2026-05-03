@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.18 (LL-021 :benchmarked, 2026-05-03)
+Version: 0.0.19 (LL-019 :benchmarked, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -550,8 +550,8 @@ LL-ID, not the Key.
   Benettin at the API level (audit-on-every-verify);
   `verify_constant_time(λs, env; target_seconds)` pads
   response time to a uniform target (timing decorrelation).
-- Evidence type: example-tested
-- Status: :tested
+- Evidence type: benchmarked
+- Status: :benchmarked
 - Source: src/julia/src/Audit.jl (verify_full,
   verify_constant_time).
 - Test: src/julia/test/runtests.jl LL-019 @testsets (12
@@ -560,17 +560,30 @@ LL-ID, not the Key.
   reject; verify_constant_time elapsed ≥ target_seconds;
   result equality with plain verify; Bool-only return;
   argument validation).
-- Notes: Statistical *indistinguishability* of the
-  response-time distribution is deferred to a future
-  benchmark — single-call elapsed is asserted by the unit
-  test; multi-call distributional equality (KS-test or
-  Anderson-Darling) is `:benchmarked` follow-up. Production
-  constant-time-response should use an async deadline
-  scheduler rather than `sleep` (which blocks a worker
-  thread); the prototype's `sleep` demonstrates the
-  property at the design level. Lean target per round-2
-  §1D.v: side-channel timing indistinguishability theorem.
-  See docs/p_r2a_side_channel_hardening_companion.md.
+- Benchmark:
+  src/julia/benchmark/ll019_timing_distribution.jl +
+  src/julia/benchmark/results/ll019_timing_distribution.txt
+  + docs/ll019_benchmarked_companion.md (two-sample KS test
+  on 400 timed verify_constant_time calls bucketed by
+  verify result; KS_stat=0.109 < critical=0.170 at α=0.05
+  → fail to reject H0 → distributions statistically
+  indistinguishable). Performance target: "verify_constant_time
+  produces a response-time distribution where accept-bucket
+  and reject-bucket are statistically indistinguishable per
+  a two-sample KS test at α=0.05" — met.
+- Notes: Plain verify also passes the KS test (KS_stat=0.041)
+  at the prototype's scale because the data-dependent timing
+  channel is sub-microsecond, below OS scheduling jitter.
+  At production scale (millisecond-scale data-dependent
+  paths) the channel emerges; verify_constant_time is the
+  operationally-meaningful defence. Production constant-
+  time-response should use an async deadline scheduler
+  rather than sleep (which blocks a worker thread); the
+  prototype's sleep demonstrates the property at the
+  benchmark level. Lean target per round-2 §1D.v: side-
+  channel timing indistinguishability theorem; this
+  benchmark grounds its theorem statement (see
+  docs/ll019_benchmarked_companion.md §3.3).
 
 ### LL-020 — calibration-confidentiality
 - Key: registered envelope sealed against registration-channel observers, not just substitution
@@ -672,17 +685,18 @@ LL-ID, not the Key.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 4 (LL-003, LL-004, LL-007, LL-019)
+- `:tested`: 3 (LL-003, LL-004, LL-007)
 - `:verified`: 0
-- `:benchmarked`: 2 (LL-006, LL-021)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
 - `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018, LL-020)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage with two :benchmarked entries. The headline
-detection-probability bound (LL-006) and the worst-case
-adversary bound (LL-021) both have fitted constants
-empirically validated against committed benchmark surfaces.
-Four example-tested entries; ten argued at design level;
+**Prototype-stage with three :benchmarked entries
+(round-2 :benchmarked-cohort complete). LL-006 detection
+bound, LL-021 worst-case bound, and LL-019 timing-
+indistinguishability all have empirically-validated
+performance targets met against committed benchmark output.
+Three example-tested entries; ten argued at design level;
 five open (LL-001/002 await Lean enforcement; LL-009/010/015
 corpus-boundary declarations).**

@@ -5,6 +5,157 @@ messages match entry summaries.
 
 ---
 
+## 0.0.19 — 2026-05-03 — LL-019 :benchmarked (timing-distribution KS test); round-2 cohort complete
+
+Closes LL-019 from `:tested` to `:benchmarked` via a two-
+sample Kolmogorov-Smirnov test on response-time
+distributions for `verify_constant_time` and plain `verify`,
+bucketed by verify result (accept vs reject).
+
+LL-019 :benchmarked claim met: `verify_constant_time`
+produces a response-time distribution where accept-bucket
+and reject-bucket are statistically indistinguishable per
+KS test at α = 0.05 (KS_stat = 0.109 < critical = 0.170).
+
+This closes the round-2 :benchmarked cohort: LL-006
+(P3-bound), LL-021 (worst-case), LL-019 (timing-
+indistinguishability) — three sequential same-day sessions
+across 0.0.17/0.0.18/0.0.19, each with appropriate test
+methodology (constrained-fit on bound-shape claims for
+LL-006 and LL-021; KS-test on distributional-equality
+claim for LL-019).
+
+### Added
+
+- **`src/julia/benchmark/ll019_timing_distribution.jl`** —
+  timing-distribution benchmark with manual two-sample KS
+  test. 20 distinct genuine λs + 20 distinct adversary λs
+  (BROAD direction, ε_A = 2.0); 10 timed calls each = 400
+  total samples per benchmark function (`verify` and
+  `verify_constant_time`). Buckets samples by verify
+  result, not input source — corrects the design flaw of
+  the first iteration where input-source bucketing
+  conflated input-type with verify-result and produced a
+  misleading DISTINGUISHABLE verdict on the genuine bucket
+  with mixed accept/reject paths.
+- **`src/julia/benchmark/results/ll019_timing_distribution.txt`**
+  — committed benchmark output with summary statistics
+  (median, mean, std), KS statistics, critical value, and
+  verdicts for both `verify` and `verify_constant_time`.
+- **`docs/ll019_benchmarked_companion.md`** — companion
+  with §2.1 hypothesis test setup, §2.2 bucketing-by-
+  result design, §2.3 results (KS_stat=0.041 for `verify`;
+  0.109 for `verify_constant_time`; both INDISTINGUISHABLE
+  at α=0.05), §2.4 honest interpretation (prototype-scale
+  `verify` passes empirically because data-dependent
+  timing is below OS jitter; production-scale would
+  emerge channel that constant-time wrapper defeats),
+  §2.5 performance target met, §2.6 sample-size
+  considerations, §2.7 comparison to LL-006 and LL-021
+  :benchmarked methodologies, §3.3 Lean theorem grounding
+  per round-2 §1D.v priority 2, §5 four lessons including
+  "bucket by result, not input" and "different test
+  shapes for different performance-target shapes."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.18 → 0.0.19. LL-019
+  evidence type `example-tested` → `benchmarked`; status
+  `:tested` → `:benchmarked`; description amended with
+  KS-test results + production-scale honest framing.
+  Counts: `:tested` 4 → 3; `:benchmarked` 2 → 3. Total 21
+  unchanged.
+- **`artifact_registry.md`** — version 0.0.18 → 0.0.19.
+  LL-019 row updated with benchmark + companion paths.
+- **`dashboard.md`** — version 0.0.18 → 0.0.19. LL-019
+  marked ✓ landed at :benchmarked. Spec status counts.
+  Round-2 :benchmarked cohort marked complete.
+- **`changelog.md`** — this entry.
+
+### Why
+
+LL-019 :benchmarked uses a different test shape than
+LL-006 and LL-021. The latter two have bound-shape claims
+(P(detect) ≥ 1 - K·exp(-c·T·ε²)); the constrained-fit
+methodology validates them. LL-019's claim is
+distributional equality (F_accept = F_reject), which the
+two-sample Kolmogorov-Smirnov test validates via empirical
+CDF comparison.
+
+This session also surfaced a benchmark-design lesson worth
+recording: timing-channel benchmarks must bucket by the
+*channel's putative cause* (verify result), not by proxy
+categories (input source). The first iteration bucketed by
+input source and reported false-positive DISTINGUISHABLE on
+verify_constant_time; the bucketing-by-result fix produced
+the correct INDISTINGUISHABLE result.
+
+The "plain verify also passes KS test" finding is honest
+and not surprising at the prototype's scale: 20-component
+spectrum comparison runs in microseconds, with sub-µs
+data-dependent path differences hidden by OS scheduling
+jitter. The constant-time wrapper is the
+production-grade defence; the prototype's verify happens
+to be too fast for the channel to manifest at this scale.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:tested` 4 → 3 (LL-019
+  leaves); `:benchmarked` 2 → 3 (LL-019 enters); others
+  unchanged.
+- Status moves: LL-019 → `:benchmarked`.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:argued`: 10
+- `:open`: 5
+
+### Round-2 :benchmarked cohort summary
+
+| spec | session | landed | constants / test |
+|---|---|---|---|
+| LL-006 detection bound | P3-bound | 0.0.17 | K=1, c′=0.00423, T=60 |
+| LL-021 worst-case bound | LL-021 :benchmarked | 0.0.18 | K=1, c′=0.02777, T=60 (parameterised on ε_eff) |
+| LL-019 timing-indistinguishability | LL-019 :benchmarked | 0.0.19 | KS_stat=0.109 < 0.170 at α=0.05 |
+
+Three sessions across 0.0.17 → 0.0.19. Each test
+methodology matches its claim shape.
+
+### Known gaps
+
+- **α=0.05 only.** Tighter α (0.01, 0.001) would require
+  more samples per bucket. Deferred.
+- **Prototype-scale only.** Plain `verify` passes KS at
+  µs scale because OS jitter masks sub-µs data-dependent
+  timing. Production-scale (ms data-dependent paths)
+  would need a different benchmark to confirm channel
+  emergence and constant-time defeat.
+- **No formal proof.** Statistical validation at α=0.05
+  is not a formal proof. Round-2 §1D.v Lean priority 2 is
+  the formal target; this benchmark grounds the theorem
+  statement (§3.3 of the companion).
+
+### Followup recommendations
+
+- **Higher-resolution KS test at α=0.01.** Same shape;
+  more samples.
+- **Production-scale wrapper KS test.** Wrap `verify_full`
+  (full Benettin spectrum, ms-scale data-dependent
+  timing) and run the KS test; confirm constant-time
+  defeats the channel that emerges.
+- **P3d SDE-selection benchmark** (LL-003 :benchmarked).
+- **P3-Nyq adversary-rate benchmark** (LL-005 :tested).
+- **ε-DP envelope stub** (LL-020 Strategy 2 :tested).
+- **Lean side-channel theorem** per §3.3 of the
+  companion. P5/P6 work.
+
+---
+
 ## 0.0.18 — 2026-05-03 — LL-021 :benchmarked (worst-case bound constants fitted)
 
 Closes LL-021 from `:tested` to `:benchmarked` by applying

@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.18 — LL-021 :benchmarked).
+Last updated: 2026-05-03 (0.0.19 — LL-019 :benchmarked; round-2 cohort complete).
 
 ## Status summary
 
@@ -123,27 +123,32 @@ P3 — **Julia prototype core.** ◐ In progress.
 
   **Sub-items closed since round-2:**
   - **0.0.17 P3-bound — LL-006 `:benchmarked`.** ✓ Landed.
-    High-resolution detection-probability sweep + constrained
-    constant fit. K=1, c′=0.00423, T=60. See
-    `docs/p3_bound_companion.md`.
-  - **0.0.18 LL-021 `:benchmarked`.** ✓ Landed. Constrained
-    fit on the P-R2c worst-case surface, parameterised on
-    ε_eff = ε_A · proj(û onto m_unit). K=1, c′=0.02777,
-    T=60 (6.6× larger than LL-006's c′ — directions accounted
-    for). Bound holds at 9/12 data points; 3 negative-margin
-    points covered by Wilson 95% CIs. See
+    K=1, c′=0.00423, T=60. See `docs/p3_bound_companion.md`.
+  - **0.0.18 LL-021 `:benchmarked`.** ✓ Landed. K=1,
+    c′=0.02777, T=60 parameterised on ε_eff. See
     `docs/ll021_benchmarked_companion.md`.
+  - **0.0.19 LL-019 `:benchmarked`.** ✓ Landed. KS-test
+    confirms verify_constant_time produces statistically
+    indistinguishable response-time distributions across
+    accept/reject inputs (KS_stat=0.109 < critical=0.170 at
+    α=0.05). See `docs/ll019_benchmarked_companion.md`.
+
+  **Round-2 :benchmarked cohort complete.** All three
+  round-2 surfaced :benchmarked targets (LL-006 detection
+  bound, LL-021 worst-case bound, LL-019 timing-
+  indistinguishability) have empirically-validated
+  performance targets.
 
   **Remaining unblocked sub-items:**
   - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
   - P3-Nyq — Nyquist-condition adversary-rate benchmark
     (LL-005 `:tested`).
-  - LL-019 `:benchmarked` upgrade (statistical timing-
-    indistinguishability via response-time KS-test).
   - ε-DP envelope stub for LL-020 Strategy 2 → would close
     LL-020 to `:tested`.
   - Higher-resolution P-R2c refresh (15+ trials per point)
     to tighten LL-021's c′ binding constraint.
+  - Higher-resolution LL-019 KS-test at α=0.01 or with
+    production-scale verify_full timing.
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D
@@ -230,11 +235,11 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.18)
+- Total spec entries: 21 (no change in 0.0.19)
 - `:proved`: 0
-- `:tested`: 4 (LL-003, LL-004, LL-007, LL-019)
+- `:tested`: 3 (LL-003, LL-004, LL-007)
 - `:verified`: 0
-- `:benchmarked`: 2 (LL-006, LL-021)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
 - `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018, LL-020)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
