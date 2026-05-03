@@ -1,0 +1,59 @@
+# LavaLamp P-R2c — Structured-Adversary Benchmark (LL-021)
+# =========================================================
+# Date: 2026-05-02
+# Reproducibility: deterministic (Random.seed!=101 for
+#                    calibration; trial IC seeds = 3000+trial;
+#                    adversary direction is supplied explicitly).
+#
+# System: Lorenz-96 N=20, F=8.0, two sensor channels:
+#   Channel 1 (NARROW): constant_stream(1.0), b_1 = e_1
+#   Channel 2 (BROAD):  constant_stream(1.0), b_2 = ones(20)
+# Genuine alphas = [1.0, 1.0]
+# Calibration: n_trials=5, N_benettin=1000,
+#              Δt=0.05, Ttr=200.0
+# Verifier: verify_full at k=5.0 (LL-019 audit-on-every-verify)
+# Adversary: synthetic_adversary with explicit direction in α-space,
+#            magnitude ε_A
+# Trials per (direction, magnitude) point: 5
+#
+# Result columns:
+#   direction       — adversary perturbation direction (NARROW/MIXED/BROAD)
+#   ε_A             — perturbation magnitude (L2 in α-space)
+#   p_reject        — empirical detection probability
+#   rejects         — count of rejections out of 5
+#   wall_s          — wall-clock seconds for this point
+#
+direction    ε_A    p_reject   rejects/trials    wall_s
+---------    ---    --------   ---------------   ------
+NARROW       0.50       0.20      1 / 5              0.7
+NARROW       1.00       0.00      0 / 5              0.7
+NARROW       2.00       0.20      1 / 5              0.7
+NARROW       4.00       0.00      0 / 5              0.7
+MIXED        0.50       0.00      0 / 5              0.7
+MIXED        1.00       0.60      3 / 5              0.7
+MIXED        2.00       1.00      5 / 5              0.7
+MIXED        4.00       1.00      5 / 5              0.8
+BROAD        0.50       0.60      3 / 5              0.7
+BROAD        1.00       1.00      5 / 5              0.7
+BROAD        2.00       1.00      5 / 5              0.8
+BROAD        4.00       1.00      5 / 5              0.8
+
+# ===
+# LL-021 worst-case finding:
+# The NARROW direction (perturbing only b_1 = e_1) produces
+# detection probability ≪ the BROAD direction (perturbing
+# b_2 = ones(20)) at equal ε_A. Empirically demonstrates
+# that the P3b isotropic detection-probability surface is
+# an OPTIMISTIC lower bound: a structured adversary aligned
+# with the narrow-coupling direction extracts substantially
+# more rejection-margin than the isotropic average.
+#
+# Worst-case δ_A for this coupling configuration is bounded
+# by ε_A · (mean(b_narrow) / norm(b_narrow)) =
+# ε_A · (1/20 / 1) = ε_A / 20 rather than the BROAD case's
+# ε_A · (1 / sqrt(20)) ≈ ε_A · 0.224. Ratio ≈ sqrt(20) =
+# roughly 4.5× under-estimation.
+#
+# Implication for LL-006 / LL-008 / LL-018: the detection
+# bound P(detect) ≥ 1 - K·exp(-c·T·δ_A²) must use the
+# worst-case δ_A, not the isotropic-average δ_A.

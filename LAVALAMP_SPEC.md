@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.14 (P-R2a side-channel hardening, 2026-05-02)
+Version: 0.0.15 (P-R2c worst-case-adversary-bound, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -216,6 +216,14 @@ LL-ID, not the Key.
   (worst-case-adversary-bound) supplies the corrected
   bound; the empirical curve here remains valid as a lower
   bound on detection difficulty.
+- **Round-2 worst-case companion benchmark (0.0.15):** The
+  empirical worst-case surface lives at
+  `src/julia/benchmark/results/p_r2c_structured_lorenz96.txt`
+  with the analytic derivation in
+  `docs/p_r2c_worst_case_adversary_companion.md` §2.1. For
+  the prototype's two-channel coupling, the NARROW direction
+  produces 0-20% detection across all tested magnitudes
+  while the BROAD direction saturates at 100% by ε_A = 1.0.
 
 ### LL-007 — chaos-guard
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
@@ -588,35 +596,42 @@ LL-ID, not the Key.
 - Key: detection-probability claim stated against worst-case adversary direction, not isotropic
 - Logic tier: Core
 - Description: The LL-006 detection-probability bound shape
-  P(detect) ≥ 1 - K·exp(-c·T·δ_A²) is currently parameterised
-  on isotropic synthetic-adversary perturbations
-  (`Audit.synthetic_adversary` uses unit-vector × magnitude
-  with random direction). Real adversaries have *structured*
-  perturbation directions (sensor manipulation favours
-  specific α components per V-006; configuration replay shifts
-  toward registered-config directions per V-009; slow-drift
-  threshold gaming chooses the maximally-evading direction
-  per V-005). The empirical detection-probability surface
-  (`benchmark/results/p3b_detection_lorenz96.txt`) is therefore
-  an *optimistic* lower bound, not a worst-case bound.
-  LL-021 requires: (a) the LL-006 / LL-008 / LL-018 bound be
-  re-stated with δ_A defined as the *minimum* spectrum gap
-  over all admissible adversary directions; (b) empirical
-  benchmarks include structured-direction adversaries
-  (worst-case sweep, not isotropic).
-- Evidence type: none
-- Status: :open
-- Source: docs/synthesis_team_round2_companion.md §1C-A3 + A6
-  + §1D-iii; docs/attack_surface_enumeration.md V-013.
-- Notes: The under-estimation factor scales with the condition
-  number of the coupling matrix (the ratio of strongest- to
-  weakest-coupled directions). For the prototype's uniform b =
-  ones(N) the condition number is 1 (so the optimistic bound
-  is also worst-case for *uniform* coupling), but LL-021 is
-  load-bearing for any production coupling that intentionally
-  weights sensors differently. Long-term: state-dependent
-  coupling (LL-004 future enhancement) reduces the condition-
-  number disparity by making the coupling x-dependent.
+  P(detect) ≥ 1 - K·exp(-c·T·δ_A²) must use the *worst-case*
+  spectrum gap δ_A_worst — the minimum over all admissible
+  adversary directions in α-space — rather than the isotropic-
+  average. LL-021 derives the worst-case direction analytically
+  (the û orthogonal to the mean-coupling vector
+  m = (mean(b_1), …, mean(b_n)), reducing δ_A by a factor
+  set by the coupling matrix's condition number) and
+  demonstrates the asymmetry empirically via the structured-
+  adversary benchmark. For the prototype's two-channel system
+  with b_1 = e_1 (narrow) vs b_2 = ones(N) (broad), the
+  worst-case (NARROW direction) detection probability is at
+  the FPR baseline across ε_A ∈ {0.5, 1.0, 2.0, 4.0} while
+  the best-case (BROAD direction) saturates at 1.00 for
+  ε_A ≥ 1.0 — the empirical asymmetry is essentially
+  unbounded at this configuration's calibration noise floor.
+- Evidence type: example-tested
+- Status: :tested
+- Source: src/julia/src/Audit.jl synthetic_adversary
+  (direction parameter supports explicit û).
+- Test: src/julia/benchmark/p_r2c_structured_adversary.jl +
+  src/julia/benchmark/results/p_r2c_structured_lorenz96.txt
+  (committed empirical surface; 12 data points across 3
+  directions × 4 magnitudes × 5 trials at N=20, k=5,
+  verify_full audit-on-every-verify).
+- Notes: Production deployments have three options for
+  reducing worst-case under-estimation: (1) choose coupling
+  vectors with uniform support (reduces condition number);
+  (2) increase n (more channels) so the orthogonal-to-mean-
+  coupling subspace is high-dimensional and adversaries
+  cannot easily place ε in it; (3) accept the bound and
+  document the deployment-context-bounded weakness. The
+  prototype lands option 3 with documented benchmark.
+  :benchmarked upgrade (calibrating K, c constants against
+  the empirical worst-case curve) and Lean theorem (round-2
+  §1D.v priority 1) are P5/P6 followups. See
+  docs/p_r2c_worst_case_adversary_companion.md.
 
 ---
 
@@ -624,20 +639,20 @@ LL-ID, not the Key.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 5 (LL-003, LL-004, LL-006, LL-007, LL-019)
+- `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018)
-- `:open`: 7 (LL-001, LL-002, LL-009, LL-010, LL-015,
-  LL-020, LL-021)
+- `:open`: 6 (LL-001, LL-002, LL-009, LL-010, LL-015, LL-020)
 
 **Prototype-stage with round-2 architectural debt
-substantially closing. Five entries (LL-003 Lorenz-96
+substantially closing. Six entries (LL-003 Lorenz-96
 baseline, LL-004 sensor coupling, LL-006 residue audit,
-LL-007 chaos-guard, LL-019 side-channel hardening)
-example-tested via the Julia prototype; 9 entries argued at
-design level; 7 remain open: LL-001/002 await Lean /
-type-level enforcement (P5/P6); LL-009/010/015 are corpus-
-boundary declarations; LL-020/021 are the remaining round-2
-surfaced architectural debts (P-R2b / P-R2c).**
+LL-007 chaos-guard, LL-019 side-channel hardening, LL-021
+worst-case-adversary-bound) example-tested via the Julia
+prototype; 9 entries argued at design level; 6 remain open:
+LL-001/002 await Lean / type-level enforcement (P5/P6);
+LL-009/010/015 are corpus-boundary declarations; LL-020 is
+the remaining round-2 surfaced architectural debt (P-R2b
+calibration confidentiality).**

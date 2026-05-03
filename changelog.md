@@ -5,6 +5,137 @@ messages match entry summaries.
 
 ---
 
+## 0.0.15 — 2026-05-02 — P-R2c worst-case-adversary-bound (LL-021 :tested)
+
+Implements the round-2 LL-021 architectural response.
+Empirically demonstrates that the P3b detection-probability
+surface (isotropic adversary, single coupling channel) is an
+*optimistic* lower bound vs structured adversaries.
+
+A new benchmark introduces a Lorenz-96 system with TWO
+sensor channels carrying *different* coupling vectors b
+(b_1 = e_1 NARROW vs b_2 = ones(N) BROAD), then sweeps
+adversary perturbation direction in α-space at fixed
+magnitude. The committed empirical surface shows dramatic
+asymmetry: at ε_A = 1.0 the NARROW direction has 0/5
+detection while the BROAD direction has 5/5 detection. Even
+at ε_A = 4.0 (perturbation 4× the genuine α magnitude), the
+NARROW direction stays at 0/5 — the structured worst-case
+adversary is essentially undetectable at the prototype's
+configuration.
+
+LL-021 closes :open → :tested with example-tested evidence
+backed by the committed benchmark output. Counts: :tested
+5 → 6; :open 7 → 6; total 21 unchanged.
+
+### Added
+
+- **`src/julia/benchmark/p_r2c_structured_adversary.jl`** —
+  benchmark script. Constructs a 2-channel coupling
+  configuration with NARROW (b_1 = e_1) and BROAD (b_2 =
+  ones(N)) coupling vectors; sweeps adversary direction
+  ∈ {NARROW (1,0), MIXED (1,1)/√2, BROAD (0,1)} at
+  magnitudes ε_A ∈ {0.5, 1.0, 2.0, 4.0}; 5 trials per point;
+  uses verify_full from 0.0.14 (audit-on-every-verify) for
+  every call. Total ~50s wall clock.
+- **`src/julia/benchmark/results/p_r2c_structured_lorenz96.txt`**
+  — committed empirical surface.
+- **`docs/p_r2c_worst_case_adversary_companion.md`** —
+  P-R2c session companion. §2.1 analytic derivation
+  (worst-case direction = orthogonal to mean-coupling
+  vector m = (mean(b_1), …, mean(b_n)); under-estimation
+  factor = condition number of the coupling matrix). §2.2
+  empirical result table. §2.3 explanation of why the
+  asymmetry is "all FPR" empirically (narrow direction sits
+  below the calibration noise floor at any tested
+  magnitude). §2.4 corrected detection bound + production
+  deployment options. §2.5 refined Lean theorem shape per
+  round-2 §1D.v priority 1. §5 captures four lessons
+  including "single-channel benchmarks understate adversary
+  capability" and "P-R2a → P-R2c order was right (build
+  audit-on-every-verify discipline first, exercise it in
+  higher-content benchmark second)."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.14 → 0.0.15. LL-021
+  evidence type `none` → `example-tested`; status `:open`
+  → `:tested`; description expanded with empirical numbers.
+  LL-006 notes amendment pointing at the worst-case
+  benchmark file. Counts: `:tested` 5 → 6; `:open` 7 → 6.
+- **`artifact_registry.md`** — version 0.0.14 → 0.0.15.
+  LL-021 row updated with benchmark + source paths. Counts.
+- **`dashboard.md`** — version 0.0.14 → 0.0.15. P-R2c
+  marked ✓ landed. Spec status counts updated.
+
+### Why
+
+P-R2c was the most numerically interesting of the three
+P-R2 sub-tasks per round-2 §1D and the dashboard's outline-
+of-next-steps. The benchmark not only validates LL-021's
+concern (V-013 / round-2 §1C-A3 + A6) — it produces a
+*sharper* finding than expected: the NARROW direction is
+essentially undetectable at the prototype's configuration,
+not just under-detected.
+
+The session order P-R2a → P-R2c (skipping P-R2b for now) was
+chosen because P-R2c uses `verify_full` from P-R2a in every
+benchmark call (LL-019 audit-on-every-verify discipline).
+P-R2b (LL-020 calibration confidentiality) is mostly
+cryptographic-protocol design and can land independently.
+
+The empirical asymmetry has a *practical* implication for
+production: deployments must either choose coupling vectors
+with uniform support (reduces condition number), increase
+the channel count (raises the dimensionality of the
+orthogonal-to-mean-coupling subspace), or document the
+deployment-context-bounded worst-case weakness. The
+prototype lands option 3 honestly with the benchmark as
+evidence.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:tested` 5 → 6 (+ LL-021);
+  `:open` 7 → 6 (- LL-021); others unchanged.
+- Status moves to `:tested`: LL-021.
+- Notes amendments: LL-006 (worst-case companion benchmark
+  pointer added).
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
+- `:benchmarked`: 0
+- `:argued`: 9
+- `:open`: 6
+
+### Known gaps
+
+- **LL-021 :benchmarked upgrade outstanding.** Calibrating K,
+  c, δ_A_worst constants against the empirical surface is
+  the next analytical step.
+- **Lean theorem.** Round-2 §1D.v priority 1 (linear-coupling
+  worst-case bound) is now grounded in the §2.5 theorem
+  shape. P5/P6 work.
+- **LL-020 calibration confidentiality still :open.** P-R2b
+  remaining; mostly design (cryptographic-protocol
+  thinking).
+- **Production coupling-matrix design guidance.** The
+  three options in §2.4 are sketches; not benchmarked.
+
+### Followup recommendations
+
+- **P-R2b — LL-020 calibration confidentiality.** Final
+  P-R2 sub-task. Companion doc + spec refinement;
+  cryptographic-protocol design (TPM-sealed storage / ε-DP /
+  multi-party threshold). Mostly design, no benchmarks.
+- **Round-3 trigger** unchanged — after closure_forces_structure
+  paper update lands.
+
+---
+
 ## 0.0.14 — 2026-05-02 — P-R2a side-channel hardening (LL-019 :tested)
 
 Implements the round-2 LL-019 architectural response.

@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.14 — P-R2a side-channel hardening).
+Last updated: 2026-05-02 (0.0.15 — P-R2c worst-case-adversary-bound).
 
 ## Status summary
 
@@ -144,11 +144,17 @@ P-R2 — **Round-2 architectural responses.** ◐ Promoted from
     privacy perturbation of any published envelope statistics;
     multi-party threshold scheme as alternative for no-TPM
     deployments. Companion doc + spec entry refinement.
-  - **P-R2c — LL-021 worst-case-adversary-bound.** Analytic
-    derivation of worst-case δ_A direction (minimum-coupling
-    direction in α-space). Structured-adversary benchmark
-    extending the existing isotropic surface. Companion doc
-    + benchmark script + spec refinement.
+  - **P-R2c — LL-021 worst-case-adversary-bound.** ✓ Landed
+    in 0.0.15. Analytic derivation in
+    `docs/p_r2c_worst_case_adversary_companion.md` §2.1
+    (worst-case direction = orthogonal-to-mean-coupling-
+    vector); empirical surface in
+    `benchmark/results/p_r2c_structured_lorenz96.txt`
+    showing dramatic asymmetry: NARROW direction at
+    ε_A=4.0 → 0/5 detect; BROAD direction at ε_A=0.5 →
+    3/5 detect. LL-021 closes :open → :tested. :benchmarked
+    upgrade (K, c constant fitting) and Lean theorem
+    (round-2 §1D.v priority 1) are P5/P6 followups.
 
 P-R3 — **Synthesis-team round 3.** Trigger: *after the
   `closure_forces_structure` physics-paper update lands*
@@ -196,15 +202,14 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.14)
+- Total spec entries: 21 (no change in 0.0.15)
 - `:proved`: 0
-- `:tested`: 5 (LL-003, LL-004, LL-006, LL-007, LL-019)
+- `:tested`: 6 (LL-003, LL-004, LL-006, LL-007, LL-019, LL-021)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018)
-- `:open`: 7 (LL-001, LL-002, LL-009, LL-010, LL-015,
-  LL-020, LL-021)
+- `:open`: 6 (LL-001, LL-002, LL-009, LL-010, LL-015, LL-020)
 
 Nine entries closed at the design-pass level via manual
 evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed

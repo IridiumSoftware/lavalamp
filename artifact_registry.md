@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.14 (P-R2a side-channel hardening, 2026-05-02)
+Version: 0.0.15 (P-R2c worst-case-adversary-bound, 2026-05-02)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -86,7 +86,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-019 | side-channel hardening (reseed timing + audit-on-verify) | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Audit.jl | :tested |
 | LL-020 | calibration confidentiality (envelope sealed against observers) | Core | none | — | — | :open |
-| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | none | — | — | :open |
+| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | example-tested | src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt | src/julia/src/Audit.jl | :tested |
 
 ---
 
@@ -94,13 +94,13 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 5
+- `:tested`: 6
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9
-- `:open`: 7
+- `:open`: 6
 
-## Cross-audit A1–A6 self-check (post-0.0.14)
+## Cross-audit A1–A6 self-check (post-0.0.15)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (21 of 21).
@@ -118,7 +118,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.14 and `dashboard.md` 0.0.14.
+  `LAVALAMP_SPEC.md` 0.0.15 and `dashboard.md` 0.0.15.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 82/82 assertions pass in
