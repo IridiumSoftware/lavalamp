@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.24 (P3-Nyq negative result, 2026-05-03)
+Version: 0.0.25 (P3d SDE-selection benchmark; LL-003 :benchmarked, 2026-05-03)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -38,7 +38,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-001 | substrate-bound identity primitive | Core | manual | docs/spec_closure_pass_companion.md §1 | — | :argued |
 | LL-002 | visual ↔ security decoupling invariant | Core | manual | docs/spec_closure_pass_companion.md §2 | — | :argued |
-| LL-003 | single-attractor chaotic engine | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Engine.jl | :tested |
+| LL-003 | single-attractor chaotic engine | Core | benchmarked | src/julia/benchmark/p3d_sde_selection.jl + src/julia/benchmark/results/p3d_sde_selection.txt + docs/p3d_sde_selection_companion.md (Lorenz-96 dominates Lorenz-63 / Rössler) | src/julia/src/Engine.jl | :benchmarked |
 | LL-004 | continuous sensor coupling | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Sensors.jl + src/julia/src/Engine.jl | :tested |
 | LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 | — | :argued |
 
@@ -94,13 +94,13 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 3
+- `:tested`: 2
 - `:verified`: 0
-- `:benchmarked`: 3
+- `:benchmarked`: 4
 - `:argued`: 14
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.24)
+## Cross-audit A1–A6 self-check (post-0.0.25)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (21 of 21).
@@ -118,7 +118,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.24 and `dashboard.md` 0.0.24.
+  `LAVALAMP_SPEC.md` 0.0.25 and `dashboard.md` 0.0.25.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 82/82 assertions pass in

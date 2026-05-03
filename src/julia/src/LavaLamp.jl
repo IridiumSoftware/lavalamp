@@ -30,6 +30,7 @@ include("ChaosGuard.jl")
 using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
 using .Engine: lorenz96, lyapunov_spectrum, lorenz96_coupled
+using .Engine: lorenz63, rossler
 using .Audit: Envelope, register_envelope, residue, verify, synthetic_adversary
 using .Audit: verify_full, verify_constant_time
 using .Audit: differentially_private_envelope
@@ -39,6 +40,7 @@ using .ChaosGuard: Guard, update!, is_valid, current_lambda, reseed!
 
 # Engine + spectrum estimator (LL-003).
 export lorenz96, lyapunov_spectrum
+export lorenz63, rossler
 
 # Sensor-coupling layer (LL-004 / LL-005 / LL-016).
 export lorenz96_coupled

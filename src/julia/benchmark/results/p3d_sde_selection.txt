@@ -1,0 +1,63 @@
+# LavaLamp P3d — SDE-Selection Comparative Benchmark (LL-003)
+# ============================================================
+# Date: 2026-05-03
+# Reproducibility: deterministic. Trial IC seeds = 5001+trial.
+#
+# Trials per SDE: 5
+#
+# Per-SDE configuration:
+#   Lorenz-96 N=40      N_benettin=2000  Δt=0.050  Ttr=500.0  T_obs=100.0
+#   Lorenz-63           N_benettin=2000  Δt=0.050  Ttr=200.0  T_obs=100.0
+#   Rössler             N_benettin=3000  Δt=0.100  Ttr=500.0  T_obs=300.0
+
+# Mean ± std across 5 trials.
+# λ₁ = leading Lyapunov exponent
+# n_pos = count of positive exponents
+# h_KS = Kolmogorov-Sinai entropy rate (= chaos-production rate per Pesin)
+# KY = Kaplan-Yorke fractal-dimension estimate
+# wall_s = per-call wall-clock seconds for full-spectrum estimation
+#
+SDE                  dim      λ₁    n_pos    h_KS      KY    wall_s
+────────────────────────────────────────────────────────────────────────
+Lorenz-96 N=40       40    1.674    13.40   10.257   27.040     3.952
+Lorenz-63             3    0.898     1.60    0.900    2.062     0.285
+Rössler               3    0.065     1.40    0.066    2.013     0.256
+
+# Standard deviations across trials:
+#   Lorenz-96 N=40      λ₁_std=0.0712  n_pos_std=0.55  h_KS_std=0.2318  KY_std=0.2225  wall_std=0.954
+#   Lorenz-63           λ₁_std=0.0057  n_pos_std=0.55  h_KS_std=0.0060  KY_std=0.0004  wall_std=0.601
+#   Rössler             λ₁_std=0.0047  n_pos_std=0.55  h_KS_std=0.0049  KY_std=0.0011  wall_std=0.545
+
+# h_KS ratio (vs. lowest):
+#   Lorenz-96 N=40     : 155.15x
+#   Lorenz-63          : 13.62x
+#   Rössler            : 1.00x
+
+# ===
+# LL-003 :benchmarked finding:
+#
+# Lorenz-96 N=40 dominates on the security-relevant axes:
+#
+#   - h_KS (chaos-production rate; LL-008 S_production):
+#     Lorenz-96 ≈ 10× Lorenz-63, ≈ 130× Rössler.
+#   - n_pos (Lyapunov richness; spectrum-attack surface):
+#     Lorenz-96 has ~14 positive exponents vs ~1 for the
+#     two 3-dim systems.
+#   - KY dimension (attractor complexity): Lorenz-96 ≈ 27
+#     vs ≈ 2 for the others.
+#
+# Cost is correspondingly higher — Lorenz-96 takes ~10×
+# the wall-clock per spectrum estimation. This is the
+# security-vs-cost tradeoff the design makes explicitly:
+# higher chaos-production rate justifies higher compute
+# per sample.
+#
+# Lorenz-63 / Rössler are viable low-power-mode fallbacks
+# for resource-constrained deployments with documented
+# margin reduction (smaller h_KS → smaller LL-008 / LL-018
+# resolution-bound margin Δh against the same adversary
+# measurement bandwidth).
+#
+# The architecture-design §2.3 recommendation (Lorenz-96
+# as the candidate engine) is empirically justified by
+# this benchmark.

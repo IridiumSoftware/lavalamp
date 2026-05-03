@@ -33,6 +33,7 @@ using ..Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using ..Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
 
 export lorenz96, lyapunov_spectrum, lorenz96_coupled
+export lorenz63, rossler
 
 """
     lorenz96_eom!(du, u, p, t)
@@ -174,6 +175,100 @@ function lorenz96_coupled(N::Int=40; F::Float64=8.0,
     state = u0 === nothing ? F .+ 0.1 .* randn(N) : copy(u0)
     p = coupling === nothing ? no_coupling(F) : coupling
     return CoupledODEs(lorenz96_coupled_eom!, state, p)
+end
+
+# ─── Alternate SDE candidates for the P3d selection benchmark ──────
+
+"""
+    lorenz63_eom!(du, u, p, t)
+
+In-place Lorenz-63 right-hand side. Three-dimensional system,
+canonical chaotic SDE.
+
+```
+du₁ = σ·(u₂ - u₁)
+du₂ = u₁·(ρ - u₃) - u₂
+du₃ = u₁·u₂ - β·u₃
+```
+
+p = [σ, ρ, β]. Standard chaotic-regime parameters
+σ=10, ρ=28, β=8/3 give λ₁ ≈ 0.91 (Lorenz, 1963; Sparrow, 1982).
+"""
+function lorenz63_eom!(du, u, p, t)
+    σ, ρ, β = p[1], p[2], p[3]
+    @inbounds begin
+        du[1] = σ * (u[2] - u[1])
+        du[2] = u[1] * (ρ - u[3]) - u[2]
+        du[3] = u[1] * u[2] - β * u[3]
+    end
+    return nothing
+end
+
+"""
+    lorenz63(; σ=10.0, ρ=28.0, β=8/3, u0=nothing) -> CoupledODEs
+
+Construct a `CoupledODEs` implementing Lorenz-63. Default
+parameters give the standard chaotic regime.
+
+Reference: λ₁ ≈ 0.91, λ₂ ≈ 0, λ₃ ≈ -14.6, h_KS ≈ 0.91,
+Kaplan-Yorke dimension ≈ 2.06 (Lorenz 1963).
+
+API STABILITY: experimental (P3d-stage).
+"""
+function lorenz63(; σ::Float64=10.0,
+                  ρ::Float64=28.0,
+                  β::Float64=8/3,
+                  u0=nothing)
+    state = u0 === nothing ? [1.0, 1.0, 1.0] .+ 0.1 .* randn(3) : copy(u0)
+    p = [σ, ρ, β]
+    return CoupledODEs(lorenz63_eom!, state, p)
+end
+
+"""
+    rossler_eom!(du, u, p, t)
+
+In-place Rössler right-hand side. Three-dimensional system
+with single quadratic non-linearity.
+
+```
+du₁ = -u₂ - u₃
+du₂ = u₁ + a·u₂
+du₃ = b + u₃·(u₁ - c)
+```
+
+p = [a, b, c]. Standard chaotic-regime parameters
+a=0.2, b=0.2, c=5.7 give λ₁ ≈ 0.07 (Rössler, 1976; Sprott
+chaos atlas).
+"""
+function rossler_eom!(du, u, p, t)
+    a, b, c = p[1], p[2], p[3]
+    @inbounds begin
+        du[1] = -u[2] - u[3]
+        du[2] = u[1] + a * u[2]
+        du[3] = b + u[3] * (u[1] - c)
+    end
+    return nothing
+end
+
+"""
+    rossler(; a=0.2, b=0.2, c=5.7, u0=nothing) -> CoupledODEs
+
+Construct a `CoupledODEs` implementing the Rössler system.
+Default parameters give the standard single-band-attractor
+chaotic regime.
+
+Reference: λ₁ ≈ 0.07, λ₂ ≈ 0, λ₃ ≈ -5.4, h_KS ≈ 0.07,
+Kaplan-Yorke dimension ≈ 2.01 (Rössler 1976; Sprott).
+
+API STABILITY: experimental (P3d-stage).
+"""
+function rossler(; a::Float64=0.2,
+                 b::Float64=0.2,
+                 c::Float64=5.7,
+                 u0=nothing)
+    state = u0 === nothing ? [1.0, 1.0, 1.0] .+ 0.1 .* randn(3) : copy(u0)
+    p = [a, b, c]
+    return CoupledODEs(rossler_eom!, state, p)
 end
 
 end # module Engine

@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.24 — P3-Nyq negative result).
+Last updated: 2026-05-03 (0.0.25 — P3d SDE-selection; LL-003 :benchmarked).
 
 ## Status summary
 
@@ -162,8 +162,15 @@ P3 — **Julia prototype core.** ◐ In progress.
     checkpoint audit) — round-3 input. See
     `docs/p3_nyq_companion.md`.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.25 P3d SDE-selection benchmark** ✓ Landed.
+    Comparative bench Lorenz-96 / Lorenz-63 / Rössler;
+    Lorenz-96 dominates on all security axes (λ₁ ×1.86–26;
+    n_pos ×8.4; h_KS ×11–155; KY dim ×13). LL-003 closes
+    `:tested` → `:benchmarked`. See
+    `docs/p3d_sde_selection_companion.md`.
+
   **Remaining unblocked sub-items:**
-  - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
   - Higher-resolution P-R2c refresh (15+ trials per point)
     to tighten LL-021's c′ binding constraint.
   - Higher-resolution LL-019 KS-test at α=0.01 or with
@@ -173,7 +180,11 @@ P3 — **Julia prototype core.** ◐ In progress.
     specifically).
   - LL-005 part-(a) parameter-validation test (trivial; would
     move parameter side to :tested but entry-level claim
-    needs adversary-side too).
+    needs adversary-side too — round-3 input per 0.0.24).
+  - Higher-N Lorenz-96 benchmark (N ∈ {20, 40, 80, 160}
+    to characterize h_KS scaling).
+  - Per-SDE detection-probability surface (rerun P3-bound
+    fit on Lorenz-63 / Rössler).
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D
@@ -260,11 +271,11 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.20)
+- Total spec entries: 21 (no change in 0.0.25)
 - `:proved`: 0
-- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:tested`: 2 (LL-004, LL-007)
 - `:verified`: 0
-- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
 - `:argued`: 14 (LL-001, LL-002, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020)

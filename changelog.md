@@ -5,6 +5,155 @@ messages match entry summaries.
 
 ---
 
+## 0.0.25 — 2026-05-03 — P3d SDE-selection benchmark (LL-003 :benchmarked)
+
+Closes LL-003 from `:tested` to `:benchmarked` via a
+comparative SDE-selection bench across Lorenz-96 / Lorenz-63
+/ Rössler. The architecture-design §2.3 recommendation
+("Lorenz-96 is the leading candidate") is empirically
+justified by the comparative table.
+
+Adds Lorenz-63 and Rössler implementations to Engine.jl as
+alternate SDE candidates, validated against literature
+values during smoke-testing (Lorenz-63 λ ≈ [0.929, 0.001,
+-14.597] vs lit [0.91, 0, -14.6]; Rössler λ ≈ [0.076, 0,
+-5.147] vs lit [0.07, 0, -5.4]).
+
+Comparative result (5 trials per SDE):
+
+| SDE | dim | λ₁ | n_pos | h_KS | KY | wall_s |
+|---|---:|---:|---:|---:|---:|---:|
+| Lorenz-96 N=40 | 40 | 1.674 | 13.4 | 10.257 | 27.0 | 3.95 |
+| Lorenz-63 | 3 | 0.898 | 1.6 | 0.900 | 2.06 | 0.29 |
+| Rössler | 3 | 0.065 | 1.4 | 0.066 | 2.01 | 0.26 |
+
+Lorenz-96 dominates on every security-relevant axis: 155×
+the h_KS of Rössler, 11× of Lorenz-63; 8.4× more positive
+exponents; 13× the Kaplan-Yorke dimension. Compute cost
+is ~14× the cheapest but per-h_KS efficiency is comparable;
+absolute h_KS matters for the LL-008 / LL-018 resolution-
+bound margin.
+
+### Added
+
+- **`src/julia/src/Engine.jl`** —
+  - `lorenz63_eom!(du, u, p, t)` + `lorenz63(; σ=10, ρ=28,
+    β=8/3, u0=nothing)`
+  - `rossler_eom!(du, u, p, t)` + `rossler(; a=0.2, b=0.2,
+    c=5.7, u0=nothing)`
+  Both with standard chaotic-regime defaults; both
+  smoke-validated against literature.
+- **`src/julia/src/LavaLamp.jl`** — re-exports.
+- **`src/julia/benchmark/p3d_sde_selection.jl`** —
+  comparative benchmark script. 5 trials per SDE;
+  per-system N_benettin / Δt / Ttr appropriate to each
+  system's time scale.
+- **`src/julia/benchmark/results/p3d_sde_selection.txt`** —
+  committed comparative table + h_KS ratios.
+- **`docs/p3d_sde_selection_companion.md`** — companion.
+  §2 per-axis comparison; §2.5 architectural justification
+  of the choice; §2.6 deployment guidance (Lorenz-63
+  fallback for resource-constrained; Rössler not
+  recommended); §3 verification framing; §4 spec impact;
+  §5 four lessons including "comparative benchmarks
+  justify defaults" and "negative-result + positive-result
+  sequences."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.24 → 0.0.25. LL-003
+  evidence type `example-tested` → `benchmarked`; status
+  `:tested` → `:benchmarked`; description amended with
+  comparative-bench results + dominance ratios. Counts:
+  `:tested` 3 → 2; `:benchmarked` 3 → 4. Total 21
+  unchanged.
+- **`artifact_registry.md`** — version 0.0.24 → 0.0.25.
+  LL-003 row updated.
+- **`dashboard.md`** — version 0.0.24 → 0.0.25. P3 sub-
+  items list adds 0.0.25 entry; P3d removed from
+  remaining-unblocked. Spec status counts.
+
+Test suite: 117/117 still passes (~52s); the new SDE
+constructors are not in the persistent test suite (they're
+benchmark-only candidates).
+
+### Why
+
+P3d was the third and final sub-task in the work-set
+unfastened by user direction 2026-05-03. With LL-003
+:benchmarked, the prototype's headline architectural choice
+("the SDE is Lorenz-96") now has comparative-benchmark
+justification, not just literature-match testing.
+
+The benchmark also surfaces useful deployment guidance:
+Lorenz-63 is a viable low-power fallback (~10× cost
+reduction; ~10× h_KS reduction; documented margin trade-
+off); Rössler is the "what insufficient chaos production
+looks like" anchor.
+
+This commit + 0.0.23 (positive — ε-DP) + 0.0.24 (negative
+— Nyquist) form a three-session sequence with mixed
+positive / negative outcomes; all three commit honest
+evidence per the lavalamp pattern.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:tested` 3 → 2 (LL-003
+  leaves); `:benchmarked` 3 → 4 (LL-003 enters);
+  others unchanged.
+- Status moves: LL-003 → `:benchmarked`.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 2 (LL-004, LL-007)
+- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
+- `:argued`: 14
+- `:open`: 1 (LL-015)
+
+### Trajectory of :benchmarked count
+
+| commit | :benchmarked | event |
+|---|---:|---|
+| 0.0.16 | 0 | round-2 cohort not yet started |
+| 0.0.17 | 1 | LL-006 (P3-bound) |
+| 0.0.18 | 2 | LL-021 (worst-case) |
+| 0.0.19 | 3 | LL-019 (timing) |
+| 0.0.25 | 4 | **LL-003 (SDE choice)** |
+
+Four `:benchmarked` entries — substantial empirical
+evidence backing the architectural choices.
+
+### Known gaps
+
+- **Per-SDE detection-probability surface.** The
+  P3-bound + LL-021 :benchmarked work was Lorenz-96-
+  specific. Rerunning the same fits for Lorenz-63 /
+  Rössler would let deployments document expected
+  detection probability per SDE choice.
+- **Higher-N Lorenz-96 scaling.** N ∈ {20, 40, 80, 160}
+  scaling could justify a "large-N" deployment mode.
+- **C/C++ implementation cost.** Wall-clock numbers are
+  Julia-specific; comparative ratios should hold under
+  P7 hardening but absolute costs differ.
+
+### Followup recommendations
+
+- **Higher-resolution P-R2c refresh** to tighten LL-021's
+  c′ binding constraint.
+- **Detection-power-vs-ε benchmark** for LL-020 Strategy 2.
+- **Higher-resolution LL-019 KS-test** at α=0.01.
+- **LL-005 round-3 input.** The 0.0.24 negative finding
+  + this benchmark's reaffirmation of Lorenz-96 don't
+  resolve the Nyquist-detection gap; round-3 architectural
+  review.
+- **Round-3 trigger** unchanged (after closure_forces_structure
+  paper update).
+
+---
+
 ## 0.0.24 — 2026-05-03 — P3-Nyq negative result on Nyquist detection
 
 P3-Nyq adversary-rate benchmark attempted to demonstrate

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.24 (P3-Nyq negative result on Nyquist detection, 2026-05-03)
+Version: 0.0.25 (P3d SDE-selection benchmark; LL-003 :benchmarked, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -103,21 +103,35 @@ LL-ID, not the Key.
   that would have pulled toward multi-basin systems. Lorenz-96
   (N=40, F=8) is the prototype's default: λ₁ ≈ 1.66, ~14 positive
   exponents, h_KS ≈ 10.5, Kaplan-Yorke dimension ≈ 27.
-- Evidence type: example-tested
-- Status: :tested
-- Source: src/julia/src/Engine.jl (Lorenz-96 implementation +
-  Benettin spectrum estimator).
-- Test: src/julia/test/runtests.jl (8 assertions: spectrum
-  length, sortedness, λ₁ ∈ [1.4, 1.9], n_pos ∈ [11, 16],
-  h_KS ∈ [8.0, 12.5], λ_min < -3.0, IC-invariance of λ₁
-  under Oseledec). Run via `Pkg.test()` from
-  `src/julia/`; passes 8/8 in ~20s wall clock on Apple Silicon.
-- Notes: SDE-selection benchmark across Lorenz-96 / Lorenz-63 /
-  Rössler is a follow-up; Lorenz-96 is committed as the
-  prototype default. Final selection upgrades to `:benchmarked`
-  when the comparative bench lands. Stochastic perturbation
-  (the σ dW term in §2.4 design) and sensor coupling land in
-  subsequent modules.
+- Evidence type: benchmarked
+- Status: :benchmarked
+- Source: src/julia/src/Engine.jl (Lorenz-96 + alternate
+  candidates Lorenz-63, Rössler; spectrum estimator).
+- Test: src/julia/test/runtests.jl (Lorenz-96 baseline, 8
+  assertions: spectrum length, sortedness, λ₁ ∈ [1.4, 1.9],
+  n_pos ∈ [11, 16], h_KS ∈ [8.0, 12.5], λ_min < -3.0,
+  IC-invariance under Oseledec).
+- Benchmark: src/julia/benchmark/p3d_sde_selection.jl +
+  src/julia/benchmark/results/p3d_sde_selection.txt +
+  docs/p3d_sde_selection_companion.md. Comparative bench
+  across Lorenz-96 / Lorenz-63 / Rössler at 5 trials per
+  SDE. Empirical result: Lorenz-96 dominates on all
+  security-relevant axes — λ₁ ≈ 1.67 (vs 0.90 / 0.07);
+  n_pos ≈ 13.4 (vs 1.6 / 1.4); h_KS ≈ 10.26 (vs 0.90 /
+  0.07; ratio 155× over Rössler, 11× over Lorenz-63);
+  Kaplan-Yorke dimension ≈ 27.0 (vs 2.06 / 2.01). Compute
+  cost ≈ 14× the cheaper alternatives but justified by
+  the ~11× h_KS gain (per-h_KS efficiency comparable).
+  Performance target: "Lorenz-96 dominates alternatives on
+  security metrics at acceptable compute cost" — met.
+- Notes: Lorenz-63 is a viable low-power-mode fallback
+  (~10× lower h_KS; documented margin reduction).
+  Rössler not recommended for production (h_KS too low for
+  meaningful resolution-bound margin). The architecture-
+  design §2.3 recommendation is empirically justified.
+  Stochastic perturbation (the σ dW term in §2.4 design)
+  and sensor coupling are in `lorenz96_coupled` (LL-004
+  :tested).
 
 ### LL-004 — continuous-sensor-coupling
 - Key: sensor data couples to SDE as continuous potential field, not discrete kicks
@@ -762,22 +776,20 @@ LL-ID, not the Key.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:tested`: 2 (LL-004, LL-007)
 - `:verified`: 0
-- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
 - `:argued`: 14 (LL-001, LL-002, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
-**Prototype-stage; spec essentially fully argued. Three
-empirically-validated :benchmarked entries (LL-006 detection
-bound, LL-021 worst-case bound, LL-019 timing-
-indistinguishability); three :tested entries (LL-003 baseline,
-LL-004 sensor coupling, LL-007 chaos-guard); fourteen
-:argued at design level; only LL-015 remains :open as the
-honest scoping declaration that A3 (kernel-level) adversaries
-are out of scope. The closure pass at 0.0.20 elevated
-LL-001/002/009/010 from :open to :argued based on evidence
-already accumulated across earlier sessions.**
+**Prototype-stage; spec essentially fully argued. Four
+empirically-validated :benchmarked entries (LL-003 SDE
+choice via comparative bench, LL-006 detection bound,
+LL-019 timing-indistinguishability, LL-021 worst-case
+bound); two :tested entries (LL-004 sensor coupling, LL-007
+chaos-guard); fourteen :argued at design level; only LL-015
+remains :open as the honest scoping declaration that A3
+(kernel-level) adversaries are out of scope.**
