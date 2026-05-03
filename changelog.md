@@ -5,6 +5,126 @@ messages match entry summaries.
 
 ---
 
+## 0.0.20 — 2026-05-03 — Closure pass; only LL-015 remains :open
+
+Closure-pass session: four `:open` spec entries elevated to
+`:argued` based on evidence already accumulated across
+earlier sessions. No new specs; no new code; no new tests.
+Pure spec-state finishing.
+
+After this commit, **only LL-015 (A3-OOS scoping declaration)
+remains `:open`** — permanently, by design (it is a scoping
+boundary, not a verifiable claim). Every other spec entry has
+at least `:argued` evidence; six entries have empirical
+:tested or :benchmarked evidence.
+
+### Added
+
+- **`docs/spec_closure_pass_companion.md`** — closure-pass
+  companion. §1 LL-001 (composed claim argued via component
+  evidence: LL-003 :tested, LL-004 :tested, LL-006
+  :benchmarked, LL-007 :tested). §2 LL-002 (visual ↔
+  security decoupling preserved by construction across the
+  Julia prototype: no visual layer exists, security
+  primitive has no visual-layer imports). §3 LL-009 (no
+  complex numbers; Float64 throughout the security path).
+  §4 LL-010 (bounded N, Δt; finite-dim Lorenz-96; no
+  autopoietic dynamics). §5 why LL-015 stays `:open`
+  permanently. §6 considered-and-dropped: LL-017 verify-
+  level no-oracle is :tested-grade evidence but the entry
+  also covers protocol-level which isn't implemented;
+  honest tier stays :argued without subdividing the entry
+  (which would add a new spec). §7 spec impact + counts.
+  §8 process notes including closure-pass discipline as a
+  reusable pattern for future sessions.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.19 → 0.0.20.
+  Status moves :open → :argued with evidence type none →
+  manual on LL-001, LL-002, LL-009, LL-010. Source paths
+  point at the closure-pass companion. Counts: `:argued`
+  10 → 14; `:open` 5 → 1.
+- **`artifact_registry.md`** — version 0.0.19 → 0.0.20.
+  Four row updates. Counts.
+- **`dashboard.md`** — version 0.0.19 → 0.0.20. Status
+  summary updated to reflect "spec essentially fully
+  argued." Spec status counts. The closure pass is noted
+  as the elevation source.
+- **`changelog.md`** — this entry.
+
+### Why
+
+The user's constraint for this session: "close out without
+adding anything new from a feature/spec perspective. updating
+spec states would be within scope. No new specs though
+unless discovered via a proving path." All four moves are
+status upgrades on existing entries; the considered-but-
+dropped LL-017 upgrade was excluded specifically because
+subdivision counts as adding new specs.
+
+The pattern is closure-pass discipline: periodically audit
+the spec for entries whose evidence is implicit in
+already-completed work but whose spec status has lagged.
+Elevate to match the evidence. The lavalamp CLAUDE.md
+"honest framing" rule is the discipline boundary — only
+elevate when evidence actually meets the taxonomy's
+requirements; don't force scoping declarations into argued
+status.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:argued` 10 → 14 (+ LL-001,
+  LL-002, LL-009, LL-010); `:open` 5 → 1 (− those four);
+  `:tested` / `:benchmarked` unchanged.
+- Status moves to `:argued`: LL-001, LL-002, LL-009, LL-010.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:argued`: 14
+- `:open`: 1 (LL-015)
+
+### Trajectory
+
+| commit | :open | event |
+|---|---|---|
+| 0.0.1 | 14 | concept-stage foundation |
+| 0.0.3 | 17 | attack-surface enumeration adds LL-015/016/017 |
+| 0.0.5 | 6 | P2 design pass closes 11 to :argued; LL-018 added |
+| 0.0.6 | 5 | LL-003 :tested |
+| 0.0.12 | 8 | round-2 adds LL-019/020/021 |
+| 0.0.14 | 7 | LL-019 :tested |
+| 0.0.15 | 6 | LL-021 :tested |
+| 0.0.16 | 5 | LL-020 :argued |
+| 0.0.20 | **1** | this closure pass |
+
+### Known gaps
+
+- **LL-015 stays `:open` permanently.** Scoping declaration
+  with no verification path. Future sessions should not
+  attempt to upgrade.
+- **No new evidence.** This commit elevates spec states
+  based on existing evidence; no new tests, benchmarks, or
+  proofs.
+- **Round-3 trigger unchanged.** Still gated on the
+  closure_forces_structure paper update.
+
+### Followup recommendations
+
+The closure-pass discipline can be reapplied periodically.
+Currently no new evidence is available to elevate other
+entries; further elevations would require either (a) the
+P3d / P3-Nyq / ε-DP-stub work that remains queued, or (b)
+P5/P6 Lean / Haskell formal verification. Both wait for
+the next session.
+
+---
+
 ## 0.0.19 — 2026-05-03 — LL-019 :benchmarked (timing-distribution KS test); round-2 cohort complete
 
 Closes LL-019 from `:tested` to `:benchmarked` via a two-

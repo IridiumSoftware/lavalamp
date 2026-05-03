@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.19 (LL-019 :benchmarked, 2026-05-03)
+Version: 0.0.20 (closure pass — LL-001/002/009/010 :argued, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -46,10 +46,19 @@ LL-ID, not the Key.
   a continuous *function of (machine, configuration, time)*, not a
   static credential. Verification compares trajectory features
   against a registered hardware envelope.
-- Evidence type: none
-- Status: :open
-- Source: TBD (formal Lean / Haskell impl pending attack-surface
-  enumeration).
+- Evidence type: manual
+- Status: :argued
+- Source: docs/spec_closure_pass_companion.md §1 — composed
+  claim argued via component evidence: SDE solver (LL-003
+  :tested), sensor coupling (LL-004 :tested), residue audit
+  verification (LL-006 :benchmarked), real-time validity check
+  (LL-007 :tested). The audit benchmark
+  (`benchmark/results/p3_bound_high_res_lorenz96.txt`)
+  exercises the composed identity claim end-to-end.
+- Notes: :tested upgrade requires either (a) Lean / type-level
+  enforcement of the composition property, or (b) a test
+  suite written specifically against LL-001's higher-level
+  claim. Both deferred to P5/P6.
 
 ### LL-002 — visual-security-decoupling
 - Key: visual layer and security primitive are architecturally independent
@@ -64,14 +73,24 @@ LL-ID, not the Key.
   visual-richness ↔ security tension that round-1 synthesis-team
   review (Gemini + Grok, 2026-04-30) identified as a structural
   blindspot in any design that fed the visual *from* the SDE.
-- Evidence type: none
-- Status: :open
+- Evidence type: manual
+- Status: :argued
+- Source: docs/spec_closure_pass_companion.md §2 — invariant
+  preserved by construction across the Julia prototype: no
+  visual layer exists; the security primitive
+  (`Sensors.jl`, `Engine.jl`, `Audit.jl`, `ChaosGuard.jl`)
+  has no visual-layer dependencies; chaos-guard reseed
+  events do not signal to a visual; round-2 reviewers
+  treated LL-002 as settled (no proposed re-coupling).
 - Notes: This is a load-bearing architectural invariant. If the
   visual ever gets re-coupled to the security primitive, the
   basin-spoofing attack surface returns (multi-basin reaction-
   diffusion regimes the visual layer would want to use are
   precisely where the adversary can hide a spoof inside scalar-KL
-  threshold).
+  threshold). :tested upgrade requires either (a) a visual layer
+  with assertions about decoupling, or (b) Lean / type-level
+  enforcement that the security-primitive type-graph cannot
+  reach the visual-layer type-graph. Both deferred.
 
 ### LL-003 — single-attractor-chaotic-engine
 - Key: security primitive uses single-attractor chaotic SDE
@@ -310,10 +329,20 @@ LL-ID, not the Key.
   identity / verification. The visual skin (decorative only) is
   not bound by this constraint, but its outputs do not feed the
   security primitive (per LL-002).
-- Evidence type: none
-- Status: :open
-- Source: Corpus-wide discipline boundary (Aaron, 2026-04-29
-  Gemini conversation; reaffirmed across engine and RMR work).
+- Evidence type: manual
+- Status: :argued
+- Source: docs/spec_closure_pass_companion.md §3 — boundary
+  preserved by Float64 type choice across the Julia prototype:
+  state vectors, coupling vectors, sensor stream values,
+  Lyapunov spectrum estimates, envelope values, and residue
+  audit per-component test all use Float64. Round-1's SGL
+  complex-valued slip was rejected; the boundary held through
+  P3 implementation. Originating corpus boundary: Aaron
+  2026-04-29 Gemini conversation; reaffirmed across engine
+  and RMR work.
+- Notes: :tested upgrade requires either (a) static analysis
+  asserting no Complex types touch security paths, or (b)
+  Lean / type-level proof. Both deferred.
 
 ### LL-010 — no-open-ended-simulation
 - Key: bounded-time / finite-state SDE only; no continuum-limit dynamics
@@ -322,11 +351,23 @@ LL-ID, not the Key.
   state. The system explicitly does not run continuum-limit /
   hypergraph-rewriting / autopoietic dynamics. Trajectories are
   analyzed in bounded windows; no open-ended simulation regime.
-- Evidence type: none
-- Status: :open
-- Source: Corpus-wide safety boundary (Aaron, 2026-04-29 Grok
+- Evidence type: manual
+- Status: :argued
+- Source: docs/spec_closure_pass_companion.md §4 — boundary
+  preserved by parameter and system class: every SDE
+  integration takes explicit bounded N (Benettin steps) and
+  Δt; trajectories analysed over bounded windows; finite-
+  dimensional Lorenz-96 N=20-40 (not hypergraph-rewriting,
+  not continuum-limit); no autopoietic dynamics in the SDE
+  itself. The Closure v5 corpus' Q₁₀₂ autopoietic structure
+  is the *target of analysis* per
+  qkd_pqc_complementarity_companion.md §2.5, not the
+  *physical instantiation* — explicitly out of scope here.
+  Originating corpus boundary: Aaron 2026-04-29 Grok
   conversation re Q102 / continuum limit / self-reproducing
-  structure).
+  structure.
+- Notes: :tested upgrade requires either Lean enforcement of
+  bounded-T integration calls, or runtime guard. Both deferred.
 
 ---
 
@@ -688,15 +729,19 @@ LL-ID, not the Key.
 - `:tested`: 3 (LL-003, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 3 (LL-006, LL-019, LL-021)
-- `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
-  LL-014, LL-016, LL-017, LL-018, LL-020)
-- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
+- `:argued`: 14 (LL-001, LL-002, LL-005, LL-008, LL-009,
+  LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
+  LL-018, LL-020)
+- `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
+  by design)
 
-**Prototype-stage with three :benchmarked entries
-(round-2 :benchmarked-cohort complete). LL-006 detection
-bound, LL-021 worst-case bound, and LL-019 timing-
-indistinguishability all have empirically-validated
-performance targets met against committed benchmark output.
-Three example-tested entries; ten argued at design level;
-five open (LL-001/002 await Lean enforcement; LL-009/010/015
-corpus-boundary declarations).**
+**Prototype-stage; spec essentially fully argued. Three
+empirically-validated :benchmarked entries (LL-006 detection
+bound, LL-021 worst-case bound, LL-019 timing-
+indistinguishability); three :tested entries (LL-003 baseline,
+LL-004 sensor coupling, LL-007 chaos-guard); fourteen
+:argued at design level; only LL-015 remains :open as the
+honest scoping declaration that A3 (kernel-level) adversaries
+are out of scope. The closure pass at 0.0.20 elevated
+LL-001/002/009/010 from :open to :argued based on evidence
+already accumulated across earlier sessions.**

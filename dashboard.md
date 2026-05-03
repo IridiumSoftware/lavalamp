@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.19 — LL-019 :benchmarked; round-2 cohort complete).
+Last updated: 2026-05-03 (0.0.20 — closure pass; only LL-015 remains :open).
 
 ## Status summary
 
@@ -235,14 +235,16 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.19)
+- Total spec entries: 21 (no change in 0.0.20)
 - `:proved`: 0
 - `:tested`: 3 (LL-003, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 3 (LL-006, LL-019, LL-021)
-- `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
-  LL-014, LL-016, LL-017, LL-018, LL-020)
-- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
+- `:argued`: 14 (LL-001, LL-002, LL-005, LL-008, LL-009,
+  LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
+  LL-018, LL-020)
+- `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
+  by design)
 
 Nine entries closed at the design-pass level via manual
 evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed

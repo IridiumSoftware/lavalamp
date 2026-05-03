@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.19 (LL-019 :benchmarked, 2026-05-03)
+Version: 0.0.20 (closure pass — LL-001/002/009/010 :argued, 2026-05-03)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -36,8 +36,8 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
-| LL-001 | substrate-bound identity primitive | Core | none | — | — | :open |
-| LL-002 | visual ↔ security decoupling invariant | Core | none | — | — | :open |
+| LL-001 | substrate-bound identity primitive | Core | manual | docs/spec_closure_pass_companion.md §1 | — | :argued |
+| LL-002 | visual ↔ security decoupling invariant | Core | manual | docs/spec_closure_pass_companion.md §2 | — | :argued |
 | LL-003 | single-attractor chaotic engine | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Engine.jl | :tested |
 | LL-004 | continuous sensor coupling | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Sensors.jl + src/julia/src/Engine.jl | :tested |
 | LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 | — | :argued |
@@ -54,8 +54,8 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
-| LL-009 | no complex numbers in security math | Boundary | none | — | — | :open |
-| LL-010 | no open-ended simulation | Boundary | none | — | — | :open |
+| LL-009 | no complex numbers in security math | Boundary | manual | docs/spec_closure_pass_companion.md §3 | — | :argued |
+| LL-010 | no open-ended simulation | Boundary | manual | docs/spec_closure_pass_companion.md §4 | — | :argued |
 
 ## Protocol layer (closed at design-pass level by 0.0.5)
 
@@ -97,10 +97,10 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:tested`: 3
 - `:verified`: 0
 - `:benchmarked`: 3
-- `:argued`: 10
-- `:open`: 5
+- `:argued`: 14
+- `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.19)
+## Cross-audit A1–A6 self-check (post-0.0.20)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (21 of 21).
@@ -118,7 +118,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.19 and `dashboard.md` 0.0.19.
+  `LAVALAMP_SPEC.md` 0.0.20 and `dashboard.md` 0.0.20.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 82/82 assertions pass in
