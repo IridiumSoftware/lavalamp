@@ -5,6 +5,118 @@ messages match entry summaries.
 
 ---
 
+## 0.0.22 — 2026-05-03 — A0-A6 cross-audit pass (PASS across all six checks)
+
+Full cross-audit per CLAUDE.md §Cross-audit protocol,
+triggered by the closure-pass (0.0.20) + drift-fix (0.0.21).
+First explicit full A0-A6 pass since the prototype began
+(individual checks have been run inline at every commit).
+
+**Result: PASS across all six checks.** No drift requiring
+remediation. The CLAUDE.md drift surfaced by A0 was fixed in
+0.0.21 before this audit ran.
+
+### Added
+
+- **`docs/audit_2026-05-03.md`** — findings document.
+  §1 A0 self-audit (PASS post-0.0.21); §2 A1 coverage
+  (21/21 LL-IDs have registry rows); §3 A2 key match
+  (spec keys ↔ registry abbreviated labels — intentional
+  for table formatting); §4 A3 evidence-file existence
+  (all 12 cited paths resolve via git ls-files); §5 A4
+  status-evidence honesty (all 21 entries pass the rule
+  table); §6 A5 stale counts (spec / registry / dashboard
+  / CLAUDE.md all show 3/3/14/1 of 21); §7 A6 test sync
+  (all :tested / :benchmarked entries have committed
+  evidence; CI runs Pkg.test() on every push). §8
+  summary table. §9 process notes including future
+  cross-audit cadence + inline-discipline observation +
+  what the audit does NOT establish (consistency, not
+  substance).
+
+### Changed
+
+- **`dashboard.md`** — version 0.0.20 → 0.0.22 (skipping
+  0.0.21 which only touched CLAUDE.md / README.md).
+- **`changelog.md`** — this entry.
+
+### Why
+
+Per the lavalamp CLAUDE.md §Cross-audit protocol guidance:
+"Run when integrating substantial new work, preparing a
+release, or after the spec is materially changed." The
+closure pass (0.0.20) + drift fix (0.0.21) constituted
+substantial spec-state and documentation changes. Running
+the full cross-audit pass formalises what the inline
+discipline has done piecewise across all P3 / P-R2 /
+benchmarked-cohort sessions; the PASS result confirms that
+the discipline held.
+
+This is the cleanest cross-audit result possible — every
+check passes, no findings to remediate.
+
+### Spec impact
+
+None. Counts unchanged from 0.0.20: 21 / 0 / 0 / 3 / 3 / 14
+/ 1.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:argued`: 14
+- `:open`: 1 (LL-015)
+
+### Followup recommendations
+
+- Future cross-audit triggers: after round-3 (when the
+  physics-paper update lands), before P5 / P6 substantial
+  work, after any session that adds more than two new spec
+  entries.
+- The inline A1/A4/A5 discipline (cross-audit clean
+  "X + Y + Z = 21" assertion in commit messages) should
+  continue.
+
+---
+
+## 0.0.21 — 2026-05-03 — CLAUDE.md + README.md drift fix
+
+Status section + priority list update across CLAUDE.md and
+README.md. No spec moves; no code changes. A0 self-audit
+per the cross-audit protocol: drift fixed here, not papered
+over in the project. The CLAUDE.md was written at concept-
+stage (2026-04-30) and required updating to reflect the
+prototype-stage reality after the round-2 :benchmarked
+cohort + closure pass landed.
+
+### Changed
+
+- **`CLAUDE.md`**:
+  - §Status: "Concept-stage" → "Prototype-stage" with the
+    actual trajectory across 0.0.3 - 0.0.20; spec ledger
+    snapshot inline; round-3 trigger noted.
+  - "For LavaLamp specifically (priority order)" subsection:
+    P1/P2 marked landed with version numbers; P3
+    substantively done with sub-item version mapping; P5/P6
+    targets refreshed to reflect Lean priorities from
+    round-2 §1D.v + the :benchmarked-cohort grounding.
+- **`README.md`**:
+  - "Concept-stage" → "Prototype-stage" header.
+  - §Status: spec ledger table inline; trajectory bullet;
+    expanded companion-doc list (17 docs).
+  - §Layout: tree view shows actual src/julia/ structure
+    instead of the "no code until P1+P2 complete" framing.
+
+### Spec impact
+
+None. Counts unchanged from 0.0.20: 21 / 0 / 0 / 3 / 3 / 14
+/ 1.
+
+---
+
 ## 0.0.20 — 2026-05-03 — Closure pass; only LL-015 remains :open
 
 Closure-pass session: four `:open` spec entries elevated to

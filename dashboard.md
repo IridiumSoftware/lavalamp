@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.20 — closure pass; only LL-015 remains :open).
+Last updated: 2026-05-03 (0.0.22 — A0-A6 cross-audit pass).
 
 ## Status summary
 
