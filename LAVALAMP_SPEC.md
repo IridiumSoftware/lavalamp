@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.20 (closure pass — LL-001/002/009/010 :argued, 2026-05-03)
+Version: 0.0.23 (LL-020 Strategy 2 ε-DP envelope stub, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -663,9 +663,22 @@ LL-ID, not the Key.
   platform-coupled (TPM/Secure Enclave/TrustZone) or
   cryptographic-library-coupled (Shamir / DP libraries)
   and sits outside the Julia-prototype scope per the
-  language-tier discipline; ε-DP envelope stub is plausible
-  as a pure-Julia follow-up (would upgrade Strategy 2 to
-  :tested).
+  language-tier discipline. **Round-2 follow-up
+  (2026-05-03):** Strategy 2 (ε-DP perturbation) is
+  implemented in
+  `src/julia/src/Audit.jl::differentially_private_envelope`
+  and example-tested in `src/julia/test/runtests.jl` (23
+  assertions covering Gaussian-mechanism σ_DP formula, σ
+  floor, DP metadata recording, argument validation,
+  reproducibility). See
+  `docs/ll020_strategy_2_epsilon_dp_companion.md` for the
+  Dwork-Roth §A.1 derivation and the privacy-vs-detection
+  trade-off discussion. Strategies 1 (TPM-sealed) and 3
+  (Shamir threshold) remain implementation-deferred (P7 /
+  P5 respectively); LL-020 entry-level stays `:argued`
+  because the multi-strategy approach is the entry's
+  claim and partial implementation tests one component,
+  not the whole.
 
 ### LL-021 — worst-case-adversary-bound
 - Key: detection-probability claim stated against worst-case adversary direction, not isotropic

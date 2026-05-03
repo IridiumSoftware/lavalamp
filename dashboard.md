@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.22 — A0-A6 cross-audit pass).
+Last updated: 2026-05-03 (0.0.23 — LL-020 Strategy 2 ε-DP envelope stub).
 
 ## Status summary
 
@@ -139,16 +139,27 @@ P3 — **Julia prototype core.** ◐ In progress.
   indistinguishability) have empirically-validated
   performance targets.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.23 LL-020 Strategy 2 ε-DP envelope stub** ✓ Landed.
+    `differentially_private_envelope` in `Audit.jl`
+    implements the Dwork-Roth Gaussian mechanism with σ_DP
+    = sensitivity·sqrt(2·log(1.25/δ))/ε. 23 new test
+    assertions. LL-020 entry-level stays `:argued` (multi-
+    strategy approach as a whole; Strategy 1 TPM-sealed +
+    Strategy 3 Shamir threshold remain implementation-
+    deferred). See `docs/ll020_strategy_2_epsilon_dp_companion.md`.
+
   **Remaining unblocked sub-items:**
   - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
   - P3-Nyq — Nyquist-condition adversary-rate benchmark
     (LL-005 `:tested`).
-  - ε-DP envelope stub for LL-020 Strategy 2 → would close
-    LL-020 to `:tested`.
   - Higher-resolution P-R2c refresh (15+ trials per point)
     to tighten LL-021's c′ binding constraint.
   - Higher-resolution LL-019 KS-test at α=0.01 or with
     production-scale verify_full timing.
+  - Detection-power-vs-ε benchmark for LL-020 Strategy 2
+    (would support a :benchmarked upgrade for Strategy 2
+    specifically).
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D

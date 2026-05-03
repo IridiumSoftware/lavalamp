@@ -43,6 +43,7 @@ using ..Engine: lyapunov_spectrum
 
 export Envelope, register_envelope, residue, verify, synthetic_adversary
 export verify_full, verify_constant_time
+export differentially_private_envelope
 
 """
     Envelope
@@ -319,6 +320,92 @@ function synthetic_adversary(p::CouplingParams, ε_A::Real;
     û = d ./ norm_d
     perturbed = p.alphas .+ Float64(ε_A) .* û
     return CouplingParams(p.F_base, p.streams, perturbed, p.coupling_vectors)
+end
+
+"""
+    differentially_private_envelope(env::Envelope; ε::Real,
+                                     δ::Real=1e-6,
+                                     sensitivity::Real=0.1,
+                                     rng::AbstractRNG=default_rng()
+                                     ) -> Envelope
+
+Construct an `(ε, δ)`-differentially-private published version
+of `env` by adding calibrated Gaussian noise to each component
+of `env.spectrum` and `env.σ` per the standard Gaussian mechanism.
+
+The Gaussian mechanism: for a function with L2-sensitivity Δ_2,
+adding `Gaussian(0, σ²)` noise per component satisfies
+`(ε, δ)`-DP when
+
+```
+σ ≥ Δ_2 · sqrt(2 · ln(1.25 / δ)) / ε
+```
+
+(See Dwork & Roth, "The Algorithmic Foundations of Differential
+Privacy" §A.1 / Thm A.1.)
+
+**Sensitivity argument.** The L2-sensitivity Δ_2 of the registered
+envelope w.r.t. swapping a single calibration trial is bounded
+by the per-trial λ̂ deviation: at the prototype's calibration
+config (n_trials = 5–10, N_benettin ≈ 1200), per-exponent λ̂
+varies by ≈ 0.1 across trials (per `register_envelope`'s sample
+σ ≈ 0.05–0.2). The supplied `sensitivity` parameter must exceed
+the empirical per-trial deviation; default 0.1 is honest for
+the prototype's calibration config but should be re-derived per
+deployment.
+
+**Privacy-vs-detection trade-off.** A registration-channel
+observer who sees only `differentially_private_envelope(env)`
+gains at most `ε`-bounded information about the true envelope
+(per the DP guarantee). The verifier using the perturbed envelope
+has correspondingly *wider* threshold tolerances (k · σ_perturbed
+vs k · σ_original where σ_perturbed > σ_original due to the
+added noise), so detection power decreases as ε decreases.
+
+This implements LL-020 Strategy 2 from
+`docs/p_r2b_calibration_confidentiality_companion.md` §2.2.
+Other LL-020 strategies (TPM-sealed storage; multi-party
+threshold scheme) require platform / cryptographic-library
+coupling and live in P7 hardening / P5 Haskell tracks.
+
+# Examples
+```julia-repl
+julia> env_pub = differentially_private_envelope(env;
+                                                  ε=1.0, δ=1e-6,
+                                                  sensitivity=0.1);
+# env_pub satisfies (1.0, 1e-6)-DP w.r.t. env's calibration trials
+```
+
+API STABILITY: experimental.
+"""
+function differentially_private_envelope(env::Envelope;
+                                          ε::Real,
+                                          δ::Real=1e-6,
+                                          sensitivity::Real=0.1,
+                                          rng::AbstractRNG=default_rng())
+    ε > 0 || throw(ArgumentError("ε must be positive"))
+    0 < δ < 1 || throw(ArgumentError("δ must be in (0, 1)"))
+    sensitivity > 0 || throw(ArgumentError("sensitivity must be positive"))
+
+    σ_DP = sensitivity * sqrt(2 * log(1.25 / δ)) / ε
+
+    n = length(env.spectrum)
+    spectrum_pub = env.spectrum .+ σ_DP .* randn(rng, n)
+    σ_pub = env.σ .+ σ_DP .* randn(rng, n)
+    # Floor σ at a small positive value — DP-perturbed σ can go
+    # negative, which would make the verifier reject every
+    # candidate (k · σ < 0). Floor preserves the (ε, δ)-DP
+    # guarantee since the floor is data-independent.
+    σ_pub = max.(σ_pub, 1e-10)
+
+    metadata = copy(env.metadata)
+    metadata[:dp_ε] = Float64(ε)
+    metadata[:dp_δ] = Float64(δ)
+    metadata[:dp_sensitivity] = Float64(sensitivity)
+    metadata[:dp_σ] = σ_DP
+    metadata[:dp_perturbed] = true
+
+    return Envelope(spectrum_pub, σ_pub, env.n_trials, metadata)
 end
 
 end # module Audit

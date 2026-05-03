@@ -415,6 +415,107 @@ end
                                                          target_seconds=0.0)
     end
 
+    # ─── LL-020 Strategy 2: ε-DP envelope perturbation ─────────────────
+
+    @testset "differentially_private_envelope (LL-020 Strategy 2)" begin
+        # Construct a small reference envelope by hand for the test —
+        # avoids the cost of register_envelope and keeps the test fast.
+        env = LavaLamp.Audit.Envelope(
+            [1.0, 2.0, 0.5, -0.3, -0.8],            # spectrum
+            [0.1, 0.1, 0.1, 0.1, 0.1],              # σ
+            5,                                       # n_trials
+            Dict{Symbol,Any}(:dim => 5,
+                              :N => 1200, :Δt => 0.05, :Ttr => 300.0),
+        )
+
+        # σ_DP formula: σ = sensitivity · sqrt(2·log(1.25/δ)) / ε
+        # At ε=1.0, δ=1e-6, sensitivity=0.1:
+        #   σ_DP = 0.1 · sqrt(2·log(1.25e6)) / 1.0
+        #        ≈ 0.1 · sqrt(2 · 14.0388...) / 1.0
+        #        ≈ 0.1 · 5.30 = 0.530
+        env_dp = differentially_private_envelope(env;
+                                                  ε=1.0, δ=1e-6,
+                                                  sensitivity=0.1,
+                                                  rng=Random.Xoshiro(42))
+
+        # Result type
+        @test env_dp isa LavaLamp.Audit.Envelope
+
+        # Length preservation
+        @test length(env_dp.spectrum) == 5
+        @test length(env_dp.σ) == 5
+
+        # n_trials preserved
+        @test env_dp.n_trials == 5
+
+        # DP metadata recorded
+        @test env_dp.metadata[:dp_ε] == 1.0
+        @test env_dp.metadata[:dp_δ] == 1e-6
+        @test env_dp.metadata[:dp_sensitivity] == 0.1
+        @test env_dp.metadata[:dp_perturbed] == true
+        # σ_DP formula check
+        expected_σ_DP = 0.1 * sqrt(2 * log(1.25 / 1e-6)) / 1.0
+        @test isapprox(env_dp.metadata[:dp_σ], expected_σ_DP; rtol=1e-10)
+
+        # Original metadata fields preserved
+        @test env_dp.metadata[:dim] == 5
+        @test env_dp.metadata[:N] == 1200
+
+        # σ floor: even with negative-leaning Gaussian noise, σ stays
+        # ≥ 1e-10 (otherwise verify would always reject k·σ < 0).
+        @test all(σᵢ -> σᵢ >= 1e-10, env_dp.σ)
+
+        # Tight-ε (high privacy) → large σ_DP, large perturbation
+        env_dp_tight = differentially_private_envelope(env;
+                                                        ε=0.1, δ=1e-6,
+                                                        sensitivity=1.0,
+                                                        rng=Random.Xoshiro(7))
+        @test env_dp_tight.metadata[:dp_σ] > 10.0
+        @test sum(abs.(env_dp_tight.spectrum .- env.spectrum)) > 1.0
+
+        # Loose-ε (low privacy) → tiny σ_DP, near-identity perturbation
+        env_dp_loose = differentially_private_envelope(env;
+                                                        ε=1e6, δ=1e-6,
+                                                        sensitivity=0.001,
+                                                        rng=Random.Xoshiro(7))
+        @test env_dp_loose.metadata[:dp_σ] < 1e-7
+        @test sum(abs.(env_dp_loose.spectrum .- env.spectrum)) < 1e-3
+
+        # Argument validation
+        @test_throws ArgumentError differentially_private_envelope(env;
+                                                                    ε=0.0,
+                                                                    δ=1e-6,
+                                                                    sensitivity=0.1)
+        @test_throws ArgumentError differentially_private_envelope(env;
+                                                                    ε=-0.1,
+                                                                    δ=1e-6,
+                                                                    sensitivity=0.1)
+        @test_throws ArgumentError differentially_private_envelope(env;
+                                                                    ε=1.0,
+                                                                    δ=0.0,
+                                                                    sensitivity=0.1)
+        @test_throws ArgumentError differentially_private_envelope(env;
+                                                                    ε=1.0,
+                                                                    δ=1.0,
+                                                                    sensitivity=0.1)
+        @test_throws ArgumentError differentially_private_envelope(env;
+                                                                    ε=1.0,
+                                                                    δ=1e-6,
+                                                                    sensitivity=0.0)
+
+        # Reproducibility: same seed → same result
+        env_dp1 = differentially_private_envelope(env;
+                                                   ε=1.0, δ=1e-6,
+                                                   sensitivity=0.1,
+                                                   rng=Random.Xoshiro(123))
+        env_dp2 = differentially_private_envelope(env;
+                                                   ε=1.0, δ=1e-6,
+                                                   sensitivity=0.1,
+                                                   rng=Random.Xoshiro(123))
+        @test env_dp1.spectrum == env_dp2.spectrum
+        @test env_dp1.σ == env_dp2.σ
+    end
+
     # ─── Chaos-guard / periodic-window safety signal (LL-007 / LL-002) ──
 
     @testset "ChaosGuard config + state machine (LL-007)" begin

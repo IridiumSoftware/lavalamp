@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.20 (closure pass — LL-001/002/009/010 :argued, 2026-05-03)
+Version: 0.0.23 (LL-020 Strategy 2 ε-DP envelope stub, 2026-05-03)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -85,7 +85,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
 | LL-019 | side-channel hardening (reseed timing + audit-on-verify) | Core | benchmarked | src/julia/test/runtests.jl + src/julia/benchmark/results/ll019_timing_distribution.txt + docs/ll019_benchmarked_companion.md | src/julia/src/Audit.jl | :benchmarked |
-| LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 | — | :argued |
+| LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 + docs/ll020_strategy_2_epsilon_dp_companion.md (Strategy 2 example-tested) | src/julia/src/Audit.jl (Strategy 2 only) | :argued |
 | LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | benchmarked | src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md | src/julia/src/Audit.jl | :benchmarked |
 
 ---
@@ -100,7 +100,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 14
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.20)
+## Cross-audit A1–A6 self-check (post-0.0.23)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (21 of 21).
@@ -118,7 +118,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.20 and `dashboard.md` 0.0.20.
+  `LAVALAMP_SPEC.md` 0.0.23 and `dashboard.md` 0.0.23.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 82/82 assertions pass in

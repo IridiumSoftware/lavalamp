@@ -5,6 +5,138 @@ messages match entry summaries.
 
 ---
 
+## 0.0.23 — 2026-05-03 — LL-020 Strategy 2 ε-DP envelope stub
+
+Implements Strategy 2 of LL-020 (ε-differentially-private
+envelope perturbation) per the P-R2b design. Pure-Julia
+implementation of the Dwork-Roth Gaussian mechanism with
+the canonical σ_DP = sensitivity · sqrt(2·log(1.25/δ))/ε
+formula. 23 new test assertions covering the mechanism +
+DP metadata + argument validation + reproducibility.
+
+LL-020 entry-level status remains `:argued`. The entry's
+claim is the three-strategy approach (TPM-sealed + ε-DP +
+Shamir-threshold) as a whole; Strategy 2's example-tested
+implementation is recorded as a notes amendment. Strategies
+1 and 3 remain implementation-deferred per the P-R2b
+design (P7 / P5 respectively).
+
+This is the first commit since the architectural-debt
+closure (0.0.20 / 0.0.22) to add new code; pre-paused
+constraint relaxed by user direction. Slower without engine
+upstream; may need rework when paper / engine updates land,
+but progress now over indefinite wait.
+
+### Added
+
+- **`src/julia/src/Audit.jl`** —
+  `differentially_private_envelope(env; ε, δ=1e-6,
+  sensitivity=0.1, rng=default_rng())`. Returns a new
+  `Envelope` with each component of `spectrum` and `σ`
+  perturbed by `Gaussian(0, σ_DP²)`; σ floored at 1e-10
+  (DP-safe via post-processing immunity); DP parameters
+  recorded in metadata for downstream audit.
+- **`src/julia/src/LavaLamp.jl`** — re-exports.
+- **`src/julia/test/runtests.jl`** — 23 new assertions in
+  the LL-020 `@testset`: type checks; length / n_trials /
+  metadata preservation; σ_DP formula verified to 1e-10
+  precision; σ floor enforced; tight-ε produces large σ_DP
+  + substantial perturbation; loose-ε produces near-
+  identity perturbation; argument validation
+  (ε ≤ 0, δ ≤ 0, δ ≥ 1, sensitivity ≤ 0 all throw);
+  reproducibility (same seed → same result).
+- **`docs/ll020_strategy_2_epsilon_dp_companion.md`** —
+  session companion. §1 build / run. §2 results: §2.1
+  Gaussian mechanism review; §2.2 sensitivity bound
+  argument with prototype default of 0.1; §2.3
+  privacy-vs-detection-power trade-off documented in
+  concept (benchmark deferred); §2.4 σ-floor DP-safety via
+  post-processing immunity; §2.5 empirical σ_DP scaling
+  table; §2.6 reproducibility note. §3 verification:
+  why entry-level stays :argued; what Strategy-2-:tested
+  establishes vs what it doesn't. §4 spec impact (notes
+  amendment, no status moves; counts unchanged). §5 four
+  lessons including "strategy-of-strategies entries land
+  in chunks" and "honest entry-level status protects
+  against partial-claim drift."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.20 → 0.0.23. LL-020
+  notes amendment recording Strategy 2 implementation +
+  example-tested status. No entry-level status change.
+- **`artifact_registry.md`** — version 0.0.20 → 0.0.23.
+  LL-020 row Test/Proof file updated to reference both
+  P-R2b design companion AND new Strategy 2 companion;
+  Source file points at `Audit.jl` (Strategy 2 only).
+  Cross-audit A5 reference updated.
+- **`dashboard.md`** — version 0.0.22 → 0.0.23. P3 sub-items
+  list adds 0.0.23 entry; "ε-DP envelope stub" removed
+  from remaining-unblocked list (now landed). Detection-
+  power-vs-ε benchmark added as new follow-up for
+  Strategy 2 :benchmarked upgrade.
+- **`changelog.md`** — this entry.
+
+Test suite: 94 → 117 assertions; passes in ~52s via
+`Pkg.test()`.
+
+### Why
+
+User direction 2026-05-03: "we can do those" (referring to
+P3d / P3-Nyq / ε-DP stub previously excluded as adding
+new code). Constraint relaxation; "may need to revisit"
+acknowledged but progress over wait.
+
+The ε-DP stub was chosen first because it's smallest
+(single function + tests; no new SDEs or new benchmark
+infrastructure) and most isolated (LL-020 alone; no
+upstream / downstream coupling).
+
+Honest entry-level status (LL-020 stays :argued) per the
+"strategy-of-strategies" lesson captured in companion §5.1:
+multi-strategy entries land in chunks, and entry-level
+status reflects the weakest sub-claim's evidence. Notes
+record per-strategy progress.
+
+### Spec impact
+
+- Counts: total 21 unchanged; status counts unchanged
+  (3 :tested / 3 :benchmarked / 14 :argued / 1 :open).
+- Status moves: none.
+- Notes amendment on LL-020 recording Strategy 2's
+  example-tested evidence.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:argued`: 14
+- `:open`: 1 (LL-015)
+
+### Followup recommendations
+
+- **Detection-power-vs-ε benchmark** for Strategy 2 — the
+  natural :benchmarked upgrade. Run the P3-bound detection-
+  probability sweep against `differentially_private_envelope`
+  output at varying ε; trace the trade-off curve.
+- **P3-Nyq adversary-rate Nyquist benchmark** — next sub-
+  task in this work-set (closes LL-005 to :tested).
+- **P3d SDE-selection benchmark** — third sub-task in the
+  work-set (closes LL-003 to :benchmarked).
+- **Lean theorem.** Gaussian mechanism (ε, δ)-DP textbook
+  proof; round-2 §1D.v priority 3 target. P5/P6 work.
+- **Strategy 1 (TPM-sealed) implementation** — P7 hardening
+  via platform FFI.
+- **Strategy 3 (Shamir threshold) implementation** — P5
+  Haskell or finite-field cryptography library. Closes
+  the LL-020 entry-level claim when combined with
+  Strategies 1 and 2.
+
+---
+
 ## 0.0.22 — 2026-05-03 — A0-A6 cross-audit pass (PASS across all six checks)
 
 Full cross-audit per CLAUDE.md §Cross-audit protocol,
