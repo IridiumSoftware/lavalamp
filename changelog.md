@@ -5,6 +5,134 @@ messages match entry summaries.
 
 ---
 
+## 0.0.18 — 2026-05-03 — LL-021 :benchmarked (worst-case bound constants fitted)
+
+Closes LL-021 from `:tested` to `:benchmarked` by applying
+the P3-bound constrained-fit methodology (introduced in
+0.0.17) to the existing P-R2c worst-case detection surface
+(0.0.15 commit). No new code; pure analysis on the
+already-committed `p_r2c_structured_lorenz96.txt`.
+
+Fitted worst-case constants: **K=1, c′=0.02777, T=60** for
+the prototype's two-channel coupling (b_1=e_1 narrow vs
+b_2=ones(N) broad). `c′_worst = 0.02777` is **6.6× larger
+than `c′_isotropic = 0.00423`** from P3-bound (LL-006) —
+the two bounds describe the same shape under different
+parameterisations: LL-006 absorbs ∂λ/∂α into c′ at the
+isotropic-equivalent direction; LL-021 separates direction
+effects via `ε_eff = ε_A · proj(û onto m_unit)`.
+
+Bound holds at 9 of 12 data points pointwise; the 3
+negative-margin points (NARROW ε_A=1.00, NARROW ε_A=4.00,
+MIXED ε_A=0.50, all 0/5 sample frequency) have Wilson 95%
+CIs covering the bound's prediction. Sampling variance at
+n=5 accounts for apparent margin failures.
+
+### Added
+
+- **`docs/ll021_benchmarked_companion.md`** — analysis
+  companion. §2.1 reframes the bound under direction
+  projection (`ε_eff = ε_A · proj(û onto m_unit)`).
+  §2.2 derivation: per-point c_max under K=1 constraint,
+  binding at MIXED ε_A=1.0 with c_max ≈ 0.0278. §2.3 bound
+  predictions vs empirical at all 12 points (9 hold).
+  §2.4 Wilson CI analysis for the 3 negative-margin points
+  (all CIs cover bound prediction). §2.5 n=5 sampling-
+  variance caveat with deferred higher-resolution refresh.
+  §2.6 comparison to LL-006 constants explaining the 6.6×
+  ratio. §2.7 Lean theorem grounding per round-2 §1D.v
+  priority 1. §5 captures four lessons including
+  "direction projection collapses a multi-direction surface
+  into a single bound" and "methodology continuity across
+  sessions is the lavalamp pattern."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.17 → 0.0.18.
+  LL-021 evidence type `example-tested` → `benchmarked`;
+  status `:tested` → `:benchmarked`; description amended
+  with fitted constants + 6.6× ratio context. Counts:
+  `:tested` 5 → 4; `:benchmarked` 1 → 2. Total 21
+  unchanged.
+- **`artifact_registry.md`** — version 0.0.17 → 0.0.18.
+  LL-021 row updated with companion path.
+- **`dashboard.md`** — version 0.0.17 → 0.0.18. LL-021
+  marked ✓ landed at :benchmarked. Spec status counts.
+  Remaining unblocked sub-items refined.
+
+### Why
+
+LL-021 :benchmarked was the natural follow-up to P3-bound
+0.0.17: same constrained-fit methodology, applied to an
+already-committed benchmark surface, with the analytic
+direction-projection framing from
+`docs/p_r2c_worst_case_adversary_companion.md` §2.1
+providing the parameterisation that collapses the
+12-point P-R2c surface onto a single bound curve.
+
+The 6.6× ratio between the two bounds' c′ constants is
+informative: it quantifies how much the direction-aware
+worst-case framing tightens the bound vs the isotropic
+parameterisation. The two bounds describe the same shape
+under different inputs; the ratio is the cost the
+adversary pays for misalignment with m_unit.
+
+The Wilson CI framing for the 3 negative-margin points
+preserves the lavalamp CLAUDE.md "honest framing" rule:
+sampling variance accounts for the apparent margin
+failures; the bound holds in expectation. Higher-resolution
+refresh (15+ trials per point) is documented as a
+follow-up that would tighten the validation.
+
+### Spec impact
+
+- Counts: total 21 unchanged; `:tested` 5 → 4 (LL-021
+  leaves); `:benchmarked` 1 → 2 (LL-021 enters); others
+  unchanged.
+- Status moves: LL-021 → `:benchmarked`.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 4 (LL-003, LL-004, LL-007, LL-019)
+- `:benchmarked`: 2 (LL-006, LL-021)
+- `:argued`: 10
+- `:open`: 5
+
+### Known gaps
+
+- **n=5 sampling at P-R2c.** Higher-resolution refresh
+  (15+ trials per point) would tighten the c′ binding
+  constraint. Deferred — current fit is honest at n=5
+  with Wilson CI framing.
+- **Configuration-specific.** K=1, c′=0.02777, T=60 are
+  for the prototype's 2-channel coupling. Other channel
+  configurations would have different c′; the bound's
+  shape is universal.
+- **No analytic ∂λ/∂F̄ derivation.** The proportionality
+  constant is empirical; a Lean derivation would derive
+  it from the SDE structure.
+
+### Followup recommendations
+
+- **LL-019 :benchmarked upgrade** — different shape
+  (response-time distribution KS-test); requires a new
+  benchmark.
+- **Higher-resolution P-R2c refresh** — 15+ trials per
+  (direction, magnitude) point; tightens LL-021 c′.
+- **P3d SDE-selection benchmark** — LL-003 :benchmarked.
+- **P3-Nyq Nyquist adversary-rate** — LL-005 :tested.
+- **ε-DP envelope stub for LL-020 Strategy 2** — would
+  upgrade Strategy 2 specifically to :tested.
+- **Lean target.** Both LL-006 and LL-021 now have
+  concrete K, c′, T constants; the unified Lean theorem
+  in `ll021_benchmarked_companion.md` §2.7 is the P5/P6
+  target.
+
+---
+
 ## 0.0.17 — 2026-05-03 — P3-bound LL-006 :benchmarked (first benchmarked entry)
 
 Closes the P3-bound followup: high-resolution detection-

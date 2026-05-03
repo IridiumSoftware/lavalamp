@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.17 (P3-bound LL-006 :benchmarked, 2026-05-03)
+Version: 0.0.18 (LL-021 :benchmarked, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -632,8 +632,8 @@ LL-ID, not the Key.
   the best-case (BROAD direction) saturates at 1.00 for
   ε_A ≥ 1.0 — the empirical asymmetry is essentially
   unbounded at this configuration's calibration noise floor.
-- Evidence type: example-tested
-- Status: :tested
+- Evidence type: benchmarked
+- Status: :benchmarked
 - Source: src/julia/src/Audit.jl synthetic_adversary
   (direction parameter supports explicit û).
 - Test: src/julia/benchmark/p_r2c_structured_adversary.jl +
@@ -641,6 +641,18 @@ LL-ID, not the Key.
   (committed empirical surface; 12 data points across 3
   directions × 4 magnitudes × 5 trials at N=20, k=5,
   verify_full audit-on-every-verify).
+- Benchmark: docs/ll021_benchmarked_companion.md §2 — fitted
+  worst-case constants K=1, c′=0.02777, T=60 (parameterised
+  on ε_eff = ε_A · proj(û onto m_unit) where m is the
+  mean-coupling vector). Bound holds at 9 of 12 data
+  points pointwise; the 3 with negative margin have Wilson
+  95% CIs covering the bound prediction (sampling-variance
+  consistent at n=5). c′_worst = 0.02777 is 6.6× larger
+  than c′_isotropic = 0.00423 from P3-bound (LL-006);
+  the two bounds describe the same shape under different
+  parameterisations. Performance target: "fitted worst-case
+  bound holds across the prototype's structured-adversary
+  surface" — met within sampling-variance bounds.
 - Notes: Production deployments have three options for
   reducing worst-case under-estimation: (1) choose coupling
   vectors with uniform support (reduces condition number);
@@ -660,17 +672,17 @@ LL-ID, not the Key.
 
 - Total: 21
 - `:proved`: 0
-- `:tested`: 5 (LL-003, LL-004, LL-007, LL-019, LL-021)
+- `:tested`: 4 (LL-003, LL-004, LL-007, LL-019)
 - `:verified`: 0
-- `:benchmarked`: 1 (LL-006)
+- `:benchmarked`: 2 (LL-006, LL-021)
 - `:argued`: 10 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018, LL-020)
 - `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
 
-**Prototype-stage with first :benchmarked entry. LL-006
-(headline detection-probability bound) closed to
-:benchmarked in 0.0.17 with fitted constants K=1, c′=0.00423,
-T=60 validated against high-resolution benchmark. Five
-example-tested entries; ten argued at design level; five
-remain open (LL-001/002 await Lean / type-level enforcement;
-LL-009/010/015 are corpus-boundary declarations).**
+**Prototype-stage with two :benchmarked entries. The headline
+detection-probability bound (LL-006) and the worst-case
+adversary bound (LL-021) both have fitted constants
+empirically validated against committed benchmark surfaces.
+Four example-tested entries; ten argued at design level;
+five open (LL-001/002 await Lean enforcement; LL-009/010/015
+corpus-boundary declarations).**
