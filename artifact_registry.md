@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.23 (LL-020 Strategy 2 ε-DP envelope stub, 2026-05-03)
+Version: 0.0.24 (P3-Nyq negative result, 2026-05-03)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -100,7 +100,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 14
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.23)
+## Cross-audit A1–A6 self-check (post-0.0.24)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (21 of 21).
@@ -118,7 +118,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.23 and `dashboard.md` 0.0.23.
+  `LAVALAMP_SPEC.md` 0.0.24 and `dashboard.md` 0.0.24.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 82/82 assertions pass in

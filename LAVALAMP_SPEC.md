@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.23 (LL-020 Strategy 2 ε-DP envelope stub, 2026-05-03)
+Version: 0.0.24 (P3-Nyq negative result on Nyquist detection, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -177,7 +177,30 @@ LL-ID, not the Key.
 - Source: docs/architecture_design_companion.md §2.4, §3.6.
 - Notes: Recommended starting points: f_SDE ≈ 10 kHz, sensor
   sampling at 10× sensor electronic bandwidth where supported.
-  Concrete numerical calibration is P3 work.
+  Concrete numerical calibration is P3 work. **Round-2
+  follow-up (2026-05-03):** P3-Nyq adversary-rate benchmark
+  (`benchmark/p3_nyq_adversary_rate.jl` + result file
+  `benchmark/results/p3_nyq_adversary_rate.txt` + companion
+  `docs/p3_nyq_companion.md`) attempted to demonstrate that
+  the residue audit (LL-006) detects sub-Nyquist adversaries.
+  Result: NEGATIVE. The residue audit does not detect
+  sub-Nyquist sensor reconstruction at the prototype's
+  configuration because zero-mean Gaussian noise has the
+  same time-averaged statistics under sub-sampling, and the
+  Lyapunov spectrum is a time-averaged invariant. LL-005 is
+  therefore a parameter-level hygiene requirement (correctly
+  configured: Δt=0.05 → f_SDE=20Hz; gaussian_noise_stream at
+  100Hz; both > thermal-noise BW for typical deployments)
+  rather than an actively-defended attack surface. Sub-
+  Nyquist adversary detection requires LL-016 sensor
+  authenticity (already :argued; multi-sensor cross-validation,
+  hardware attestation) or a not-yet-implemented mechanism
+  (FFT-based audit on trajectory PSD; trajectory-checkpoint
+  comparison — both round-3 architectural input). LL-005
+  entry-level status stays :argued because the entry's
+  claim has two implicit sub-claims (parameter compliance
+  + adversary detection) and only the parameter side is
+  evidenced.
 
 ---
 

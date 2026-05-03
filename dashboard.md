@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.23 — LL-020 Strategy 2 ε-DP envelope stub).
+Last updated: 2026-05-03 (0.0.24 — P3-Nyq negative result).
 
 ## Status summary
 
@@ -149,10 +149,21 @@ P3 — **Julia prototype core.** ◐ In progress.
     Strategy 3 Shamir threshold remain implementation-
     deferred). See `docs/ll020_strategy_2_epsilon_dp_companion.md`.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.24 P3-Nyq Nyquist adversary-rate benchmark** ✓
+    Landed with **negative result**. The residue audit
+    (LL-006) does not detect sub-Nyquist sensor adversaries
+    at the prototype's configuration because zero-mean
+    Gaussian noise has invariant time-averaged statistics
+    under sub-sampling. LL-005 stays :argued; the benchmark
+    output is committed as audit-trail evidence. Sub-Nyquist
+    detection requires LL-016 (sensor authenticity) or a
+    not-yet-implemented mechanism (FFT / trajectory-
+    checkpoint audit) — round-3 input. See
+    `docs/p3_nyq_companion.md`.
+
   **Remaining unblocked sub-items:**
   - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
-  - P3-Nyq — Nyquist-condition adversary-rate benchmark
-    (LL-005 `:tested`).
   - Higher-resolution P-R2c refresh (15+ trials per point)
     to tighten LL-021's c′ binding constraint.
   - Higher-resolution LL-019 KS-test at α=0.01 or with
@@ -160,6 +171,9 @@ P3 — **Julia prototype core.** ◐ In progress.
   - Detection-power-vs-ε benchmark for LL-020 Strategy 2
     (would support a :benchmarked upgrade for Strategy 2
     specifically).
+  - LL-005 part-(a) parameter-validation test (trivial; would
+    move parameter side to :tested but entry-level claim
+    needs adversary-side too).
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D

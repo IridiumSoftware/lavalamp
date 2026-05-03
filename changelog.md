@@ -5,6 +5,137 @@ messages match entry summaries.
 
 ---
 
+## 0.0.24 — 2026-05-03 — P3-Nyq negative result on Nyquist detection
+
+P3-Nyq adversary-rate benchmark attempted to demonstrate
+that the residue audit (LL-006) detects sub-Nyquist sensor
+adversaries per LL-005's architecture-design claim. Result:
+**negative**. The residue audit does NOT detect sub-Nyquist
+sensor reconstruction at the prototype's configuration.
+
+This is honest architectural feedback, not a failure.
+LL-005 stays `:argued` (no spec status change). The
+benchmark output is committed as audit-trail evidence that
+the testing was attempted and produced a structural-gap
+finding.
+
+### Added
+
+- **`src/julia/benchmark/p3_nyq_adversary_rate.jl`** —
+  benchmark script. Genuine system uses
+  `gaussian_noise_stream(σ=1.0, sample_rate=100 Hz)`.
+  Adversary observes the genuine stream at sub-Nyquist
+  sample rate `f_adv` and reconstructs via linear
+  interpolation. Sweep `f_adv ∈ {1, 2, 5, 10, 20, 50, 100}
+  Hz` × 20 trials per point.
+- **`src/julia/benchmark/results/p3_nyq_adversary_rate.txt`**
+  — committed empirical surface. Across all `f_adv` values
+  the rejection rate scatters between 0% and 20% with no
+  monotonic trend. Wilson 95% CIs for n=20 samples are all
+  overlapping; no point is statistically distinguishable
+  from the genuine FPR baseline (1/20 = 0.05).
+- **`docs/p3_nyq_companion.md`** — companion doc.
+  - §2.1 the empirical sweep with no monotonic detection
+    trend.
+  - §2.2 architectural reason for the negative result:
+    zero-mean Gaussian noise → time-averaged sensor
+    statistics invariant under sub-sampling → spectrum
+    (a time-averaged invariant) doesn't shift.
+  - §2.3 architectural implication: the residue audit
+    catches parameter-perturbation attacks (V-001, V-013,
+    V-005) but not sensor-bandwidth attacks (V-004 Nyquist
+    failure). LL-005 is a parameter-level hygiene
+    requirement (correctly configured), not an actively-
+    defended attack surface.
+  - §2.4 mechanisms that *would* detect sub-Nyquist
+    adversaries (trajectory-checkpoint comparison,
+    FFT-based audit, LL-016 sensor authenticity);
+    none currently in the prototype.
+  - §2.5 honest tier framing: LL-005 has implicit sub-
+    claims (parameter compliance + adversary detection);
+    only the parameter side is evidenced; entry-level
+    stays `:argued`.
+  - §3 verification.
+  - §4 spec impact (notes amendment, no status moves).
+  - §5 four lessons including "negative results are
+    valuable evidence" and "when in doubt, document the
+    negative."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.23 → 0.0.24. LL-005
+  notes amendment recording the benchmark and the negative
+  finding's architectural implication. No entry-level
+  status change.
+- **`artifact_registry.md`** — version 0.0.23 → 0.0.24.
+  Cross-audit A5 reference updated.
+- **`dashboard.md`** — version 0.0.23 → 0.0.24. P3 sub-
+  items list adds 0.0.24 entry; P3-Nyq removed from
+  remaining-unblocked list (now landed with negative
+  result). LL-005 part-(a) parameter-validation test added
+  as a small trivial-cost follow-up.
+
+### Why
+
+The Nyquist condition (LL-005) is necessary for the
+*physical security claim* (substrate-noise can't be
+reconstructed at sub-Nyquist) but the residue audit doesn't
+*enforce* it as an attack vector. The benchmark surfaces
+this gap empirically.
+
+The structural reason: spectrum-based detection averages
+over time, and time-averaged statistics of a zero-mean noise
+sensor are invariant under sub-sampling. The audit is the
+right tool for parameter-perturbation attacks (already
+:benchmarked via LL-006 / LL-021) but the wrong tool for
+bandwidth-violation attacks.
+
+This is a real architectural finding worth pinning. Round-3
+reviewers should evaluate whether the prototype's residue-
+audit-only defence is sufficient given LL-016 covers the
+gap (already :argued for sensor authenticity) or whether an
+additional mechanism is needed.
+
+Don't fudge the negative result. The committed benchmark
+output is honest-discipline evidence.
+
+### Spec impact
+
+- Counts: total 21 unchanged; status counts unchanged
+  (3 :tested / 3 :benchmarked / 14 :argued / 1 :open).
+- Status moves: none.
+- Notes amendment on LL-005 recording the negative
+  finding + architectural implication.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 3 (LL-003, LL-004, LL-007)
+- `:benchmarked`: 3 (LL-006, LL-019, LL-021)
+- `:argued`: 14
+- `:open`: 1 (LL-015)
+
+### Followup recommendations
+
+- **Round-3 architectural input.** This finding is a real
+  candidate for the next round-3 brief: does the prototype
+  need an FFT-based audit or a trajectory-checkpoint
+  audit to close the Nyquist-detection gap? Or is LL-016
+  sensor authenticity sufficient?
+- **LL-016 implementation** is the load-bearing defence
+  per this benchmark's finding. P7 / P5 work via TPM
+  attestation / multi-sensor cross-validation.
+- **P3d SDE-selection benchmark** is the next sub-task in
+  the work-set (closes LL-003 to :benchmarked).
+- **Parameter-validation test for LL-005** (trivial; would
+  move part-(a) to :tested) deferred until the
+  adversary-side gap is addressed (otherwise the partial
+  upgrade misleads).
+
+---
+
 ## 0.0.23 — 2026-05-03 — LL-020 Strategy 2 ε-DP envelope stub
 
 Implements Strategy 2 of LL-020 (ε-differentially-private
