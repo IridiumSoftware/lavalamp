@@ -1,6 +1,6 @@
 # LavaLamp
 
-A device-bound identity primitive. Concept-stage; private repo.
+A device-bound identity primitive. Prototype-stage; private repo.
 
 ## What it is
 
@@ -49,47 +49,93 @@ layer would want to use) returns.
 
 ## Status
 
-Concept-stage. No code yet. Architecture has been synthesized
-through one round of synthesis-seat (Gemini) + edge-witness-seat
-(Grok) review on 2026-04-30. Next deliverable is the attack-surface
-enumeration document, then architectural design pass, then language
-tracks (Haskell + Lean 4 mirroring the triadic-coordination-engine
-pattern).
+Prototype-stage. The Julia prototype core (`src/julia/`)
+implements the SDE substrate (Lorenz-96), sensor-coupling layer,
+Lyapunov-spectrum residue audit, chaos-guard, and side-channel
+hardening. CI runs `Pkg.test()` on every push (94 assertions
+pass in ~50s).
+
+**Spec ledger:** 21 entries with the current breakdown:
+
+| status | count | entries |
+|---|---:|---|
+| `:proved` | 0 | — |
+| `:verified` | 0 | — |
+| `:tested` | 3 | LL-003 baseline, LL-004 sensor coupling, LL-007 chaos-guard |
+| `:benchmarked` | 3 | LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
+| `:argued` | 14 | (P2 design + round-2 closures + closure-pass arguments) |
+| `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
+
+**Trajectory:** 0.0.1 (concept-stage scaffold) → 0.0.3
+(attack-surface enum) → 0.0.5 (P2 design pass) → 0.0.6 - 0.0.10
+(P3 prototype core) → 0.0.11 (CI) → 0.0.12 (synthesis-team round
+2) → 0.0.14 - 0.0.16 (P-R2 trio) → 0.0.17 - 0.0.19 (round-2
+:benchmarked cohort) → 0.0.20 (closure pass).
+
+**Round 3** (next synthesis-team review) is gated on the
+`closure_forces_structure` physics-paper update.
 
 See:
-- `LAVALAMP_SPEC.md` — authoritative claim ledger (14 entries, all
-  `:open`)
+- `LAVALAMP_SPEC.md` — authoritative claim ledger
+- `artifact_registry.md` — spec-to-evidence map
 - `dashboard.md` — current status + priority stack + open
   questions
 - `CLAUDE.md` — project governance + scope boundaries
-- `docs/` — per-session companion records
+- `changelog.md` — per-version diffs
+- `docs/*_companion.md` — per-session permanent records
 
 ## Layout
 
 ```
 lavalamp/
-├── README.md                       ← you are here
-├── LAVALAMP_SPEC.md                ← claim ledger
-├── artifact_registry.md            ← spec-to-evidence map
-├── dashboard.md                    ← status + priorities
-├── changelog.md                    ← versioned entries
-├── CLAUDE.md                       ← project governance
-├── docs/                           ← per-session companion docs
+├── README.md                                    ← you are here
+├── LAVALAMP_SPEC.md                             ← claim ledger
+├── artifact_registry.md                         ← spec-to-evidence map
+├── dashboard.md                                 ← status + priorities
+├── changelog.md                                 ← versioned entries
+├── CLAUDE.md                                    ← project governance
+├── .github/workflows/test.yml                   ← CI workflow
+├── docs/                                        ← per-session companion docs
 │   ├── concept_origin_companion.md
-│   └── synthesis_team_round1_companion.md
-└── .gitignore
+│   ├── synthesis_team_round1_companion.md
+│   ├── synthesis_team_round2_brief.md
+│   ├── synthesis_team_round2_companion.md
+│   ├── attack_surface_enumeration.md
+│   ├── architecture_design_companion.md
+│   ├── language_plan_catlab_tier_companion.md
+│   ├── qkd_pqc_complementarity_companion.md
+│   ├── p3_baseline_companion.md
+│   ├── p3a_sensor_coupling_companion.md
+│   ├── p3b_residue_audit_companion.md
+│   ├── p3c_chaos_guard_companion.md
+│   ├── p_r2a_side_channel_hardening_companion.md
+│   ├── p_r2b_calibration_confidentiality_companion.md
+│   ├── p_r2c_worst_case_adversary_companion.md
+│   ├── p3_bound_companion.md
+│   ├── ll021_benchmarked_companion.md
+│   ├── ll019_benchmarked_companion.md
+│   └── spec_closure_pass_companion.md
+└── src/
+    └── julia/                                   ← prototype core (P3)
+        ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
+        ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard}.jl
+        ├── test/runtests.jl                     ← 94 assertions, run via Pkg.test()
+        └── benchmark/
+            ├── p3b_detection_probability.jl
+            ├── p_r2c_structured_adversary.jl
+            ├── p3_bound_high_res.jl
+            ├── ll019_timing_distribution.jl
+            └── results/*.txt                    ← committed benchmark outputs
 
-# Source-code subdirectories created when code lands. Per the
-# dashboard's priority stack, the language plan is:
-#   P3  src/julia/   — prototype core (SDE, residue audit, chaos-guard, sensor coupling)
-#   P4  src/haskell/ — spec-as-types + QuickCheck for compositional completeness
-#   P5  src/lean4/   — formal verification of structural security claims
-#   P6  src/cpp/     — production hardening (from proven spec; far future)
-#   P7  visual/      — decoupled decorative skin (per LL-002; any framework)
-#
-# No code until attack-surface enumeration (P1) + architectural
-# design pass (P2) complete.
-
+# Future language tracks (per dashboard priority stack):
+#   P4  Catlab.jl (default skip; revisit when verification protocol
+#       surfaces categorical content)
+#   P5  src/haskell/ — spec-as-types + QuickCheck against the Julia
+#       prototype for compositional-completeness
+#   P6  src/lean4/   — formal verification of structural security claims
+#       (round-2 §1D.v Lean priorities + the §2.1 detection bound)
+#   P7  src/cpp/     — production hardening from the proven spec
+#   P8  visual/      — decorative skin (per LL-002; any framework)
 ```
 
 ## License

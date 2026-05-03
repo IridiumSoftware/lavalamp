@@ -27,11 +27,32 @@ lava-lamp animation). The visual is decorative and can be driven by
 any RNG; the security is the substance under the hood. Same shape
 as Lazarus.
 
-**Status (2026-04-30).** Concept-stage. Architecture has been
-synthesized through one round each of synthesis-seat (Gemini) and
-edge-witness-seat (Grok) review. Visual/security decoupling
-resolution by Aaron closes the round-1 blindspot. No code yet;
-attack-surface enumeration is the next deliverable.
+**Status (2026-05-03).** Prototype-stage. P1 attack-surface
+enumeration landed in 0.0.3; P2 architectural design pass in
+0.0.5; P3 Julia prototype core (Lorenz-96 baseline + sensor
+coupling + residue audit + chaos-guard + side-channel hardening)
+across 0.0.6 - 0.0.10 + 0.0.14; CI live since 0.0.11.
+Synthesis-team round 2 (0.0.12) surfaced V-011/012/013 attack
+vectors and three new spec entries; the P-R2 design-response
+trio (0.0.14 / 0.0.15 / 0.0.16) closed all three. The :benchmarked
+cohort (0.0.17 / 0.0.18 / 0.0.19) fitted concrete bound constants
+to LL-006 / LL-021 / LL-019. The closure pass (0.0.20) elevated
+LL-001 / LL-002 / LL-009 / LL-010 from `:open` to `:argued`.
+
+**Spec ledger now (21 entries, post-0.0.20):**
+
+- `:tested` × 3 (LL-003 baseline; LL-004 sensor coupling; LL-007
+  chaos-guard)
+- `:benchmarked` × 3 (LL-006 detection bound; LL-019 timing-
+  indistinguishability; LL-021 worst-case adversary bound)
+- `:argued` × 14 (P2 design + round-2 closures + closure-pass
+  arguments)
+- `:open` × 1 (LL-015 A3-OOS scoping declaration; permanent by
+  design)
+- `:proved` × 0; `:verified` × 0
+
+Round 3 (next synthesis-team review) is gated on the
+`closure_forces_structure` physics-paper update.
 
 **Owner:** Aaron Green.
 
@@ -215,26 +236,41 @@ gradient that makes the tier worthwhile.
   explore → verify and verify → prove). The synthesis-seat /
   edge-witness-seat protocol applies.
 
-**For LavaLamp specifically (priority order):**
+**For LavaLamp specifically (priority order, status as of 0.0.20):**
 
-1. Attack-surface enumeration document (P1 in `dashboard.md`) —
-   *landed in 0.0.3*.
-2. Architectural design pass (P2): formalise the residue audit,
-   the resolution-bounded security claim, the chaos-guard, the
-   sensor-coupling potential field.
-3. Julia prototype implementing the architecture (P3).
-4. Catlab categorical realisation **only if** the verification
-   protocol design (P2) surfaces enough categorical structure to
-   warrant it. Default: skip; revisit when registration ceremony /
-   cross-config transition designs are concrete. The SDE /
-   sensor-coupling primitive is dynamical-systems work, not
-   categorical; the verification protocol may be different.
-5. Haskell spec-as-types + QuickCheck against the Julia
-   prototype (compositional completeness check).
-6. Lean 4 formal proofs of the structural security claims.
-7. (Future) C/C++ hardening rewrite from the proven spec.
-8. Decoupled visual skin throughout (per LL-002, low priority,
-   any RNG / animation framework).
+1. Attack-surface enumeration document (P1) — ✓ *landed in 0.0.3*.
+2. Architectural design pass (P2) — ✓ *landed in 0.0.5*. Five
+   sub-items (residue audit, resolution-bounded security claim,
+   chaos-guard, sensor coupling, protocol layer) closed at design
+   level (manual evidence, `:argued` status).
+3. Julia prototype (P3) — ◐ *substantively done* across 0.0.6
+   (baseline) → 0.0.8 (P3a sensor coupling) → 0.0.9 (P3b residue
+   audit) → 0.0.10 (P3c chaos-guard) → 0.0.14 (P-R2a side-channel
+   hardening). Empirical evidence committed for LL-003/004/006/007/019/021.
+   Remaining unblocked sub-tasks: P3d SDE-selection benchmark
+   (LL-003 → `:benchmarked`); P3-Nyq Nyquist adversary-rate
+   benchmark (LL-005 → `:tested`); ε-DP envelope stub for LL-020
+   Strategy 2 (→ `:tested`).
+4. Catlab categorical realisation — *default skip*. Decision rule
+   from 0.0.4 reaffirmed in 0.0.16: protocol layer (registration
+   / cold-start / cross-config) is operational state-machine +
+   cryptographic protocol shape, not categorical structure that
+   benefits from Catlab over Haskell. Revisit only if a future
+   round surfaces categorical content.
+5. Haskell spec-as-types + QuickCheck — *not yet started*.
+   Targets compositional-completeness coverage of the Julia
+   prototype.
+6. Lean 4 formal proofs — *not yet started*. Round-2 §1D.v
+   priorities target: linear-coupling worst-case bound (LL-021
+   :benchmarked grounds the theorem statement); side-channel
+   timing indistinguishability (LL-019 :benchmarked grounds);
+   calibration ε-DP (LL-020 design); plus the original §2.1
+   detection-probability bound for LL-006/008/018.
+7. C/C++ hardening rewrite — *future*. Targets platform-coupled
+   work (TPM-sealed envelope from LL-020 Strategy 1; real-sensor
+   FFI from LL-016 / LL-004).
+8. Decoupled visual skin — *low priority*. Per LL-002, any RNG /
+   animation framework; decorative-only.
 
 ## Workflow rules
 
