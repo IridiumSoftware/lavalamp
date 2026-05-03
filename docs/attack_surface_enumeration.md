@@ -523,6 +523,156 @@ they were.
 - Optional adaptive thresholding that learns from trajectory
   history and is therefore harder for the adversary to predict.
 
+### V-011 — Reseed Oracle (LL-019 surface)
+
+**Adversary classes:** A2, A4, A5
+
+**Mechanism.** The chaos-guard (LL-007) state machine
+{INVALID, WARMUP, VALID} produces observable transitions
+when λ̂₁ < τ_λ triggers a reseed. Reseed events correspond to
+brief "unavailability" windows on the verifier (the device
+returns WARMUP-shaped responses for warmup_steps updates).
+Because reseed triggers are sensor-correlated — a thermal
+event or sensor-induced parameter drift can push λ̂₁ below
+the rejection threshold — an adversary probing verification
+readiness or measuring response latency obtains an *event
+channel correlated with the device's internal sensor state*.
+
+This is a low-bandwidth oracle: the adversary doesn't read
+the trajectory directly, but they can synchronise their spoof
+trajectory to the device's reseed cadence, time their attack
+to coincide with WARMUP windows, or use reseed timing as a
+covert thermal-event detector against the device.
+
+**Defenses.** None yet — pending LL-019 design.
+
+**Residual risk.** Substantial. The chaos-guard's state-
+transition logic is currently exposed via natural verifier
+output. Any production deployment that emits WARMUP responses
+distinguishably from VALID/REJECT responses leaks the timing.
+
+**Mitigation pending.** LL-019 design must specify either:
+- Constant-time response (hide WARMUP behind a uniform
+  delay matching the slowest legitimate verification path).
+- Decorrelation of reseed triggers from observable verifier
+  outputs (introduce randomised delay between reseed event
+  and any external response that could leak the event).
+- Explicit acceptance + documentation that the deployment
+  context bounds A4 capability below the timing-precision
+  threshold required to exploit this.
+
+**Source.** Surfaced in synthesis-team round 2
+(`docs/synthesis_team_round2_companion.md` §1C — Grok
+edge-witness response, A1).
+
+### V-012 — Calibration Spectrum Leakage (LL-020 surface)
+
+**Adversary classes:** A5 (registration-time observer)
+
+**Mechanism.** The registration ceremony (LL-011) calibrates
+the device's envelope by running n_trials independent SDE
+runs and recording per-exponent λ_i mean and σ_i. The current
+prototype uses n_trials=10. These ~10 spectrum estimates plus
+the calibration statistics are *exposed to anyone who can
+observe the registration channel* — even with TPM attestation
+preventing envelope substitution, observation of the channel
+is not prevented.
+
+An A5 adversary present during registration captures the
+registered envelope to machine precision. They can:
+
+1. Reconstruct the SDE family / parameter set by least-
+   squares fitting against the captured spectra.
+2. Compute the envelope's residue ball geometry exactly
+   (mean ± k·σ per exponent at any chosen k).
+3. Craft trajectories that lie just inside the rejection
+   ball, evading the LL-006 audit by construction.
+
+This directly undermines LL-017 verification-no-oracle:
+no-oracle assumes the adversary doesn't know the threshold
+geometry, but a registration-channel observer *does*.
+
+**Defenses.** None yet — pending LL-020 design.
+
+**Residual risk.** Substantial. TPM attestation defends
+against envelope substitution but not envelope observation;
+they are complementary requirements that the current design
+treats as a single concern.
+
+**Mitigation pending.** LL-020 design must specify:
+- Sealed-storage protocol for the registered envelope
+  (verifier-side encryption with key tied to the TPM /
+  Secure Enclave), with the envelope never transmitted in
+  the clear after registration.
+- ε-differentially-private perturbation of any published
+  envelope statistics (so observers see a noisy version
+  with quantifiable information loss).
+- Multi-party threshold scheme on envelope reconstruction
+  (no single channel observer reconstructs the envelope
+  alone).
+
+**Source.** Surfaced in synthesis-team round 2
+(`synthesis_team_round2_companion.md` §1C — Grok edge-witness
+response, A2).
+
+### V-013 — Structured α-Direction Attack (LL-021 surface)
+
+**Adversary classes:** A2, A4
+
+**Mechanism.** The synthetic-adversary model in `Audit.jl`
+perturbs α isotropically (random unit vector × magnitude).
+Real adversaries have *structured* perturbation directions:
+
+- Sensor manipulation (V-006) perturbs only the α components
+  coupled to the manipulated sensor — directional.
+- Configuration replay (V-009) shifts α toward registered
+  configuration directions — directional.
+- Slow-drift threshold gaming (V-005) chooses the direction
+  that maximally evades the residue test — *adversarially*
+  directional.
+
+The empirical detection-probability surface
+(`benchmark/results/p3b_detection_lorenz96.txt`) at the
+prototype's working point is therefore an *optimistic* lower
+bound on detection difficulty; structured adversaries can
+align ε with the weakest-coupled directions of the linear
+U(s, x; t) and stay inside the residue ball longer than the
+isotropic surface predicts.
+
+The under-estimation factor scales with the condition number
+of the coupling matrix — visible empirically in the α-sweep
+data from 0.0.8 (different α directions produce different
+spectrum shifts).
+
+**Defenses.** Partial:
+
+- **LL-006 (Lyapunov-spectrum residue audit).** The vector
+  per-exponent test still catches structured adversaries
+  who diverge in *any* exponent — they have to suppress
+  divergence across the entire spectrum simultaneously.
+- **LL-021 (worst-case-adversary-bound, pending).** Re-state
+  the LL-006 detection-probability claim against a worst-
+  case adversary direction, not isotropic. Empirical
+  benchmarks should sweep structured directions in addition
+  to isotropic.
+
+**Residual risk.** Moderate. Even with LL-021, a
+sufficiently sophisticated adversary aligned with the
+weakest-coupled direction can extract more rejection-margin
+than the isotropic curve suggests. The honest claim shrinks
+from "P(detect) sigmoidal in ε_A" to "P(detect) sigmoidal in
+ε_A · cos(θ_min)" where θ_min is the angle between ε and the
+worst-case direction.
+
+**Mitigation pending.** LL-021 design + structured-direction
+benchmark sweep. Long-term: state-dependent coupling (U
+quadratic-or-higher in x) reduces the coupling matrix's
+condition-number disparity.
+
+**Source.** Surfaced in synthesis-team round 2
+(`synthesis_team_round2_companion.md` §1C — Grok edge-
+witness response, A3 + A6).
+
 ---
 
 ## §4 — Adversary class × attack vector matrix
@@ -542,6 +692,9 @@ vector; ○ = secondary / contributing class; blank = not applicable.
 | V-008 cold-start | | ● | OOS | ● | | ● |
 | V-009 cross-config | | | OOS | ● | | |
 | V-010 threshold game | | ● | OOS | ● | | |
+| V-011 reseed oracle | | ● | OOS | ● | ● | |
+| V-012 calibration leak | | | | ○ | ● | |
+| V-013 structured α-attack | | ● | OOS | ● | | |
 
 **OOS** = out of scope (A3 root assumed defeated; LavaLamp does
 not claim defense against full-kernel adversaries).
@@ -582,6 +735,20 @@ risk.
 **5. Threshold calibration (V-010).** Calibration discipline
 LL-014 pending. Without bounded false-negative rates, slow-drift
 attacks (V-005) are not provably detected.
+
+**7. Reseed oracle (V-011).** Chaos-guard state transitions
+observable as timing channel; sensor-correlated. LL-019
+pending — constant-time response or randomised-delay protocol.
+
+**8. Calibration spectrum leakage (V-012).** Registration-
+channel observers capture the registered envelope. LL-020
+pending — sealed storage / ε-DP perturbation / multi-party
+threshold scheme.
+
+**9. Structured α-direction attack (V-013).** Empirical
+detection surface is optimistic vs structured adversaries.
+LL-021 pending — worst-case-direction bound and structured-
+adversary benchmark.
 
 **6. A3 (kernel-level adversary) is explicitly out of scope.**
 This is honest scoping, not residual risk — but consumers of the

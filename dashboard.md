@@ -1,22 +1,28 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-02 (0.0.11 — GitHub Actions CI workflow).
+Last updated: 2026-05-02 (0.0.12 — synthesis-team round 2).
 
 ## Status summary
 
-**Project state.** Prototype-stage. P2 architectural design
-pass landed; P3 prototype core has the Lorenz-96 baseline
-(LL-003, `:tested`), the sensor-coupling layer (LL-004,
-`:tested`), the residue audit + detection-probability
-benchmark (LL-006, `:tested`), and the chaos-guard /
-periodic-window safety signal (LL-007, `:tested` —
-`ChaosGuard.jl` with state-machine logic + Lorenz-96 chaotic
-vs sub-chaotic integration + reseed-flow tests; uses the cheap
-Wolf-method λ₁ estimator at ~1.3 ms/call vs ~507 ms for full
-Benettin spectrum). Nine entries remain `:argued` (P2 design);
-five remain `:open`. Test suite passes 82/82 in ~47s via
-`Pkg.test()` from `src/julia/` — actually faster than 0.0.9
-because chaos-guard uses single-exponent estimator.
+**Project state.** Prototype-stage with round-2 architectural
+debt. P2 architectural design pass landed; P3 prototype core
+has the Lorenz-96 baseline (LL-003, `:tested`), the sensor-
+coupling layer (LL-004, `:tested`), the residue audit
+(LL-006, `:tested`), the chaos-guard (LL-007, `:tested`).
+Synthesis-team round 2 landed in 0.0.12 and surfaced three
+new attack vectors (V-011 reseed oracle, V-012 calibration
+spectrum leakage, V-013 structured α-direction attack) plus
+a structural concern (linearisability of the linear-in-x
+coupling). Three new spec entries (LL-019/020/021) opened to
+respond. Nine entries remain `:argued`; eight `:open`
+(LL-001/002/009/010/015 plus LL-019/020/021). Test suite
+passes 82/82 in ~47s via `Pkg.test()` from `src/julia/`.
+
+**Workflow shift:** prototype-extension work (P3d, P3-bound,
+P3-Nyq) is *deferred* until LL-019/020/021 design responses
+land. Running comparative SDE benchmarks against an
+architecture marked as having known soft spots would just
+need to be re-run; design first.
 
 **Key architectural moves locked.**
 
@@ -105,26 +111,39 @@ P3 — **Julia prototype core.** ◐ In progress.
     state machine {INVALID, WARMUP, VALID}, reseed flow
     verified with deterministic-magnitude perturbation).
 
-  Remaining sub-items:
-  - **P3d — SDE-selection benchmark.** Comparative bench across
-    Lorenz-96 / Lorenz-63 / Rössler on Lyapunov richness,
-    parameter sensitivity, compute cost. Upgrades LL-003 to
-    `:benchmarked` with the comparative artefact pinned in the
-    registry.
-  - **P3-Nyq — Nyquist-condition adversary-rate benchmark.**
-    Demonstrate that an adversary at sub-Nyquist sampling cannot
-    reconstruct the genuine sensor stream. Closes LL-005 to
-    `:tested`. Folds into the existing benchmark framework.
-  - **P3-bound — LL-006 `:benchmarked` upgrade.** Calibrate the
-    §2.1 bound's constants (K, c, δ_A(ε_A)) against the existing
-    detection-probability surface; verify empirical curve is
-    above the bound prediction.
   - **CI workflow.** ✓ Landed in 0.0.11
     (`.github/workflows/test.yml`). Julia 1.12 on
     ubuntu-latest; runs `Pkg.test()` on every push to master
     and on PRs. 20-minute job timeout. Lockfile-respecting
-    install via `julia-actions/julia-buildpkg`. Workflow fires
-    automatically on this commit's push.
+    install via `julia-actions/julia-buildpkg`.
+
+  **Deferred sub-items** (pending LL-019/020/021 design
+  responses; see Round-2 followups below):
+  - P3d — SDE-selection benchmark (LL-003 `:benchmarked`).
+  - P3-Nyq — Nyquist-condition adversary-rate benchmark
+    (LL-005 `:tested`).
+  - P3-bound — LL-006 `:benchmarked` upgrade.
+
+P-R2 — **Round-2 architectural responses.** ◐ Promoted from
+  followup status to active priority by 0.0.12. Three
+  design-response sessions, similar in shape to P2 sub-items:
+  - **P-R2a — LL-019 side-channel hardening.** Constant-time
+    response or randomised-delay protocol on chaos-guard
+    state transitions. Specification of "audit on every
+    verification request" cadence (full Benettin spectrum,
+    not just Wolf-method guard pass-through). Target output:
+    small companion doc + spec entry refinement +
+    implementation in `Audit.jl` / `ChaosGuard.jl`.
+  - **P-R2b — LL-020 calibration confidentiality.** Sealed-
+    storage protocol for registered envelope; ε-differential-
+    privacy perturbation of any published envelope statistics;
+    multi-party threshold scheme as alternative for no-TPM
+    deployments. Companion doc + spec entry refinement.
+  - **P-R2c — LL-021 worst-case-adversary-bound.** Analytic
+    derivation of worst-case δ_A direction (minimum-coupling
+    direction in α-space). Structured-adversary benchmark
+    extending the existing isotropic surface. Companion doc
+    + benchmark script + spec refinement.
 
 P4 — **Catlab categorical realisation** (optional, gated on P2).
   Use Julia + Catlab.jl / GATlab to verify the categorical
@@ -163,22 +182,24 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 18 (no change in 0.0.10)
+- Total spec entries: 21 (was 18; +3 in 0.0.12 — LL-019,
+  LL-020, LL-021 surfaced by synthesis-team round 2)
 - `:proved`: 0
-- `:tested`: 4 (LL-003 — Lorenz-96 baseline; LL-004 — sensor
-  coupling layer; LL-006 — Lyapunov-spectrum residue audit;
-  LL-007 — chaos-guard)
+- `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018)
-- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
+- `:open`: 8 (LL-001, LL-002, LL-009, LL-010, LL-015,
+  LL-019, LL-020, LL-021)
 
 Nine entries closed at the design-pass level via manual
 evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed
 to `:tested` via the P3 prototype. None machine-verified yet —
-Lean (P5/P6) targets LL-006, LL-008, LL-018; P3 follow-ups
-target LL-005 for `:tested`, LL-003 / LL-006 for `:benchmarked`.
+Lean (P5/P6) targets LL-006, LL-008, LL-018 plus the round-2
+priorities (linear-coupling worst-case bound, side-channel
+indistinguishability, calibration ε-DP). P-R2 follow-ups are
+the active priority; P3 follow-ups deferred.
 
 ## Open structural questions
 
@@ -343,6 +364,25 @@ Remaining `:open` entries fall into two classes:
   conservative-by-construction initial WARMUP state and its
   parallel to LL-012 cold-start handling. LL-007 closes to
   `:tested`.
+- **`docs/synthesis_team_round2_brief.md`** (0.0.11) — Brief
+  forwarded to Gemini and Grok for round 2 of the synthesis-
+  team review. Six questions per seat; reading-list set; 2000-
+  word response cap. Brief itself does not capture responses
+  — those land in the round-2 companion.
+- **`docs/synthesis_team_round2_companion.md`** (0.0.12) —
+  Round-2 dialogue + AI-integrator resolution. §1B faithfully
+  summarises Gemini's response (affirmed architecture without
+  deepening; placeholder Lean stubs; one new suggestion of
+  Transfer-Entropy verification statistic). §1C summarises
+  Grok's response (engaged A1-A6 directly; surfaced V-011
+  Reseed Oracle, V-012 Calibration Spectrum Leakage, V-013
+  Structured α-Direction Attack; identified linearisability
+  concern A6; sharper Lean priorities). §1D proposes
+  resolution: 3 new spec entries (LL-019/020/021), notes
+  amendments on LL-004/006/007/011/014, deferral of P3d /
+  P3-bound / P3-Nyq, promotion of P-R2 architectural
+  responses. §7 lists outstanding instantiator decisions
+  pending Aaron's confirmation.
 
 ## Live empirical observations
 

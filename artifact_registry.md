@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.10 (P3c chaos-guard, 2026-05-02)
+Version: 0.0.12 (synthesis-team round 2, 2026-05-02)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -80,22 +80,30 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-018 | adversary-resolution-bound formalisation (per-class A1..A6) | Core | manual | docs/architecture_design_companion.md §2.2, §3.3 | — | :argued |
 
+## Surfaced by synthesis-team round 2 (0.0.12)
+
+| LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
+|---|---|---|---|---|---|---|
+| LL-019 | side-channel hardening (reseed timing + audit-on-verify) | Core | none | — | — | :open |
+| LL-020 | calibration confidentiality (envelope sealed against observers) | Core | none | — | — | :open |
+| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | none | — | — | :open |
+
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 18
+- Total: 21
 - `:proved`: 0
 - `:tested`: 4
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9
-- `:open`: 5
+- `:open`: 8
 
-## Cross-audit A1–A6 self-check (post-0.0.10)
+## Cross-audit A1–A6 self-check (post-0.0.12)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (18 of 18).
+  here. ✓ (21 of 21).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
 - **A3 — Evidence exists.** Nine entries cite
   `docs/architecture_design_companion.md`; four entries
@@ -110,7 +118,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `:open` entries carry `none`. ✓. No entry has a status its
   evidence type cannot support.
 - **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.10 and `dashboard.md` 0.0.10.
+  `LAVALAMP_SPEC.md` 0.0.12 and `dashboard.md` 0.0.12.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 82/82 assertions pass in

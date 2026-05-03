@@ -5,6 +5,190 @@ messages match entry summaries.
 
 ---
 
+## 0.0.12 — 2026-05-02 — Synthesis-team round 2 (3 new attack vectors, 3 new spec entries)
+
+Captures the second round of synthesis-seat (Gemini) +
+edge-witness-seat (Grok) review on LavaLamp, triggered by P2
+closure (0.0.5) and the substantive P3 prototype landing
+(0.0.6 - 0.0.10). Brief was forwarded in 0.0.11; responses
+arrived together; 0.0.12 is the integration commit.
+
+The two seats produced asymmetric content this round. Grok's
+edge-witness review surfaced three real new attack vectors
+(V-011 Reseed Oracle, V-012 Calibration Spectrum Leakage,
+V-013 Structured α-Direction Attack) plus a structural
+concern (A6 linearisability of the linear-in-x coupling).
+Gemini's synthesis review affirmed the architecture without
+substantively deepening it; the Lean theorem stubs offered
+were placeholder-level.
+
+Combined verdict: `engage-and-formalise-after-fixes`. Three
+new spec entries land at `:open` (LL-019 side-channel
+hardening, LL-020 calibration confidentiality, LL-021
+worst-case-adversary-bound). Notes amendments on LL-004 /
+LL-006 / LL-007 / LL-011 / LL-014 reflect the round-2
+findings. P3 prototype-extension follow-ups (P3d, P3-Nyq,
+P3-bound) are *deferred* in favor of P-R2 architectural
+responses to LL-019/020/021.
+
+### Added
+
+- **`docs/synthesis_team_round2_companion.md`** — round-2
+  dialogue + AI-integrator resolution per the round-1
+  pattern. §1A brief summary; §1B faithful summary of
+  Gemini response (with honest assessment of its
+  limitations); §1C faithful summary of Grok response (three
+  new attack vectors + linearisability concern + sharper
+  Lean priorities); §1D proposed resolution; §2 round-2
+  architectural state; §3 verification (manual evidence);
+  §4 spec impact; §5 process notes (round-2 contribution
+  asymmetry; brief structure worked unevenly across seats;
+  Lean priorities expanded); §6 followups; §7 outstanding
+  instantiator decisions for Aaron's confirmation.
+- **`docs/attack_surface_enumeration.md`** — three new attack
+  vectors:
+  - **V-011 — Reseed Oracle.** Chaos-guard state transitions
+    observable as timing channel; sensor-correlated; gives
+    A4/A5 a thermal-event oracle. Defense: LL-019 (pending).
+  - **V-012 — Calibration Spectrum Leakage.** Registration
+    ceremony exposes the registered envelope to channel
+    observers; TPM defends substitution but not observation.
+    Defense: LL-020 (pending).
+  - **V-013 — Structured α-Direction Attack.** Real
+    adversaries are non-isotropic in α-space; existing
+    detection-probability surface is an optimistic lower
+    bound. Defense: LL-021 (pending).
+  Adversary-class × attack-vector matrix updated; residual-
+  risks section extended with three new entries.
+- **`LAVALAMP_SPEC.md`** — three new spec entries:
+  - **LL-019 — side-channel-hardening** (Core, `:open`).
+    Constant-time / randomised-delay response on chaos-guard
+    state transitions; "audit on every verification request"
+    cadence requirement (full Benettin spectrum, not just
+    Wolf-method guard).
+  - **LL-020 — calibration-confidentiality** (Core, `:open`).
+    Registered envelope sealed against registration-channel
+    observers via TPM-sealed storage / ε-DP perturbation /
+    multi-party threshold scheme. Complementary to LL-011's
+    TPM attestation (which defends substitution, not
+    observation).
+  - **LL-021 — worst-case-adversary-bound** (Core, `:open`).
+    Detection-probability claim (LL-006 / LL-008) re-stated
+    against worst-case adversary direction (minimum δ_A over
+    admissible perturbation directions), not isotropic.
+    Empirical benchmarks must include structured directions.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.10 → 0.0.12. Notes
+  amendments (no status changes) on:
+  - LL-004 (linearisability limitation; state-dependent
+    coupling deferred).
+  - LL-006 (empirical detection surface is optimistic;
+    worst-case is LL-021's deliverable).
+  - LL-007 (reseed-timing decorrelation requirement; LL-019
+    pre-condition).
+  - LL-011 (calibration confidentiality requirement; LL-020
+    complementary).
+  - LL-014 (adaptive-thresholding promoted from optional to
+    load-bearing for multi-tenant deployments).
+  Counts: total 18 → 21; `:open` 5 → 8.
+- **`artifact_registry.md`** — version 0.0.10 → 0.0.12.
+  Three new rows for LL-019/020/021 (`:open`, evidence
+  none). Counts. A1 coverage 21/21; A5 stale-counts updated.
+- **`dashboard.md`** — version 0.0.11 → 0.0.12. Project state
+  notes round-2 architectural debt; workflow shift from P3
+  prototype-extension to P-R2 architectural-response
+  sessions; P3 follow-ups marked deferred. New P-R2 priority
+  block listing P-R2a/b/c sub-tasks. Recent companion docs
+  gains the round-2 brief + companion entries.
+
+### Why
+
+Round 2 was triggered by P2 closing in 0.0.5 plus P3
+substantively closing in 0.0.10 (4 of 18 entries `:tested`).
+The round-1 plan was for round 2 to validate
+"engage-and-formalise" or send work back to architecture.
+Both happened simultaneously: the architecture is
+fundamentally sound (Gemini's affirmation; Grok's
+constructive criticism rather than fundamental obstruction)
+*and* the prototype implementation has surfaced attack
+surface that the design pass didn't enumerate.
+
+The asymmetric contribution profile (Grok > Gemini this
+round) is itself informative. Round 1 had Gemini-first
+because synthesis was load-bearing for the in-flux
+architecture; round 2 had Grok carrying the substantive load
+because the architecture was settled and the implementation
+was the new attack surface. For round 3 (after LL-019/020/021
+designs land), the brief should weight edge-witness questions
+accordingly.
+
+The decision to defer P3 prototype-extension work (P3d,
+P3-bound, P3-Nyq) in favor of P-R2 architectural responses
+follows the same logic as P3 being gated on P2 in 0.0.5:
+running comparative benchmarks against an architecture marked
+as having known soft spots produces results that need re-
+running. Architecture first; benchmarks once the architecture
+is solid.
+
+### Spec impact
+
+- Counts: total 18 → 21 (+3 — LL-019, LL-020, LL-021);
+  `:open` 5 → 8; `:argued` / `:tested` / others unchanged.
+- Status moves: none. New entries land at `:open`.
+- Notes amendments: LL-004, LL-006, LL-007, LL-011, LL-014.
+
+### Counts
+
+- Total: 21 entries
+- `:proved`: 0
+- `:verified`: 0
+- `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
+- `:benchmarked`: 0
+- `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
+  LL-014, LL-016, LL-017, LL-018)
+- `:open`: 8 (LL-001, LL-002, LL-009, LL-010, LL-015,
+  LL-019, LL-020, LL-021)
+
+### Known gaps
+
+- **§7 outstanding instantiator decisions.** The companion
+  doc lists items where Aaron's call should override the AI
+  integrator's proposed resolution before subsequent work
+  proceeds. The most consequential: whether the AI
+  integrator's framing of Gemini's response as "less
+  substantive than the brief asked for" is fair, and whether
+  three new spec entries is the right number (versus
+  consolidating to fewer).
+- **No implementation responses yet.** LL-019/020/021 land
+  with `:open` status; their defenses are pending P-R2
+  design work. The prototype's V-011/V-012/V-013 attack
+  surface is currently *exposed*.
+- **Lean target updated but not Lean work landed.** Round-2's
+  sharper theorem priorities (linear-coupling worst-case
+  bound; side-channel indistinguishability; calibration
+  ε-DP) replace Gemini's placeholder stubs but are still
+  P5/P6 work.
+
+### Followup recommendations
+
+- **P-R2a — LL-019 design.** Constant-time response /
+  decorrelation protocol for chaos-guard state transitions;
+  "audit on every verification request" cadence
+  specification. Companion doc + minor `Audit.jl` /
+  `ChaosGuard.jl` refinement.
+- **P-R2b — LL-020 design.** Calibration-data sealing
+  protocol (TPM-sealed storage / ε-DP / multi-party
+  threshold). Companion doc.
+- **P-R2c — LL-021 design.** Worst-case adversary direction
+  derivation; structured-adversary benchmark sweep. Companion
+  doc + benchmark script + spec refinement.
+- **Round 3 trigger** after P-R2a/b/c land. Brief should
+  weight edge-witness questions per round-2 §5.1.
+
+---
+
 ## 0.0.11 — 2026-05-02 — GitHub Actions CI workflow
 
 Lands the CI workflow flagged as a follow-up since 0.0.7. With

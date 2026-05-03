@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.10 (P3c chaos-guard, 2026-05-02)
+Version: 0.0.12 (synthesis-team round 2, 2026-05-02)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -129,6 +129,15 @@ LL-ID, not the Key.
   State-dependent coupling (U quadratic-or-higher in x) is a
   future enhancement, not a prerequisite. Real-sensor FFI
   deferred to a later P3 sub-task or P6 hardening.
+- **Round-2 limitation (2026-05-02):** Linear-in-x coupling
+  is *linearisable* by an adversary with system-identification
+  capability — the cubic Lorenz-96 dynamics protect the
+  unforced terms but not the sensor coupling layer. The
+  current implementation's security claim is conditional on
+  the adversary not accurately modeling the sensor interface.
+  See `synthesis_team_round2_companion.md` §1C-A6 / §1D-iv;
+  V-013 in attack_surface_enumeration.md. State-dependent
+  coupling deferred as a future architectural enhancement.
 
 ### LL-005 — sensor-Nyquist-condition
 - Key: sensor sampling rate vs physical noise bandwidth
@@ -198,6 +207,15 @@ LL-ID, not the Key.
   Thm_Q102_structure (cross-sector autopoiesis fails 0/5202
   across 5 ICs at threshold 0.999) — see
   qkd_pqc_complementarity_companion.md §2.5.
+- **Round-2 acknowledgment (2026-05-02):** The empirical
+  detection-probability surface is an *optimistic* bound
+  derived from an isotropic synthetic adversary. Real
+  adversaries have structured perturbation directions
+  (V-013); worst-case δ_A is bounded by the weakest-coupled
+  direction, not the isotropic average. LL-021
+  (worst-case-adversary-bound) supplies the corrected
+  bound; the empirical curve here remains valid as a lower
+  bound on detection difficulty.
 
 ### LL-007 — chaos-guard
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
@@ -231,6 +249,15 @@ LL-ID, not the Key.
   ambient monitoring at sub-1% CPU. Concrete λ₁_expected for the
   chosen SDE is set per-deployment; the prototype uses 1.66 from
   the Lorenz-96 N=40, F=8 baseline.
+- **Round-2 timing-channel concern (2026-05-02):** Reseed
+  events and state transitions are *observable as timing
+  channels* if the verifier emits WARMUP responses
+  distinguishably from VALID/REJECT. LL-019 (side-channel
+  hardening) is the corrective requirement — production
+  deployments must use constant-time response or
+  randomised-delay protocol around state transitions.
+  Without LL-019, V-011 (Reseed Oracle) gives an A4/A5
+  adversary a sensor-correlated event channel.
 
 ### LL-008 — resolution-bounded-security
 - Key: S_production > S_measurement
@@ -304,6 +331,16 @@ LL-ID, not the Key.
 - Source: docs/architecture_design_companion.md §2.5.1, §3.8.
 - Notes: Concrete protocol implementation (Julia client +
   Haskell verifier-side spec) is P3+P4 work.
+- **Round-2 confidentiality requirement (2026-05-02):** The
+  TPM attestation defence in this entry prevents envelope
+  *substitution* but does not prevent envelope *observation*.
+  V-012 (Calibration Spectrum Leakage) gives a registration-
+  channel observer the full registered envelope. LL-020
+  (calibration-confidentiality) is the complementary
+  requirement: registered envelope must be sealed against
+  observers via TPM-sealed storage, ε-DP perturbation of
+  any published statistics, or multi-party threshold scheme.
+  Both LL-011 and LL-020 are required for production.
 
 ### LL-012 — cold-start-window
 - Key: behavior of just-booted device before trajectory has converged
@@ -359,6 +396,14 @@ LL-ID, not the Key.
   family / parameters / estimator and are produced by P3
   benchmarks against estimator variance at the chosen window
   length.
+- **Round-2 promotion (2026-05-02):** Adaptive thresholding
+  (history-aware τ that learns from genuine-device traces)
+  is now *load-bearing for multi-tenant deployments*, not
+  optional hardening. The prototype's 10% baseline FPR at
+  k=5 / n_trials=10 is operationally a denial-of-service
+  vector at scale; tightening requires more trials, a chi-
+  squared aggregate test, or adaptive-threshold history.
+  See `synthesis_team_round2_companion.md` §1C-A5.
 
 ---
 
@@ -465,20 +510,121 @@ LL-ID, not the Key.
 
 ---
 
+## Surfaced by synthesis-team round 2 (0.0.12)
+
+### LL-019 — side-channel-hardening
+- Key: chaos-guard state transitions and audit cadence must not leak timing/correlation oracles
+- Logic tier: Core
+- Description: The chaos-guard (LL-007) state-transition
+  responses (WARMUP / INVALID / VALID) must be emitted with
+  *constant-time* or *randomised-delay* envelope so that an
+  external observer cannot distinguish reseed events from
+  legitimate verification load. Reseed triggers are sensor-
+  correlated; observable reseed timing is a sensor-event
+  oracle for an A4/A5 adversary (V-011). Additionally: the
+  full Benettin spectrum audit (LL-006) MUST run on every
+  verification request — the chaos-guard's cheap Wolf-method
+  λ₁ alone is insufficient because adversaries can craft
+  trajectories that match λ₁ but diverge in higher exponents
+  (A4 finding from round 2). The Wolf-method guard remains
+  the always-on monitor; the Benettin audit on every
+  verification closes the inter-audit window.
+- Evidence type: none
+- Status: :open
+- Source: docs/synthesis_team_round2_companion.md §1C-A1 +
+  §1D-iii; docs/attack_surface_enumeration.md V-011.
+- Notes: Mitigation strategies in decreasing strength:
+  (1) constant-time response (uniform delay matching slowest
+  legitimate verification path); (2) randomised-delay envelope
+  on all state-transition responses; (3) accepted residual
+  risk with documented deployment-context bound on A4 timing
+  precision. Implementation requires both protocol-side
+  (verifier delays state-transition emissions) and audit-side
+  (audit on every verify, not periodic) discipline.
+
+### LL-020 — calibration-confidentiality
+- Key: registered envelope sealed against registration-channel observers, not just substitution
+- Logic tier: Core
+- Description: The registration ceremony (LL-011) calibrates
+  the device's envelope by exposing n_trials Lyapunov-spectrum
+  estimates plus per-exponent σ on the registration channel.
+  TPM attestation in LL-011 defends *substitution* but not
+  *observation* — an A5 adversary present during registration
+  captures the registered envelope to machine precision and
+  can craft trajectories that lie just inside the rejection
+  ball, defeating LL-006 + LL-017 by knowing the threshold
+  geometry exactly (V-012). LL-020 requires that the
+  registered envelope and per-exponent σ be sealed against
+  observers: TPM-sealed storage on the verifier (envelope
+  never transmitted in cleartext post-registration);
+  ε-differentially-private perturbation of any published
+  envelope statistics; or multi-party threshold scheme on
+  envelope reconstruction.
+- Evidence type: none
+- Status: :open
+- Source: docs/synthesis_team_round2_companion.md §1C-A2 +
+  §1D-iii; docs/attack_surface_enumeration.md V-012.
+- Notes: LL-011 (registration ceremony) and LL-020 (calibration
+  confidentiality) are complementary requirements; production
+  deployments need both. The prototype implements neither —
+  synthetic stub streams bypass the registration channel
+  entirely. LL-020 design is the natural next architecture-
+  pass deliverable alongside LL-019 / LL-021.
+
+### LL-021 — worst-case-adversary-bound
+- Key: detection-probability claim stated against worst-case adversary direction, not isotropic
+- Logic tier: Core
+- Description: The LL-006 detection-probability bound shape
+  P(detect) ≥ 1 - K·exp(-c·T·δ_A²) is currently parameterised
+  on isotropic synthetic-adversary perturbations
+  (`Audit.synthetic_adversary` uses unit-vector × magnitude
+  with random direction). Real adversaries have *structured*
+  perturbation directions (sensor manipulation favours
+  specific α components per V-006; configuration replay shifts
+  toward registered-config directions per V-009; slow-drift
+  threshold gaming chooses the maximally-evading direction
+  per V-005). The empirical detection-probability surface
+  (`benchmark/results/p3b_detection_lorenz96.txt`) is therefore
+  an *optimistic* lower bound, not a worst-case bound.
+  LL-021 requires: (a) the LL-006 / LL-008 / LL-018 bound be
+  re-stated with δ_A defined as the *minimum* spectrum gap
+  over all admissible adversary directions; (b) empirical
+  benchmarks include structured-direction adversaries
+  (worst-case sweep, not isotropic).
+- Evidence type: none
+- Status: :open
+- Source: docs/synthesis_team_round2_companion.md §1C-A3 + A6
+  + §1D-iii; docs/attack_surface_enumeration.md V-013.
+- Notes: The under-estimation factor scales with the condition
+  number of the coupling matrix (the ratio of strongest- to
+  weakest-coupled directions). For the prototype's uniform b =
+  ones(N) the condition number is 1 (so the optimistic bound
+  is also worst-case for *uniform* coupling), but LL-021 is
+  load-bearing for any production coupling that intentionally
+  weights sensors differently. Long-term: state-dependent
+  coupling (LL-004 future enhancement) reduces the condition-
+  number disparity by making the coupling x-dependent.
+
+---
+
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 18
+- Total: 21
 - `:proved`: 0
 - `:tested`: 4 (LL-003, LL-004, LL-006, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 9 (LL-005, LL-008, LL-011, LL-012, LL-013,
   LL-014, LL-016, LL-017, LL-018)
-- `:open`: 5 (LL-001, LL-002, LL-009, LL-010, LL-015)
+- `:open`: 8 (LL-001, LL-002, LL-009, LL-010, LL-015,
+  LL-019, LL-020, LL-021)
 
-**Prototype-stage. Four entries (LL-003 Lorenz-96 baseline,
-LL-004 sensor coupling, LL-006 residue audit, LL-007 chaos-
-guard) example-tested via the Julia prototype; 9 entries
-argued at design level; 5 remain open: LL-001/002 await Lean
-/ type-level enforcement (P5/P6); LL-009/010/015 are corpus-
-boundary declarations.**
+**Prototype-stage with round-2 architectural debt. Four
+entries (LL-003 Lorenz-96 baseline, LL-004 sensor coupling,
+LL-006 residue audit, LL-007 chaos-guard) example-tested via
+the Julia prototype; 9 entries argued at design level; 8
+remain open: LL-001/002 await Lean / type-level enforcement
+(P5/P6); LL-009/010/015 are corpus-boundary declarations;
+LL-019/020/021 are the round-2 surfaced architectural debts
+needing design responses before further prototype-extension
+work proceeds.**
