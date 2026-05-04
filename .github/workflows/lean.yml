@@ -1,0 +1,42 @@
+# LavaLamp Lean 4 build — runs on every push to master and on PRs.
+#
+# Lockfile discipline (per CLAUDE.md package-management rule):
+#   leanprover/lean-action reads `src/lean4/lean-toolchain` for the
+#   pinned Lean version and `src/lean4/lake-manifest.json` for the
+#   pinned dependency manifest (empty packages list at scaffold
+#   tier). CI verifies that a clean checkout + lockfile install
+#   builds.
+#
+# Scaffold tier (0.0.36+): the package builds with no theorems —
+#   only `def hello` smoke + `LavaLamp/Theorems.lean` round-3
+#   placeholder. The CI baseline is "lake build clean."
+#
+# When proofs land (round-3+): `sorry`-stubs still build clean;
+#   real proofs without `sorry` are what CI starts catching as
+#   correctness checks. Same workflow, deeper meaning.
+
+name: Lean
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: lake build (Lean 4 / ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build LavaLamp Lean library
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: src/lean4

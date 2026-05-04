@@ -286,7 +286,10 @@ gradient that makes the tier worthwhile.
    root + `LavaLamp/Theorems.lean` round-3 placeholder + README
    capturing the discipline; `lake build` clean post-commit;
    no Mathlib at scaffold tier — round-3 architectural
-   decision). Round-2 §1D.v
+   decision). *CI live at 0.0.37* via
+   `.github/workflows/lean.yml` (leanprover/lean-action@v1;
+   `lake build` on push to master + PRs; mirror of the
+   Julia CI structure). Round-2 §1D.v
    priorities target: linear-coupling worst-case bound (LL-021
    :benchmarked grounds the theorem statement); side-channel
    timing indistinguishability (LL-019 :benchmarked grounds);

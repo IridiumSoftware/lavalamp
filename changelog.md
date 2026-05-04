@@ -5,6 +5,82 @@ messages match entry summaries.
 
 ---
 
+## 0.0.37 — 2026-05-04 — Lean 4 CI workflow (.github/workflows/lean.yml; lake build on every push)
+
+Adds a Lean 4 CI workflow as **parallel-safe infrastructure
+follow-up** to the 0.0.36 scaffold. Mirrors the Julia CI's
+structure (`.github/workflows/test.yml`); uses
+`leanprover/lean-action@v1` to install elan + read the pinned
+toolchain (`src/lean4/lean-toolchain` → `leanprover/lean4:v4.18.0`)
++ run `lake build` on every push to master and on PRs.
+
+**Net result.** Lean track now has CI baseline at the scaffold
+tier. The build is trivial today (no theorems; smoke def +
+`LavaLamp/Theorems.lean` comment-block placeholder), but the
+workflow becomes operationally meaningful when proofs land in
+round-3+: `sorry`-stubs still build clean, but real proof
+attempts without `sorry` will fail CI if they have errors.
+Same workflow, deeper meaning over time.
+
+Counts unchanged (23 / 0 / 3 / 0 / 4 / 15 / 1). Test suite
+184/184 unchanged (Julia track). No spec entry changes — CI
+infrastructure is not evidence at the spec level.
+
+### Added
+
+- **`.github/workflows/lean.yml`** — Lean CI workflow.
+  - Trigger: push to `master` + pull_request.
+  - Runner: `ubuntu-latest`.
+  - Timeout: 15 minutes (generous; scaffold-tier build runs
+    in seconds).
+  - Action: `leanprover/lean-action@v1` with
+    `lake-package-directory: src/lean4`.
+  - Permissions: read-only (`contents: read`).
+  - Comments document the lockfile discipline (toolchain pin
+    + lake-manifest.json empty-at-scaffold-tier) and the
+    workflow's evolution from scaffold-tier baseline to
+    proof-correctness checker as round-3 work lands.
+
+### Changed
+
+- **`CLAUDE.md`** — §Language tiers + phase discipline §6
+  ("Lean 4 formal proofs"): scaffold-landed line gains a
+  "*CI live at 0.0.37*" parenthetical with workflow path +
+  action reference + structural mirror note.
+- **`LAVALAMP_SPEC.md`** — version 0.0.36 → 0.0.37 (CI bump;
+  no entry changes).
+- **`artifact_registry.md`** — version 0.0.36 → 0.0.37 (CI
+  bump; no row changes).
+- **`dashboard.md`** — version 0.0.36 → 0.0.37. Recent
+  companion docs prepended with the workflow file description.
+
+### Why
+
+1. **Scaffold + CI are sibling investments.** Landing the
+   scaffold (0.0.36) without CI would mean future Lean drift
+   could go undetected (e.g., a toolchain bump that breaks the
+   build). CI catches it on the first push after the bug.
+2. **No round-3 commitment.** Adding CI doesn't change spec
+   entries, evidence types, or theorem statements. The
+   workflow is purely operational hygiene.
+3. **Symmetry with Julia track.** Julia CI runs `Pkg.test()`;
+   Lean CI runs `lake build`. Both are necessary and
+   complementary; both run on the same trigger conditions.
+4. **Discipline scales with the project.** When proofs land
+   in round-3+, the same workflow becomes a proof-
+   correctness checker without modification. The investment
+   pays off across all future Lean work.
+
+### Counts
+
+- Total: 23 (unchanged)
+- All status counts unchanged.
+- Test suite: 184/184 (Julia, unchanged).
+- Lean: `lake build` clean (no theorems at scaffold tier;
+  workflow verifies the buildable infrastructure).
+
+---
+
 ## 0.0.36 — 2026-05-04 — Lean 4 scaffold landed at src/lean4/ (lake build clean)
 
 Lands the Lean 4 formal-verification scaffold as **parallel-safe

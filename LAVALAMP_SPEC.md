@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.36 (Lean 4 scaffold landed at src/lean4/; lake build clean; no spec changes, 2026-05-04)
+Version: 0.0.37 (Lean 4 CI workflow live at .github/workflows/lean.yml; no spec changes, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions

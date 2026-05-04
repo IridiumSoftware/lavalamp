@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.36 (Lean 4 scaffold landed at src/lean4/; lake build clean; no spec changes, 2026-05-04)
+Version: 0.0.37 (Lean 4 CI workflow live at .github/workflows/lean.yml; no spec changes, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

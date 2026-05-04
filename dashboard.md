@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.36 — Lean 4 scaffold landed at src/lean4/; lake build clean; no spec changes).
+Last updated: 2026-05-04 (0.0.37 — Lean 4 CI workflow live at .github/workflows/lean.yml; no spec changes).
 
 ## Status summary
 
@@ -553,6 +553,17 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`.github/workflows/lean.yml`** (0.0.37) — Lean 4 CI
+  workflow. `leanprover/lean-action@v1` runs `lake build` on
+  push to master + PRs (mirror of the Julia CI structure).
+  Reads the pinned `src/lean4/lean-toolchain` (v4.18.0) and
+  `lake-manifest.json` (empty packages at scaffold tier). At
+  the scaffold tier the build is trivial (smoke def +
+  comment-block placeholder); when proofs land in round-3+,
+  the same workflow becomes a correctness check (real proofs
+  without `sorry` are what CI starts catching). 15-min
+  timeout, ubuntu-latest. Counts unchanged at
+  23 / 0 / 3 / 0 / 4 / 15 / 1.
 - **`src/lean4/`** (0.0.36) — Lean 4 formal-verification
   scaffold. Buildable Lake project with toolchain pin
   (`leanprover/lean4:v4.18.0`), root `LavaLamp.lean` smoke,

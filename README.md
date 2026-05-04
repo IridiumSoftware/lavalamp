@@ -91,7 +91,8 @@ scoping question on both ends) → 0.0.35 (full A0–A6 cross-
 audit pre-round-3; CLAUDE.md drift fixed; PASS across all
 six checks) → 0.0.36 (Lean 4 scaffold landed at src/lean4/;
 lake build clean; round-3 proof work picks up from a
-buildable starting point).
+buildable starting point) → 0.0.37 (Lean 4 CI workflow at
+.github/workflows/lean.yml; lake build on every push).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -115,7 +116,8 @@ lavalamp/
 ├── dashboard.md                                 ← status + priorities
 ├── changelog.md                                 ← versioned entries
 ├── CLAUDE.md                                    ← project governance
-├── .github/workflows/test.yml                   ← CI workflow
+├── .github/workflows/test.yml                   ← Julia CI (Pkg.test on push)
+├── .github/workflows/lean.yml                   ← Lean CI (lake build on push)
 ├── docs/                                        ← per-session companion docs
 │   ├── concept_origin_companion.md
 │   ├── synthesis_team_round1_companion.md
