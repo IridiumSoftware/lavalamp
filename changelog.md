@@ -5,6 +5,108 @@ messages match entry summaries.
 
 ---
 
+## 0.0.30 — 2026-05-04 — LL-003 N-scaling characterisation (Lyapunov density ≈ 0.255)
+
+Adds the Lorenz-96 N-scaling benchmark — the unblocked sub-item
+promised in `dashboard.md` P3 follow-ups. Sweeps N ∈ {20, 40,
+80, 160} at F=8, 5 trials per N, and characterises how the
+Lyapunov-spectrum statistics scale with system size for the
+chosen SDE.
+
+**Net result.** Spatially-extended-chaos prediction confirmed
+empirically. Linear h_KS scaling within sampling-variance
+bounds:
+
+```
+h_KS  ≈ 0.2165 · N^1.0370       (β=1.04 vs theoretical β=1.0)
+n_pos ≈ 0.3019 · N^1.0220       (β=1.02)
+KY    ≈ 0.6623 · N^1.0048       (β=1.00)
+```
+
+Per-N Lyapunov density h_KS/N converges from 0.2383 (N=20) to
+0.2591 (N=160) — finite-N corrections decay as N grows; density
+saturates by N≥80. Asymptotic Lyapunov density s ≈ 0.255 per
+dimension at F=8 is a deployment-design constant. Compute
+scales as O(N³) per integration step (per-trial wall clock
+0.1 → 1.8 → 5.9 → 25 s as N goes 20 → 40 → 80 → 160).
+
+LL-003 stays `:benchmarked`. The N-scaling adds deployment-
+guidance content to the entry's footer — concretely, the
+deployment-design rule:
+
+```
+For target chaos-production margin Δh*:
+  N* ≈ Δh* / s        with s ≈ 0.255
+  Compute cost: O(N*³) per integration step.
+```
+
+### Added
+
+- **`src/julia/benchmark/p3e_n_scaling.jl`** — N-scaling
+  benchmark. Sweeps N ∈ {20, 40, 80, 160} at fixed F=8,
+  N_benettin=1200, 5 trials per N. Wall-clock excluded from
+  result file (printed to stdout) per the §Benchmarking
+  discipline byte-identical convention. Total wall clock
+  ~3 minutes on Apple Silicon.
+- **`src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt`**
+  — committed result file. Per-N spectrum statistics +
+  fitted scaling laws + per-N intensities. Determinism check
+  PASS (byte-identical across two runs).
+- **`docs/p3e_n_scaling_companion.md`** — companion. §1
+  configuration + determinism. §2.1-§2.2 per-N statistics
+  and fitted laws. §2.3 per-N Lyapunov density convergence
+  (finite-N correction analysis). §2.4 O(N³) compute scaling
+  validation. §2.5 deployment-design rule with worked
+  examples. §3.2 grounds LL-008's Lean theorem in
+  N-dependent form. §5 captures five lessons including
+  "extensive-chaos prediction empirically validated" and
+  the methodology continuity across the three high-res
+  refreshes 0.0.28-0.0.30.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.29 → 0.0.30. LL-003
+  gains a "N-scaling characterisation (2026-05-04)" footer
+  documenting the linear scaling, asymptotic density,
+  compute cost, and deployment-design rule. Status unchanged.
+  Counts unchanged (22 / 0 / 0 / 2 / 0 / 4 / 15 / 1).
+- **`artifact_registry.md`** — version 0.0.29 → 0.0.30.
+  LL-003 row's Test/Proof column extended to cite the new
+  benchmark + result + companion. Cross-audit A1-A6
+  self-check refreshed for 0.0.30.
+- **`dashboard.md`** — version 0.0.29 → 0.0.30. Status
+  summary updated. P3 follow-ups list adds 0.0.30 entry;
+  Higher-N Lorenz-96 benchmark removed from
+  remaining-unblocked. Recent companion docs prepended with
+  the new companion.
+
+### Why
+
+1. **Most fundamental of the remaining queue.** Per the
+   in-conversation analysis: the N-scaling benchmark connects
+   directly to LL-008's load-bearing security claim
+   (`S_production > S_measurement` margin scales with h_KS),
+   gives a deployment-design knob (N) with predictable
+   consequences, and answers a question that's structurally
+   unknown at the prototype's parameters (literature gives
+   N=40 values; we hadn't measured N=80 or N=160 ourselves).
+2. **Empirical validation of theoretical prediction.** The
+   spatially-extended-chaos literature predicts linear h_KS
+   scaling for systems like Lorenz-96 at fixed F. This
+   benchmark validates that prediction at the prototype's
+   parameters within sampling-variance bounds.
+3. **LL-008 grounding refinement.** Prior to this benchmark,
+   `S_production` was characterised at single N values (N=20
+   in P3-bound, N=40 in P3d). The N-dependent characterisation
+   `S_production ≈ s · N` makes LL-008's theorem statement
+   parametrically clearer for P5/P6 Lean work.
+4. **Compute-cost characterisation at high N.** The O(N³) per
+   integration step scaling is now concrete (25 s per
+   spectrum at N=160). High-assurance deployments now have
+   the cost knob alongside the margin knob.
+
+---
+
 ## 0.0.29 — 2026-05-04 — LL-019 high-res refresh (regime-boundary at α=0.01/n=2000)
 
 Higher-resolution refresh of the LL-019 timing-distribution

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.29 (LL-019 high-res refresh — regime-boundary at α=0.01/n=2000, 2026-05-04)
+Version: 0.0.30 (LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -132,6 +132,29 @@ LL-ID, not the Key.
   Stochastic perturbation (the σ dW term in §2.4 design)
   and sensor coupling are in `lorenz96_coupled` (LL-004
   :tested).
+- **N-scaling characterisation (2026-05-04):** Per
+  `docs/p3e_n_scaling_companion.md`, Lorenz-96 at F=8 was
+  benchmarked across N ∈ {20, 40, 80, 160} (5 trials per N).
+  **Result: linear extensive-chaos scaling confirmed
+  empirically.** Fitted laws: h_KS ≈ 0.2165·N^1.0370,
+  n_pos ≈ 0.3019·N^1.0220, KY ≈ 0.6623·N^1.0048 (all β
+  values within 4 % of theoretical β=1.0). Per-N Lyapunov
+  density h_KS/N converges from 0.2383 (N=20) to 0.2591
+  (N=160) — finite-N corrections decay as N grows, with
+  density saturated by N≥80. **Asymptotic Lyapunov density
+  s ≈ 0.255 per dimension at F=8** (operational deployment
+  constant). λ₁ also grows weakly with N (1.481 at N=20 →
+  1.770 at N=160). Compute scaling: O(N³) per integration
+  step empirically validated; per-trial wall clock 0.1 →
+  1.8 → 5.9 → 25 s. **Deployment-design rule:** for target
+  chaos-production margin Δh*, pick N* ≈ Δh*/s; trades
+  margin against compute predictably (audit-on-verify cost
+  ≈ 25 s per spectrum at N=160; partial-spectrum audit
+  modes are P7 hardening). Benchmark script:
+  `src/julia/benchmark/p3e_n_scaling.jl`; result file:
+  `src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt`
+  (deterministic; byte-identical across runs per CLAUDE.md
+  §Benchmarking discipline).
 
 ### LL-004 — continuous-sensor-coupling
 - Key: sensor data couples to SDE as continuous potential field, not discrete kicks

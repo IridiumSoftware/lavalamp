@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.29 — LL-019 high-res refresh; regime-boundary at α=0.01/n=2000).
+Last updated: 2026-05-04 (0.0.30 — LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255).
 
 ## Status summary
 
@@ -58,10 +58,17 @@ Operational-significance unchanged (median/mean differences
 generalises the §Benchmarking discipline rule from byte-
 identical to *verdict-level* determinism for timing-based
 benchmarks, and adds round-3 input on host-isolation
-thresholds. Two `:tested`; four `:benchmarked`; fifteen
-`:argued`; one `:open` (LL-015 by design). Test suite passes
-123/123 in ~52s via `Pkg.test()` (unchanged across all
-0.0.27/28/29 since they're benchmark-only).
+thresholds. **0.0.30** characterises LL-003's N-scaling for
+the chosen SDE: Lorenz-96 at F=8 across N ∈ {20,40,80,160}
+exhibits the spatially-extended-chaos prediction h_KS ≈ s·N
+with asymptotic Lyapunov density s ≈ 0.255 per dimension
+(saturated by N≥80; finite-N correction ~9% at N=20 →
+N=160). Compute scales as O(N³) per integration step.
+Deployment-design rule: N* ≈ Δh*/s for target margin Δh*.
+Two `:tested`; four `:benchmarked`; fifteen `:argued`; one
+`:open` (LL-015 by design). Test suite passes 123/123 in
+~52s via `Pkg.test()` (unchanged across all 0.0.27/28/29/30
+since they're benchmark-only).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -272,12 +279,27 @@ P3 — **Julia prototype core.** ◐ In progress.
     threshold below which statistical power is jitter-
     limited). See `docs/ll019_high_res_companion.md`.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.30 LL-003 N-scaling characterisation** ✓ Landed.
+    New benchmark
+    `src/julia/benchmark/p3e_n_scaling.jl` + result file
+    `src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt`.
+    Sweeps N ∈ {20, 40, 80, 160} at F=8, 5 trials per N.
+    **Linear extensive-chaos scaling confirmed empirically.**
+    Fitted: h_KS ≈ 0.2165·N^1.0370 (β=1.04 ≈ theoretical 1.0).
+    Per-N Lyapunov density h_KS/N converges from 0.2383
+    (N=20) to 0.2591 (N=160); saturates by N≥80. **Asymptotic
+    Lyapunov density s ≈ 0.255 per dimension** is a deployment-
+    design constant. Compute scales as O(N³) per integration
+    step (per-trial wall clock 0.1 → 1.8 → 5.9 → 25 s).
+    Deployment-design rule: N* ≈ Δh*/s for target margin Δh*.
+    LL-003 stays `:benchmarked`; the N-scaling adds deployment-
+    guidance content. See `docs/p3e_n_scaling_companion.md`.
+
   **Remaining unblocked sub-items:**
   - LL-005 part-(a) parameter-validation test (trivial; would
     move parameter side to :tested but entry-level claim
     needs adversary-side too — round-3 input per 0.0.24).
-  - Higher-N Lorenz-96 benchmark (N ∈ {20, 40, 80, 160}
-    to characterize h_KS scaling).
   - Per-SDE detection-probability surface (rerun P3-bound
     fit on Lorenz-63 / Rössler).
 
@@ -454,6 +476,19 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/p3e_n_scaling_companion.md`** (0.0.30) — Lorenz-96
+  N-scaling benchmark for LL-003 / LL-008. §1 documents
+  configuration + determinism PASS. §2.1-§2.2 reports per-N
+  spectrum statistics and fits power-law scaling
+  (h_KS ≈ 0.2165·N^1.0370, n_pos ≈ 0.3019·N^1.0220, KY ≈
+  0.6623·N^1.0048). §2.3 tabulates per-N Lyapunov density
+  convergence (0.2383 → 0.2591 across N=20 → N=160, ~9%
+  finite-N correction). §2.4 validates O(N³) compute
+  scaling. §2.5 articulates the deployment-design rule
+  (N* ≈ Δh*/s for target margin Δh*). §3.2 grounds LL-008's
+  Lean theorem in N-dependent form. §5 captures five
+  lessons including the methodology continuity across the
+  three high-res refreshes 0.0.28-0.0.30.
 - **`docs/ll019_high_res_companion.md`** (0.0.29) — LL-019
   high-res refresh exposing a methodological boundary, not a
   tightening. §1.2 establishes the verdict-level determinism

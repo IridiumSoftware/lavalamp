@@ -76,7 +76,8 @@ SDE-selection) → 0.0.26 (P-OS OS-level scoping pass) →
 0.0.27 (LL-020 Strategy 2 :benchmarked-tier; variance-
 convolution σ refinement) → 0.0.28 (LL-021 high-resolution
 P-R2c refresh; c′=0.0288 at n=15) → 0.0.29 (LL-019 high-res
-refresh; regime-boundary at α=0.01/n=2000).
+refresh; regime-boundary at α=0.01/n=2000) → 0.0.30
+(LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -129,7 +130,8 @@ lavalamp/
 │   ├── audit_2026-05-04.md
 │   ├── ll020_strategy_2_benchmarked_companion.md
 │   ├── ll021_high_res_companion.md
-│   └── ll019_high_res_companion.md
+│   ├── ll019_high_res_companion.md
+│   └── p3e_n_scaling_companion.md
 └── src/
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
@@ -145,6 +147,7 @@ lavalamp/
             ├── ll020_strategy_2_detection_power.jl
             ├── p_r2c_structured_adversary_high_res.jl
             ├── ll019_timing_distribution_high_res.jl
+            ├── p3e_n_scaling.jl
             └── results/*.txt                    ← committed benchmark outputs
 
 # Future language tracks (per dashboard priority stack):

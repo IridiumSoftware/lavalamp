@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.29 (LL-019 high-res refresh — regime-boundary at α=0.01/n=2000, 2026-05-04)
+Version: 0.0.30 (LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -38,7 +38,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-001 | substrate-bound identity primitive | Core | manual | docs/spec_closure_pass_companion.md §1 | — | :argued |
 | LL-002 | visual ↔ security decoupling invariant | Core | manual | docs/spec_closure_pass_companion.md §2 | — | :argued |
-| LL-003 | single-attractor chaotic engine | Core | benchmarked | src/julia/benchmark/p3d_sde_selection.jl + src/julia/benchmark/results/p3d_sde_selection.txt + docs/p3d_sde_selection_companion.md (Lorenz-96 dominates Lorenz-63 / Rössler) | src/julia/src/Engine.jl | :benchmarked |
+| LL-003 | single-attractor chaotic engine | Core | benchmarked | src/julia/benchmark/p3d_sde_selection.jl + src/julia/benchmark/results/p3d_sde_selection.txt + docs/p3d_sde_selection_companion.md (Lorenz-96 dominates Lorenz-63 / Rössler) + src/julia/benchmark/p3e_n_scaling.jl + src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt + docs/p3e_n_scaling_companion.md (linear extensive-chaos scaling confirmed; Lyapunov density s ≈ 0.255 per dimension) | src/julia/src/Engine.jl | :benchmarked |
 | LL-004 | continuous sensor coupling | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Sensors.jl + src/julia/src/Engine.jl | :tested |
 | LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 | — | :argued |
 
@@ -106,7 +106,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 15
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.29)
+## Cross-audit A1–A6 self-check (post-0.0.30)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (22 of 22).
@@ -129,20 +129,19 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   evidence — the strongest status its evidence type supports.
   No entry has a status its evidence type cannot support.
 - **A5 — Stale counts.** Counts above (22 / 0 / 0 / 2 / 0 / 4 /
-  15 / 1) match `LAVALAMP_SPEC.md` 0.0.29 final-section counts
-  and `dashboard.md` 0.0.29 spec-status section. Counts
-  unchanged from 0.0.28 since this version documents a
-  methodological boundary on LL-019's evidence rather than a
-  tightening or status change.
+  15 / 1) match `LAVALAMP_SPEC.md` 0.0.30 final-section counts
+  and `dashboard.md` 0.0.30 spec-status section. Counts
+  unchanged from 0.0.29 since this version characterises
+  LL-003's N-scaling at the same `:benchmarked` evidence tier
+  rather than promoting or demoting the entry.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 123/123 assertions pass in
   ~52 s (unchanged; this version adds no new tests — the
-  high-res refresh is benchmark-only). LL-019 remains
-  `:benchmarked` at the 0.0.19 evidence regime (α=0.05 /
-  n=400); the high-res refresh exposes a methodological
-  boundary at α=0.01 / n=2000 where the test becomes
-  jitter-limited on the prototype's host.
+  N-scaling benchmark is benchmark-only). LL-003 remains
+  `:benchmarked`; the N-scaling characterisation adds
+  deployment-guidance content (linear extensive-chaos
+  scaling confirmed; asymptotic Lyapunov density s ≈ 0.255).
 
 ## Test-coverage notes
 
