@@ -147,6 +147,15 @@ lavalamp/
 #   P8  visual/      — decorative skin (per LL-002; any framework)
 ```
 
+## Portfolio
+
+LavaLamp is one of *The Triad Deployments — Digital Identity
+Resilience*, alongside Lazarus and PharOS (forthcoming). The
+three deployments share a defensive-postured, resolution-bounded
+identity stance: detection over prevention, structurally
+inherited from the C-conjugate adversary construction in
+*Possibilistic Security*.
+
 ## License
 
 Triadic Closure License (TCL) v1.3. Canonical text and original
