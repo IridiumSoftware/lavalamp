@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.31 — LL-006 per-SDE detection-power; Lorenz-96 has best operational balance).
+Last updated: 2026-05-04 (0.0.32 — LL-005 part-(a) parameter-validation test; entry stays :argued).
 
 ## Status summary
 
@@ -72,12 +72,16 @@ balance** (high security margin AND moderate per-param
 sensitivity); Lorenz-63 fails on both axes; Rössler fails on
 both (narrow chaotic band → brittle to genuine calibration
 drift). Architectural choice confirmed on a complementary
-axis. **All known unblocked sub-items now closed** except the
-LL-005 part-(a) item explicitly deferred to round-3. Two
+axis. **0.0.32** lands the LL-005 part-(a) parameter-validation
+test as a sub-claim test only — `nyquist_compliant(...)`
+predicate + 16 test assertions; suite 123 → 139. LL-005 stays
+`:argued` because the adversary-detection sub-claim is still
+open (0.0.24 P3-Nyq negative finding stands). **All
+round-3-trigger memory queue items now closed.** Two
 `:tested`; four `:benchmarked`; fifteen `:argued`; one `:open`
-(LL-015 by design). Test suite passes 123/123 in ~52s via
-`Pkg.test()` (unchanged across all 0.0.27-0.0.31 since
-they're benchmark-only).
+(LL-015 by design). Test suite passes 139/139 in ~52s via
+`Pkg.test()` (was 123 at 0.0.31; +16 LL-005 part-(a)
+assertions).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -328,14 +332,22 @@ P3 — **Julia prototype core.** ◐ In progress.
     `:benchmarked`. See
     `docs/p3f_per_sde_detection_power_companion.md`.
 
-  **Remaining unblocked sub-items:**
-  - LL-005 part-(a) parameter-validation test (trivial; would
-    move parameter side to :tested but entry-level claim
-    needs adversary-side too — round-3 input per 0.0.24).
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.32 LL-005 part-(a) parameter-validation test** ✓
+    Landed as a sub-claim test, not an entry-level upgrade.
+    `nyquist_compliant(f_SDE, f_sensor, bandwidth)` predicate
+    added to `src/julia/src/Sensors.jl` (re-exported); 16 new
+    test assertions in runtests.jl. Test suite 123/123 →
+    139/139. **LL-005 stays `:argued` at the entry level**
+    because the adversary-detection sub-claim is still open
+    per the 0.0.24 P3-Nyq negative finding. The discipline
+    (sub-claim evidence ≠ entry-level upgrade) is documented
+    in `docs/ll005_part_a_companion.md`.
 
-  **All other unblocked items closed.** With 0.0.31, the
-  round-3-trigger memory's queue is exhausted except for the
-  LL-005 part-(a) item explicitly deferred to round-3.
+  **All round-3-trigger memory queue items now closed.** No
+  further unblocked sub-items remain. Round-3 (gated on
+  `closure_forces_structure` paper update) is the only
+  outstanding work-trigger.
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D
@@ -510,6 +522,18 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/ll005_part_a_companion.md`** (0.0.32) — Brief
+  permanent record of the LL-005 part-(a) parameter-validation
+  test. §1.2 documents why the test landed despite the
+  "consider deferring to avoid misleading partial upgrade"
+  warning: add the test, but keep LL-005 `:argued`. §2.2
+  distinguishes what the test shows (parameter-compliance
+  predicate works) from what it does not show (adversary
+  detection still open per 0.0.24 P3-Nyq negative). §5.1
+  generalises the discipline: a spec entry whose claim is a
+  conjunction of N sub-claims needs evidence on all N to
+  upgrade to `:tested`. §5.3 confirms all
+  round-3-trigger-memory queue items are closed.
 - **`docs/p3f_per_sde_detection_power_companion.md`** (0.0.31) —
   Per-SDE detection-power benchmark for LL-006. §1.1 explains
   the parameter-space-adversary model (perturbing F / ρ / c).

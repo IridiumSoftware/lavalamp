@@ -52,7 +52,7 @@ layer would want to use) returns.
 Prototype-stage. The Julia prototype core (`src/julia/`)
 implements the SDE substrate (Lorenz-96), sensor-coupling layer,
 Lyapunov-spectrum residue audit, chaos-guard, and side-channel
-hardening. CI runs `Pkg.test()` on every push (123 assertions
+hardening. CI runs `Pkg.test()` on every push (139 assertions
 pass in ~52s).
 
 **Spec ledger:** 22 entries with the current breakdown:
@@ -79,7 +79,9 @@ P-R2c refresh; c′=0.0288 at n=15) → 0.0.29 (LL-019 high-res
 refresh; regime-boundary at α=0.01/n=2000) → 0.0.30
 (LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255)
 → 0.0.31 (LL-006 per-SDE detection-power; Lorenz-96 has best
-operational balance).
+operational balance) → 0.0.32 (LL-005 part-(a) parameter-
+validation test; entry stays :argued — last unblocked queue
+item now closed).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -134,12 +136,13 @@ lavalamp/
 │   ├── ll021_high_res_companion.md
 │   ├── ll019_high_res_companion.md
 │   ├── p3e_n_scaling_companion.md
-│   └── p3f_per_sde_detection_power_companion.md
+│   ├── p3f_per_sde_detection_power_companion.md
+│   └── ll005_part_a_companion.md
 └── src/
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
         ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard}.jl
-        ├── test/runtests.jl                     ← 123 assertions, run via Pkg.test()
+        ├── test/runtests.jl                     ← 139 assertions, run via Pkg.test()
         └── benchmark/
             ├── p3b_detection_probability.jl
             ├── p_r2c_structured_adversary.jl

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.31 (LL-006 per-SDE detection-power; Lorenz-96 has best operational balance, 2026-05-04)
+Version: 0.0.32 (LL-005 part-(a) parameter-validation test; entry stays :argued, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -238,6 +238,26 @@ LL-ID, not the Key.
   claim has two implicit sub-claims (parameter compliance
   + adversary detection) and only the parameter side is
   evidenced.
+- **Parameter-validation test (2026-05-04, part-(a) only):**
+  `nyquist_compliant(f_SDE, f_sensor, bandwidth)` predicate
+  added to `src/julia/src/Sensors.jl` (re-exported at
+  LavaLamp top level), asserting `f_SDE > 2·bandwidth ∧
+  f_sensor > bandwidth` per the formal requirement. 16 new
+  test assertions in `src/julia/test/runtests.jl` (compliance
+  on prototype defaults; borderline cases at strict-inequality
+  edges; argument validation; type flexibility). Test suite
+  123/123 → 139/139. **Entry-level status unchanged at
+  `:argued`** — this evidences only the *parameter-compliance*
+  sub-claim. The adversary-detection sub-claim (residue audit
+  detects sub-Nyquist sensor reconstruction) was answered
+  NEGATIVE in 0.0.24 P3-Nyq because zero-mean Gaussian noise
+  has time-averaged statistics invariant under sub-sampling.
+  A `:tested` upgrade requires both sub-claims to have direct
+  evidence; round-3 must address the adversary-side via either
+  LL-016 sensor authenticity or a not-yet-implemented
+  mechanism (FFT/PSD audit, trajectory-checkpoint comparison).
+  See `docs/ll005_part_a_companion.md` for the discipline
+  rationale.
 
 ---
 

@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.31 (LL-006 per-SDE detection-power; Lorenz-96 has best operational balance, 2026-05-04)
+Version: 0.0.32 (LL-005 part-(a) parameter-validation test; entry stays :argued, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -40,7 +40,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-002 | visual ↔ security decoupling invariant | Core | manual | docs/spec_closure_pass_companion.md §2 | — | :argued |
 | LL-003 | single-attractor chaotic engine | Core | benchmarked | src/julia/benchmark/p3d_sde_selection.jl + src/julia/benchmark/results/p3d_sde_selection.txt + docs/p3d_sde_selection_companion.md (Lorenz-96 dominates Lorenz-63 / Rössler) + src/julia/benchmark/p3e_n_scaling.jl + src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt + docs/p3e_n_scaling_companion.md (linear extensive-chaos scaling confirmed; Lyapunov density s ≈ 0.255 per dimension) | src/julia/src/Engine.jl | :benchmarked |
 | LL-004 | continuous sensor coupling | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Sensors.jl + src/julia/src/Engine.jl | :tested |
-| LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 | — | :argued |
+| LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 + src/julia/test/runtests.jl (Nyquist compliance predicate testset, LL-005 part-(a) only) + docs/ll005_part_a_companion.md | src/julia/src/Sensors.jl (`nyquist_compliant`) | :argued |
 
 ## Detection / verification
 
@@ -106,7 +106,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 15
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.31)
+## Cross-audit A1–A6 self-check (post-0.0.32)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (22 of 22).
@@ -129,20 +129,19 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   evidence — the strongest status its evidence type supports.
   No entry has a status its evidence type cannot support.
 - **A5 — Stale counts.** Counts above (22 / 0 / 0 / 2 / 0 / 4 /
-  15 / 1) match `LAVALAMP_SPEC.md` 0.0.31 final-section counts
-  and `dashboard.md` 0.0.31 spec-status section. Counts
-  unchanged from 0.0.30 since this version characterises
-  LL-006's per-SDE detection power at the same `:benchmarked`
-  evidence tier rather than promoting or demoting the entry.
-- **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
-  exercised by `src/julia/test/runtests.jl`, runnable via
-  `Pkg.test()` from `src/julia/`; 123/123 assertions pass in
-  ~52 s (unchanged; this version adds no new tests — the
-  per-SDE benchmark is benchmark-only). LL-006 remains
-  `:benchmarked`; the per-SDE characterisation adds
-  deployment-guidance content (bound shape is universal
-  across candidate SDEs; per-SDE c′ values reflect per-param
-  sensitivity, not detection quality).
+  15 / 1) match `LAVALAMP_SPEC.md` 0.0.32 final-section counts
+  and `dashboard.md` 0.0.32 spec-status section. Counts
+  unchanged from 0.0.31 — LL-005 part-(a) test is partial
+  sub-claim coverage and does not warrant entry-level status
+  upgrade per CLAUDE.md §Honest framing.
+- **A6 — Test sync.** LL-003, LL-004, LL-005 (part-(a) only),
+  LL-006, LL-007 are exercised by `src/julia/test/runtests.jl`,
+  runnable via `Pkg.test()` from `src/julia/`; 139/139
+  assertions pass in ~52 s (was 123/123 at 0.0.31; +16
+  assertions for LL-005 part-(a) Nyquist-compliance
+  predicate). LL-005 entry-level remains `:argued` because
+  the adversary-detection sub-claim is still open per the
+  0.0.24 P3-Nyq negative finding.
 
 ## Test-coverage notes
 

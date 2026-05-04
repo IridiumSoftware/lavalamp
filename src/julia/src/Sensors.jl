@@ -28,6 +28,7 @@ using Random: AbstractRNG, default_rng
 export SensorStream, evaluate
 export constant_stream, binary_step_stream, gaussian_noise_stream
 export CouplingParams, no_coupling
+export nyquist_compliant
 
 """
     SensorStream
@@ -149,6 +150,53 @@ function gaussian_noise_stream(σ::Real;
     t_grid = collect(range(0.0, Float64(t_max); length=n))
     vals = Float64(σ) .* randn(rng, n)
     return SensorStream(t_grid, vals)
+end
+
+"""
+    nyquist_compliant(f_SDE::Real, f_sensor::Real, bandwidth::Real) -> Bool
+
+Returns `true` iff the prototype's sampling rates satisfy LL-005's
+formal Nyquist condition:
+
+```
+f_SDE    > 2 · bandwidth          (SDE samples sensor at sub-Nyquist on adversary)
+f_sensor >     bandwidth          (sensor captures the substrate's noise band)
+```
+
+This predicate is **parameter-side LL-005 evidence only**. It does
+*not* certify that the residue audit detects sub-Nyquist sensor
+adversaries — that adversary-side question was answered NEGATIVE
+in 0.0.24 P3-Nyq (`docs/p3_nyq_companion.md`); zero-mean noise has
+the same time-averaged statistics under sub-sampling, so the
+Lyapunov-spectrum residue audit is *invariant* to sub-Nyquist
+reconstruction. A fully-`:tested` LL-005 entry would require
+adversary-side evidence too (round-3 input — likely via LL-016
+sensor authenticity, or a not-yet-implemented FFT/PSD audit).
+
+Use this predicate at deployment configuration time to assert that
+the chosen `f_SDE` and `f_sensor` cover the assumed adversary
+bandwidth. Throws `ArgumentError` for non-positive inputs.
+
+# Examples
+```julia-repl
+julia> nyquist_compliant(20.0, 100.0, 5.0)   # prototype default vs BW=5 Hz
+true
+
+julia> nyquist_compliant(20.0, 100.0, 15.0)  # BW > f_SDE / 2
+false
+
+julia> nyquist_compliant(20.0, 3.0, 5.0)     # f_sensor < BW
+false
+```
+
+API STABILITY: stable shape; deployment-time predicate.
+"""
+function nyquist_compliant(f_SDE::Real, f_sensor::Real, bandwidth::Real)
+    f_SDE > 0 || throw(ArgumentError("f_SDE must be positive"))
+    f_sensor > 0 || throw(ArgumentError("f_sensor must be positive"))
+    bandwidth > 0 || throw(ArgumentError("bandwidth must be positive"))
+    return Float64(f_SDE) > 2 * Float64(bandwidth) &&
+           Float64(f_sensor) > Float64(bandwidth)
 end
 
 """

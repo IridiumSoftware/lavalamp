@@ -29,6 +29,7 @@ include("ChaosGuard.jl")
 
 using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
+using .Sensors: nyquist_compliant
 using .Engine: lorenz96, lyapunov_spectrum, lorenz96_coupled
 using .Engine: lorenz63, rossler
 using .Audit: Envelope, register_envelope, residue, verify, synthetic_adversary
@@ -46,6 +47,7 @@ export lorenz63, rossler
 export lorenz96_coupled
 export SensorStream, evaluate, CouplingParams, no_coupling
 export constant_stream, binary_step_stream, gaussian_noise_stream
+export nyquist_compliant
 
 # Residue audit / verifier (LL-006 / LL-017 / LL-019 / LL-020).
 export Envelope, register_envelope, residue, verify, synthetic_adversary

@@ -122,6 +122,50 @@ end
         @test 0.9 < std_internal(s_noise.values) < 1.1  # ≈ σ
     end
 
+    @testset "Nyquist compliance predicate (LL-005 part-(a))" begin
+        # LL-005 formal requirement: f_SDE > 2·BW ∧ f_sensor > BW.
+        # This testset evidences the *parameter-side* sub-claim only;
+        # the adversary-side (residue audit detects sub-Nyquist
+        # adversaries) was answered NEGATIVE in 0.0.24 P3-Nyq, so
+        # LL-005 entry-level status remains :argued. See
+        # `docs/p3_nyq_companion.md` and `docs/ll005_part_a_companion.md`.
+
+        # Prototype defaults satisfy compliance for plausible BW.
+        # Δt=0.05 → f_SDE=20 Hz; gaussian_noise_stream default
+        # sample_rate=100 Hz. For BW = 5 Hz: 20 > 10 ✓ and 100 > 5 ✓.
+        @test nyquist_compliant(20.0, 100.0, 5.0)
+
+        # Borderline at f_SDE side: BW = 9.9 Hz still compliant
+        # (20 > 19.8). BW = 10 Hz fails (20 > 20 is false; the
+        # inequality is strict).
+        @test nyquist_compliant(20.0, 100.0, 9.9)
+        @test !nyquist_compliant(20.0, 100.0, 10.0)
+        @test !nyquist_compliant(20.0, 100.0, 15.0)  # f_SDE / 2 < BW
+
+        # Borderline at f_sensor side: f_sensor = 5 Hz, BW = 5 Hz
+        # fails (5 > 5 is false). f_sensor = 5.1 Hz passes.
+        @test !nyquist_compliant(50.0, 5.0, 5.0)
+        @test nyquist_compliant(50.0, 5.1, 5.0)
+
+        # f_sensor < BW directly fails second condition.
+        @test !nyquist_compliant(50.0, 3.0, 5.0)
+
+        # Both conditions fail.
+        @test !nyquist_compliant(8.0, 3.0, 5.0)
+
+        # Argument validation.
+        @test_throws ArgumentError nyquist_compliant(0.0, 100.0, 5.0)
+        @test_throws ArgumentError nyquist_compliant(-1.0, 100.0, 5.0)
+        @test_throws ArgumentError nyquist_compliant(20.0, 0.0, 5.0)
+        @test_throws ArgumentError nyquist_compliant(20.0, -1.0, 5.0)
+        @test_throws ArgumentError nyquist_compliant(20.0, 100.0, 0.0)
+        @test_throws ArgumentError nyquist_compliant(20.0, 100.0, -1.0)
+
+        # Type flexibility (Real, not just Float64).
+        @test nyquist_compliant(20, 100, 5)
+        @test nyquist_compliant(20.0, 100, 5//1)
+    end
+
     @testset "lorenz96_coupled with no sensors == uncoupled (LL-004 sanity)" begin
         # Empty coupling reduces to uncoupled Lorenz-96. The two EOMs
         # are mathematically identical when n_sensors == 0; spectra

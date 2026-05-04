@@ -5,6 +5,106 @@ messages match entry summaries.
 
 ---
 
+## 0.0.32 — 2026-05-04 — LL-005 part-(a) parameter-validation test (entry stays :argued)
+
+Adds the LL-005 part-(a) parameter-validation test promised in
+the round-3-trigger memory's queue ("trivial test asserting
+f_SDE > 2·BW"). Adds a `nyquist_compliant(f_SDE, f_sensor,
+bandwidth)` predicate to `src/julia/src/Sensors.jl` plus 16
+test assertions in runtests.jl. Test suite 123/123 → 139/139.
+
+**Status discipline.** LL-005's entry-level claim is
+structurally a *conjunction* of two sub-claims: (1) parameter
+compliance and (2) adversary detection. The 0.0.24 P3-Nyq
+benchmark answered (2) NEGATIVE: zero-mean Gaussian noise has
+time-averaged statistics invariant under sub-sampling, so the
+Lyapunov-spectrum residue audit cannot detect sub-Nyquist
+adversaries. With (2) open per the negative finding, evidencing
+only (1) does not warrant a `:tested` upgrade.
+
+**LL-005 entry-level status remains `:argued`.** The test
+exists; the upgrade does not. The discipline rationale —
+"sub-claim evidence ≠ entry-level upgrade for conjunctive
+claims" — is documented in `docs/ll005_part_a_companion.md` §5.1.
+
+The original deferral concern in the round-3-trigger memory
+was *"consider deferring to avoid misleading partial upgrade."*
+The right resolution is **add the test without upgrading**,
+not skip the test entirely. Future deployments call
+`nyquist_compliant(...)` at configuration time; the operational
+benefit is independent of the entry-level status question.
+
+### Added
+
+- **`src/julia/src/Sensors.jl`** — `nyquist_compliant(f_SDE,
+  f_sensor, bandwidth) -> Bool` predicate. Strict-inequality
+  formal requirement: `f_SDE > 2·BW ∧ f_sensor > BW`. Throws
+  `ArgumentError` on non-positive inputs. Documented as
+  "parameter-side LL-005 evidence only; does not certify
+  adversary detection (see 0.0.24 P3-Nyq)."
+- **`src/julia/src/LavaLamp.jl`** — re-export of
+  `nyquist_compliant`.
+- **`src/julia/test/runtests.jl`** — new "Nyquist compliance
+  predicate (LL-005 part-(a))" testset with 16 assertions:
+  prototype defaults compliant for plausible BW; borderline
+  cases at `f_SDE = 2·BW` and `f_sensor = BW` strict edges;
+  argument validation (zero / negative); type flexibility
+  (`Real` arguments).
+- **`docs/ll005_part_a_companion.md`** — brief companion
+  documenting the discipline rationale: why the test landed
+  despite the deferral warning, what it shows and does not
+  show, and why LL-005 stays `:argued`.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.31 → 0.0.32. LL-005
+  gains a "Parameter-validation test (2026-05-04, part-(a)
+  only)" footer documenting the test, the suite-count
+  increase, and the explicit "status unchanged at `:argued`"
+  framing. Counts unchanged.
+- **`artifact_registry.md`** — version 0.0.31 → 0.0.32.
+  LL-005 row's Test/Proof column extended to cite
+  runtests.jl + the companion; Source column adds
+  `src/julia/src/Sensors.jl (`nyquist_compliant`)`.
+  Cross-audit A1-A6 self-check refreshed for 0.0.32.
+- **`dashboard.md`** — version 0.0.31 → 0.0.32. P3 follow-ups
+  list adds 0.0.32 entry; LL-005 part-(a) removed from
+  remaining-unblocked. Recent companion docs prepended with
+  `ll005_part_a_companion.md`. Note: "All round-3-trigger
+  memory queue items now closed."
+
+### Why
+
+1. **Operational benefit independent of status question.**
+   `nyquist_compliant(...)` is a deployment-time check that
+   would be open-coded by every consumer otherwise. Adding it
+   to the prototype's API surface lowers operational friction
+   without overclaiming.
+2. **Conjunctive-claim discipline made explicit.** LL-005's
+   structure (P_compliance ∧ Q_detection) is now articulated
+   in the spec footer and the companion. Future readers see
+   why partial coverage doesn't upgrade. This generalises to
+   any spec entry with conjunctive claims; the §5.1 lesson is
+   reusable.
+3. **Round-3-trigger memory queue closure.** Per the 0.0.31
+   companion §5.5, this was the last unblocked item. With
+   0.0.32 landed, the prototype is in a fully-quiet state
+   pending round-3.
+
+### Counts
+
+- Total: 22 (unchanged)
+- `:proved`: 0 (unchanged)
+- `:tested`: 2 (LL-004, LL-007 — unchanged)
+- `:verified`: 0 (unchanged)
+- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021 — unchanged)
+- `:argued`: 15 (unchanged; LL-005 stays here)
+- `:open`: 1 (LL-015 — unchanged)
+
+Test suite: 123/123 → 139/139.
+
+---
+
 ## 0.0.31 — 2026-05-04 — LL-006 per-SDE detection-power (Lorenz-96 has best operational balance)
 
 Adds the per-SDE detection-power benchmark — the last unblocked
