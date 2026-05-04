@@ -281,7 +281,12 @@ gradient that makes the tier worthwhile.
 5. Haskell spec-as-types + QuickCheck — *not yet started*.
    Targets compositional-completeness coverage of the Julia
    prototype.
-6. Lean 4 formal proofs — *not yet started*. Round-2 §1D.v
+6. Lean 4 formal proofs — *scaffold landed at 0.0.36*
+   (`src/lean4/`; lakefile + toolchain pin + `LavaLamp.lean`
+   root + `LavaLamp/Theorems.lean` round-3 placeholder + README
+   capturing the discipline; `lake build` clean post-commit;
+   no Mathlib at scaffold tier — round-3 architectural
+   decision). Round-2 §1D.v
    priorities target: linear-coupling worst-case bound (LL-021
    :benchmarked grounds the theorem statement); side-channel
    timing indistinguishability (LL-019 :benchmarked grounds);

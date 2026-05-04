@@ -89,7 +89,9 @@ visual layer + decoupling-assertion testset) → 0.0.34
 stack scoping paired with LL-022 to close the trust-stack
 scoping question on both ends) → 0.0.35 (full A0–A6 cross-
 audit pre-round-3; CLAUDE.md drift fixed; PASS across all
-six checks).
+six checks) → 0.0.36 (Lean 4 scaffold landed at src/lean4/;
+lake build clean; round-3 proof work picks up from a
+buildable starting point).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -154,6 +156,13 @@ lavalamp/
 │   ├── style.css                               ← lamp-frame styling
 │   └── README.md                               ← decoupling discipline
 └── src/
+    ├── lean4/                                   ← Lean 4 formal-verification scaffold (0.0.36)
+    │   ├── lakefile.lean                       ← Lake build config (no deps at scaffold tier)
+    │   ├── lean-toolchain                      ← Lean version pin (v4.18.0)
+    │   ├── lake-manifest.json                  ← Lockfile (empty packages at scaffold)
+    │   ├── LavaLamp.lean                       ← root module
+    │   ├── LavaLamp/Theorems.lean              ← round-3 theorem placeholders
+    │   └── README.md                           ← discipline + theorem plan
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
         ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard}.jl

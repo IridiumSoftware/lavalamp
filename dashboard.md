@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.35 — full A0–A6 cross-audit pre-round-3; CLAUDE.md drift fixed; PASS).
+Last updated: 2026-05-04 (0.0.36 — Lean 4 scaffold landed at src/lean4/; lake build clean; no spec changes).
 
 ## Status summary
 
@@ -553,6 +553,20 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`src/lean4/`** (0.0.36) — Lean 4 formal-verification
+  scaffold. Buildable Lake project with toolchain pin
+  (`leanprover/lean4:v4.18.0`), root `LavaLamp.lean` smoke,
+  `LavaLamp/Theorems.lean` round-3 placeholder (comment-block
+  forms of six priority theorem statements: LL-021 worst-case
+  bound, LL-019 timing indistinguishability, LL-020
+  calibration ε-DP, LL-006/008/018 isotropic detection bound,
+  LL-022/023 parametric theorem-shape disciplines). README
+  documents the Mathlib-or-not architectural decision as
+  round-3-driven (currently no deps; build time is seconds).
+  `lake build` clean post-commit. No spec entry status
+  changes — scaffold is infrastructure-prep, not evidence.
+  When proofs land, per-priority files split out and the
+  corresponding LL entries upgrade to `:proved` (lean-proved).
 - **`docs/audit_2026-05-04_full.md`** (0.0.35) — Full A0–A6
   cross-audit pre-round-3. Triggered by the seven-version
   session arc 0.0.26 → 0.0.34. Result: **PASS across all six

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.35 (full A0–A6 cross-audit pre-round-3; CLAUDE.md drift fixed; PASS, 2026-05-04)
+Version: 0.0.36 (Lean 4 scaffold landed at src/lean4/; lake build clean; no spec changes, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
