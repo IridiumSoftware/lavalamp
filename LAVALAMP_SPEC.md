@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.32 (LL-005 part-(a) parameter-validation test; entry stays :argued, 2026-05-04)
+Version: 0.0.33 (LL-002 :tested via decoupled visual layer + decoupling-assertion testset, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -73,24 +73,47 @@ LL-ID, not the Key.
   visual-richness ↔ security tension that round-1 synthesis-team
   review (Gemini + Grok, 2026-04-30) identified as a structural
   blindspot in any design that fed the visual *from* the SDE.
-- Evidence type: manual
-- Status: :argued
-- Source: docs/spec_closure_pass_companion.md §2 — invariant
-  preserved by construction across the Julia prototype: no
-  visual layer exists; the security primitive
-  (`Sensors.jl`, `Engine.jl`, `Audit.jl`, `ChaosGuard.jl`)
-  has no visual-layer dependencies; chaos-guard reseed
-  events do not signal to a visual; round-2 reviewers
-  treated LL-002 as settled (no proposed re-coupling).
+- Evidence type: example-tested
+- Status: :tested
+- Source: `visual/lavalamp.js` (decoupled HTML/JS bubble
+  simulator; ~80 lines; Math.random()-driven; no
+  references to security-primitive APIs);
+  `visual/index.html`, `visual/style.css`,
+  `visual/README.md` (decoupling discipline documentation).
+- Test: `src/julia/test/runtests.jl` — `Visual layer
+  decoupling (LL-002)` testset (45 assertions covering
+  the decoupling invariant). Verifies (i) `visual/`
+  files exist; (ii) `visual/lavalamp.js` uses
+  `Math.random()` not crypto-grade RNG; (iii)
+  `visual/lavalamp.js` contains no security-primitive
+  identifiers (`lyapunov_spectrum`, `register_envelope`,
+  `synthetic_adversary`, `verify_full`, `Envelope(`,
+  `ChaosGuard`, `nyquist_compliant`, etc.); (iv)
+  `visual/lavalamp.js` has no `import` / `require(` /
+  `<script src=` external references; (v)
+  `src/julia/src/*.jl` contains no visual-layer
+  identifiers (`requestAnimationFrame`, `getContext(`,
+  `createRadialGradient`, `lavalamp.js`).
 - Notes: This is a load-bearing architectural invariant. If the
   visual ever gets re-coupled to the security primitive, the
   basin-spoofing attack surface returns (multi-basin reaction-
   diffusion regimes the visual layer would want to use are
   precisely where the adversary can hide a spoof inside scalar-KL
-  threshold). :tested upgrade requires either (a) a visual layer
-  with assertions about decoupling, or (b) Lean / type-level
-  enforcement that the security-primitive type-graph cannot
-  reach the visual-layer type-graph. Both deferred.
+  threshold). The `:tested` upgrade in 0.0.33 evidences the
+  invariant via *static text-search assertions* across the
+  `visual/` and `src/julia/src/` trees (option (a) from the
+  prior `:argued` footer). Stronger guarantees (option (b):
+  Lean / type-level enforcement that the security-primitive
+  type-graph cannot reach the visual-layer type-graph) remain
+  deferred to P5/P6.
+- **`:argued` → `:tested` upgrade (2026-05-04, 0.0.33):**
+  Visual layer landed at `visual/` with the decoupling discipline
+  documented in `visual/README.md`. The 45 new assertions in
+  `runtests.jl` make the decoupling invariant *executable* — any
+  future re-coupling would fail CI. The prior `:argued`
+  evidence (manual; "invariant preserved by construction") is
+  superseded by example-tested evidence; the entry-level claim
+  is now testable on every commit.
 
 ### LL-003 — single-attractor-chaotic-engine
 - Key: security primitive uses single-attractor chaotic SDE
@@ -1014,22 +1037,22 @@ LL-ID, not the Key.
 
 - Total: 22
 - `:proved`: 0
-- `:tested`: 2 (LL-004, LL-007)
+- `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 15 (LL-001, LL-002, LL-005, LL-008, LL-009,
+- `:argued`: 14 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020, LL-022)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
-**Prototype-stage; spec essentially fully argued. Four
+**Prototype-stage; spec essentially fully evidenced. Four
 empirically-validated :benchmarked entries (LL-003 SDE
 choice via comparative bench, LL-006 detection bound,
 LL-019 timing-indistinguishability, LL-021 worst-case
-bound); two :tested entries (LL-004 sensor coupling, LL-007
-chaos-guard); fifteen :argued at design level (now including
-LL-022 OS-trust-stack-dependency from the 0.0.26 P-OS
-scoping pass); only LL-015 remains :open as the honest
-scoping declaration that A3 (kernel-level) adversaries are
-out of scope.**
+bound); three :tested entries (LL-002 visual ↔ security
+decoupling via the visual layer + decoupling-assertion
+testset added in 0.0.33; LL-004 sensor coupling; LL-007
+chaos-guard); fourteen :argued at design level; only LL-015
+remains :open as the honest scoping declaration that A3
+(kernel-level) adversaries are out of scope.**

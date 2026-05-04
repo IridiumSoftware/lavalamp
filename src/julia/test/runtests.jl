@@ -778,4 +778,96 @@ end
         @test λ1s[3] - λ1s[2] > 0.05
     end
 
+    # ─── LL-002 Visual ↔ security decoupling ──────────────────────────
+
+    @testset "Visual layer decoupling (LL-002)" begin
+        # The `visual/` directory contains the user-facing lava-lamp
+        # animation. LL-002's load-bearing invariant: the visual is
+        # decorative-only and architecturally independent of the
+        # security primitive. This testset evidences the invariant
+        # via static text-search assertions across the `visual/` and
+        # `src/julia/src/` trees:
+        #
+        #   1. `visual/lavalamp.js` does NOT reference any
+        #      security-primitive identifier (Audit / Engine /
+        #      ChaosGuard / Sensors APIs).
+        #   2. `visual/lavalamp.js` uses `Math.random()` as its
+        #      randomness source (no crypto-grade RNG suggesting
+        #      security intent).
+        #   3. `visual/lavalamp.js` has no imports / requires /
+        #      external script references — it is self-contained.
+        #   4. `src/julia/src/*.jl` does NOT reference any visual-
+        #      layer identifier (requestAnimationFrame, canvas APIs).
+        #
+        # If any assertion fails, the visual and security layers
+        # have re-coupled and the basin-spoofing attack surface
+        # (V-002) returns. See LL-002 spec entry + dashboard.md
+        # asymmetry-trap-watch note.
+
+        repo_root = joinpath(@__DIR__, "..", "..", "..")
+        visual_dir = joinpath(repo_root, "visual")
+        julia_src = joinpath(repo_root, "src", "julia", "src")
+
+        # Visual directory exists and contains the expected files.
+        @test isdir(visual_dir)
+        @test isfile(joinpath(visual_dir, "index.html"))
+        @test isfile(joinpath(visual_dir, "lavalamp.js"))
+        @test isfile(joinpath(visual_dir, "style.css"))
+        @test isfile(joinpath(visual_dir, "README.md"))
+
+        # Read the visual JS file.
+        js_contents = read(joinpath(visual_dir, "lavalamp.js"), String)
+
+        # Math.random() is the randomness source (no crypto-grade
+        # primitives that would suggest security intent).
+        @test occursin("Math.random()", js_contents)
+        @test !occursin("crypto.getRandomValues", js_contents)
+        @test !occursin("crypto.subtle", js_contents)
+
+        # No security-primitive identifier matches in the visual JS.
+        # These are exact identifiers (with underscores or
+        # CamelCase) that exist in src/julia/src/; substring matches
+        # in code or docstring comments would indicate the visual is
+        # consuming security-primitive state.
+        sec_identifiers = [
+            "lyapunov_spectrum",
+            "register_envelope",
+            "synthetic_adversary",
+            "verify_full",
+            "verify_constant_time",
+            "differentially_private_envelope",
+            "lorenz96_coupled",
+            "lorenz63",
+            "rossler",
+            "ChaosGuard",
+            "Envelope(",
+            "nyquist_compliant",
+            "CouplingParams",
+            "SensorStream",
+        ]
+        for ident in sec_identifiers
+            @test !occursin(ident, js_contents)
+        end
+
+        # No imports / requires / external script references.
+        @test !occursin("require(", js_contents)
+        @test !occursin(r"^\s*import\s"m, js_contents)  # ES modules
+        @test !occursin("<script src=", js_contents)
+
+        # No visual-layer identifiers in src/julia/src/. The security
+        # primitive must not reference the visual.
+        visual_identifiers = [
+            "requestAnimationFrame",
+            "getContext(",
+            "createRadialGradient",
+            "lavalamp.js",
+        ]
+        for jl_file in filter(endswith(".jl"), readdir(julia_src; join=true))
+            contents = read(jl_file, String)
+            for ident in visual_identifiers
+                @test !occursin(ident, contents)
+            end
+        end
+    end
+
 end

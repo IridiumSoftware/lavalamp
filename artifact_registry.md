@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.32 (LL-005 part-(a) parameter-validation test; entry stays :argued, 2026-05-04)
+Version: 0.0.33 (LL-002 :tested via decoupled visual layer + decoupling-assertion testset, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -37,7 +37,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
 | LL-001 | substrate-bound identity primitive | Core | manual | docs/spec_closure_pass_companion.md §1 | — | :argued |
-| LL-002 | visual ↔ security decoupling invariant | Core | manual | docs/spec_closure_pass_companion.md §2 | — | :argued |
+| LL-002 | visual ↔ security decoupling invariant | Core | example-tested | src/julia/test/runtests.jl (Visual layer decoupling testset; 45 assertions) + docs/spec_closure_pass_companion.md §2 + visual/README.md | visual/lavalamp.js + visual/index.html + visual/style.css | :tested |
 | LL-003 | single-attractor chaotic engine | Core | benchmarked | src/julia/benchmark/p3d_sde_selection.jl + src/julia/benchmark/results/p3d_sde_selection.txt + docs/p3d_sde_selection_companion.md (Lorenz-96 dominates Lorenz-63 / Rössler) + src/julia/benchmark/p3e_n_scaling.jl + src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt + docs/p3e_n_scaling_companion.md (linear extensive-chaos scaling confirmed; Lyapunov density s ≈ 0.255 per dimension) | src/julia/src/Engine.jl | :benchmarked |
 | LL-004 | continuous sensor coupling | Core | example-tested | src/julia/test/runtests.jl | src/julia/src/Sensors.jl + src/julia/src/Engine.jl | :tested |
 | LL-005 | sensor Nyquist condition | Core | manual | docs/architecture_design_companion.md §2.4, §3.6 + src/julia/test/runtests.jl (Nyquist compliance predicate testset, LL-005 part-(a) only) + docs/ll005_part_a_companion.md | src/julia/src/Sensors.jl (`nyquist_compliant`) | :argued |
@@ -106,7 +106,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 15
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.32)
+## Cross-audit A1–A6 self-check (post-0.0.33)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (22 of 22).
@@ -128,20 +128,20 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   entries carry `none`. ✓. LL-022 is `:argued` with `manual`
   evidence — the strongest status its evidence type supports.
   No entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (22 / 0 / 0 / 2 / 0 / 4 /
-  15 / 1) match `LAVALAMP_SPEC.md` 0.0.32 final-section counts
-  and `dashboard.md` 0.0.32 spec-status section. Counts
-  unchanged from 0.0.31 — LL-005 part-(a) test is partial
-  sub-claim coverage and does not warrant entry-level status
-  upgrade per CLAUDE.md §Honest framing.
-- **A6 — Test sync.** LL-003, LL-004, LL-005 (part-(a) only),
-  LL-006, LL-007 are exercised by `src/julia/test/runtests.jl`,
-  runnable via `Pkg.test()` from `src/julia/`; 139/139
-  assertions pass in ~52 s (was 123/123 at 0.0.31; +16
-  assertions for LL-005 part-(a) Nyquist-compliance
-  predicate). LL-005 entry-level remains `:argued` because
-  the adversary-detection sub-claim is still open per the
-  0.0.24 P3-Nyq negative finding.
+- **A5 — Stale counts.** Counts above (22 / 0 / 3 / 0 / 4 /
+  14 / 1) match `LAVALAMP_SPEC.md` 0.0.33 final-section counts
+  and `dashboard.md` 0.0.33 spec-status section. **LL-002
+  moves :argued → :tested** (visual layer + decoupling-
+  assertion testset), so :tested 2 → 3 and :argued 15 → 14.
+  Total unchanged.
+- **A6 — Test sync.** LL-002, LL-003, LL-004, LL-005 (part-
+  (a) only), LL-006, LL-007 are exercised by
+  `src/julia/test/runtests.jl`, runnable via `Pkg.test()`
+  from `src/julia/`; 184/184 assertions pass in ~51 s (was
+  139/139 at 0.0.32; +45 assertions for LL-002 visual-layer
+  decoupling testset). LL-002 evidences decoupling via static
+  text-search across `visual/` and `src/julia/src/`; the
+  decoupling invariant is now executable on every commit.
 
 ## Test-coverage notes
 

@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.32 — LL-005 part-(a) parameter-validation test; entry stays :argued).
+Last updated: 2026-05-04 (0.0.33 — LL-002 :tested via decoupled visual layer + decoupling-assertion testset).
 
 ## Status summary
 
@@ -76,12 +76,18 @@ axis. **0.0.32** lands the LL-005 part-(a) parameter-validation
 test as a sub-claim test only — `nyquist_compliant(...)`
 predicate + 16 test assertions; suite 123 → 139. LL-005 stays
 `:argued` because the adversary-detection sub-claim is still
-open (0.0.24 P3-Nyq negative finding stands). **All
-round-3-trigger memory queue items now closed.** Two
-`:tested`; four `:benchmarked`; fifteen `:argued`; one `:open`
-(LL-015 by design). Test suite passes 139/139 in ~52s via
-`Pkg.test()` (was 123 at 0.0.31; +16 LL-005 part-(a)
-assertions).
+open (0.0.24 P3-Nyq negative finding stands). **0.0.33** lands
+the **decoupled visual layer** evidencing LL-002: pure HTML/JS
+bubble simulator at `visual/` (Math.random()-driven, no
+security-primitive references); 45 decoupling-assertion tests
+in runtests.jl make the invariant executable on every commit.
+LL-002 closes `:argued` → `:tested`; counts shift `:tested`
+2 → 3 and `:argued` 15 → 14. **All round-3-trigger memory
+queue items now closed; 0.0.33 is parallel-safe scaffolding
+work while waiting for upstream.** Three `:tested`; four
+`:benchmarked`; fourteen `:argued`; one `:open` (LL-015 by
+design). Test suite passes 184/184 in ~51s via `Pkg.test()`
+(was 139 at 0.0.32; +45 LL-002 decoupling assertions).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -451,25 +457,25 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 22 (was 21; +LL-022 from 0.0.26 P-OS pass)
+- Total spec entries: 22 (unchanged from 0.0.32)
 - `:proved`: 0
-- `:tested`: 2 (LL-004, LL-007)
+- `:tested`: 3 (LL-002, LL-004, LL-007 — LL-002 added 0.0.33)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 15 (LL-001, LL-002, LL-005, LL-008, LL-009,
+- `:argued`: 14 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022)
+  LL-018, LL-020, LL-022 — LL-002 left this set in 0.0.33)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
-Ten entries closed at the design-pass level via manual evidence
-(now including LL-022 from the 0.0.26 P-OS scoping pass); four
-entries (LL-003, LL-004, LL-006, LL-007) closed to `:tested` /
-`:benchmarked` via the P3 prototype. None machine-verified yet —
-Lean (P5/P6) targets LL-006, LL-008, LL-018 plus the round-2
-priorities (linear-coupling worst-case bound, side-channel
-indistinguishability, calibration ε-DP). P-R2 follow-ups are
-the active priority; P3 follow-ups deferred.
+Nine entries closed at the design-pass level via manual evidence;
+five entries (LL-002, LL-003, LL-004, LL-006, LL-007) closed to
+`:tested` / `:benchmarked` via the P3 prototype + visual layer.
+None machine-verified yet — Lean (P5/P6) targets LL-006, LL-008,
+LL-018 plus the round-2 priorities (linear-coupling worst-case
+bound, side-channel indistinguishability, calibration ε-DP).
+P-R2 follow-ups are the active priority; P3 follow-ups
+deferred.
 
 ## Open structural questions
 
@@ -522,6 +528,20 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`visual/`** (0.0.33) — Decorative-only lava-lamp animation
+  layer evidencing LL-002. Self-contained HTML/JS canvas
+  animation (~80 lines `lavalamp.js`); Math.random()-driven
+  bubble simulator with no security-primitive references. The
+  `Visual layer decoupling (LL-002)` testset in
+  `src/julia/test/runtests.jl` (45 assertions) makes the
+  decoupling invariant executable on every commit: visual JS
+  contains no security-primitive identifiers; `src/julia/src/`
+  contains no visual-layer identifiers; visual uses
+  Math.random() not crypto-grade RNG; visual has no
+  imports/requires/external script references. LL-002 closes
+  `:argued` → `:tested`. Counts shift: `:tested` 2 → 3;
+  `:argued` 15 → 14. See `visual/README.md` for the
+  decoupling-discipline rationale.
 - **`docs/ll005_part_a_companion.md`** (0.0.32) — Brief
   permanent record of the LL-005 part-(a) parameter-validation
   test. §1.2 documents why the test landed despite the

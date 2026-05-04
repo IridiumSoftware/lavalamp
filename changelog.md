@@ -5,6 +5,118 @@ messages match entry summaries.
 
 ---
 
+## 0.0.33 — 2026-05-04 — LL-002 :tested via decoupled visual layer + decoupling-assertion testset
+
+Lands the long-deferred P8 visual-skin item from the dashboard
+priority stack as **parallel-safe work while waiting for upstream
+(closure_forces_structure paper update + engine updates)**. The
+visual layer evidences LL-002 (`visual ↔ security decoupling`
+load-bearing invariant) at `:tested`-tier — option (a) from the
+prior `:argued` footer ("a visual layer with assertions about
+decoupling").
+
+**Net result.** LL-002 status moves `:argued` → `:tested`.
+Counts shift: `:tested` 2 → 3; `:argued` 15 → 14; total 22
+unchanged. Test suite 139 → 184 (+45 assertions for the
+`Visual layer decoupling (LL-002)` testset).
+
+The visual is decorative-only by construction: ~80 lines of
+JavaScript using Math.random() exclusively, with no references
+to any security-primitive identifier, no imports, no
+requires, no external script tags. The decoupling invariant is
+now **executable on every commit** — any future re-coupling
+would fail CI.
+
+### Added
+
+- **`visual/`** directory at repo root.
+  - **`visual/index.html`** — entry point (single `<script
+    src="lavalamp.js">`).
+  - **`visual/lavalamp.js`** — bubble simulator (~80 lines).
+    7 bubbles with random initial positions, velocities,
+    sizes, hues; vertical drift with sin-curve wobble; bounce
+    off edges; reset on exit-top. Pure
+    `requestAnimationFrame` render loop.
+  - **`visual/style.css`** — minimal lamp-frame styling
+    (gradient body, rounded edges, glow shadow). Decorative
+    choice; no security significance.
+  - **`visual/README.md`** — decoupling discipline
+    documentation. Explains what the visual is, what it
+    isn't, why decoupling is load-bearing (V-002 basin-
+    spoofing returns if ever re-coupled), and what the
+    decoupling assertions verify.
+- **`src/julia/test/runtests.jl`** — new `Visual layer
+  decoupling (LL-002)` testset with 45 assertions:
+  - Existence: `visual/` directory + 4 expected files.
+  - Randomness source: `Math.random()` present;
+    `crypto.getRandomValues` / `crypto.subtle` absent.
+  - 14 security-primitive identifiers (`lyapunov_spectrum`,
+    `register_envelope`, `synthetic_adversary`,
+    `verify_full`, `verify_constant_time`,
+    `differentially_private_envelope`, `lorenz96_coupled`,
+    `lorenz63`, `rossler`, `ChaosGuard`, `Envelope(`,
+    `nyquist_compliant`, `CouplingParams`, `SensorStream`)
+    NOT present in `visual/lavalamp.js`.
+  - No external imports / requires / script tags in
+    `visual/lavalamp.js`.
+  - 4 visual-layer identifiers (`requestAnimationFrame`,
+    `getContext(`, `createRadialGradient`, `lavalamp.js`)
+    NOT present in any `src/julia/src/*.jl`.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.32 → 0.0.33. LL-002
+  evidence type `manual` → `example-tested`; status `:argued`
+  → `:tested`. Source / Test fields updated to cite
+  `visual/lavalamp.js` and the decoupling testset. Counts:
+  `:tested` 2 → 3; `:argued` 15 → 14.
+- **`artifact_registry.md`** — version 0.0.32 → 0.0.33.
+  LL-002 row updated. Cross-audit A1-A6 self-check
+  refreshed for 0.0.33.
+- **`dashboard.md`** — version 0.0.32 → 0.0.33. Status
+  summary updated. Spec status counts updated. Recent
+  companions prepended with `visual/` entry.
+- **`README.md`** — test count 139 → 184; trajectory
+  extended; visual/ added to file-tree section.
+
+### Why
+
+1. **LL-002 was the most accessible :argued → :tested
+   upgrade.** Per the spec footer, the upgrade required
+   either (a) a visual layer with assertions about
+   decoupling, or (b) Lean / type-level enforcement. Option
+   (a) was buildable now without round-3 dependencies;
+   option (b) is P5/P6 and contingent on the round-3 paper
+   update.
+2. **Parallel-safe with no round-3 risk.** The visual layer
+   has zero connection to the C-conjugate adversary, Q₅₁-tier
+   identity, or 0/5202 cross-sector autopoiesis result. Pure
+   architectural-decoupling work that round-3 cannot revise.
+3. **The decoupling invariant becomes executable.** Prior
+   `:argued` evidence was "invariant preserved by
+   construction" (manual). The `:tested` evidence is
+   automatic: every commit runs CI; any reference between
+   the visual and security layers fails the test. This is
+   the asymmetry-trap defence at the test-surface level.
+4. **PharOS / Lazarus visual extensibility** — the visual
+   layer can grow into product-shaped UIs for the other
+   Triad Deployments without changing its decoupling
+   discipline. Documented in `visual/README.md`.
+
+### Counts
+
+- Total: 22 (unchanged)
+- `:proved`: 0 (unchanged)
+- `:tested`: 3 (+1: LL-002)
+- `:verified`: 0 (unchanged)
+- `:benchmarked`: 4 (unchanged)
+- `:argued`: 14 (-1: LL-002)
+- `:open`: 1 (unchanged)
+
+Test suite: 139/139 → 184/184.
+
+---
+
 ## 0.0.32 — 2026-05-04 — LL-005 part-(a) parameter-validation test (entry stays :argued)
 
 Adds the LL-005 part-(a) parameter-validation test promised in
