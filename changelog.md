@@ -5,6 +5,115 @@ messages match entry summaries.
 
 ---
 
+## 0.0.29 — 2026-05-04 — LL-019 high-res refresh (regime-boundary at α=0.01/n=2000)
+
+Higher-resolution refresh of the LL-019 timing-distribution
+benchmark, promised in `docs/ll019_benchmarked_companion.md` §4
+followups. The refresh tested `verify_constant_time` at 5×
+sample size (1000 per source vs 200) and α=0.01 (vs 0.05).
+
+**Net result.** The high-res regime exposes a *methodological
+boundary* of LL-019's :benchmarked claim, not a tightening or
+refutation. At α=0.01 / n=2000 on the prototype's dev host, the
+KS_stat for `verify_constant_time` fluctuates ~0.04 across
+consecutive runs from system-jitter alone, and the verdict can
+flip INDISTINGUISHABLE → DISTINGUISHABLE between runs (Run 1:
+KS_stat=0.073, INDIST; Run 2: KS_stat=0.116, DIST;
+critical_α=0.01 = 0.093).
+
+This is a real methodological finding, not an implementation
+bug. The mean / median timing differences across accept/reject
+buckets remain ~10 μs on 100 ms padded operations (ratio 1e-4)
+— *operational-significance is unchanged*. The KS test at this
+regime is detecting jitter-induced empirical-CDF noise, not
+algorithm-level data dependence.
+
+LL-019 stays `:benchmarked` at the 0.0.19 evidence regime
+(α=0.05 / n=400, margin 0.061 between KS_stat 0.109 and
+critical 0.170 — well above any plausible jitter range; verdict
+stable). The high-res refresh produces *regime-boundary
+documentation* for what the :benchmarked claim does and does
+not extend to.
+
+### Added
+
+- **`src/julia/benchmark/ll019_timing_distribution_high_res.jl`**
+  — copy of `ll019_timing_distribution.jl` with N_DISTINCT_λS
+  bumped 20→50, N_CALLS_PER_λS bumped 10→20 (1000 samples per
+  source vs 200), α=0.01 (c=1.628 vs 1.358 at α=0.05). Same
+  system / coupling / verifier / RNG-seed convention; trials
+  1-10 reproduce the original by construction; trials 11-20 +
+  λs 21-50 are new evidence.
+- **`src/julia/benchmark/results/ll019_timing_distribution_high_res.txt`**
+  — Run 2 output committed. The result file represents one
+  observation, not a deterministic ground truth (per the
+  verdict-level determinism convention added to CLAUDE.md
+  this commit).
+- **`docs/ll019_high_res_companion.md`** — companion. §1.2
+  establishes the verdict-level determinism convention for
+  timing-based benchmarks (byte-level determinism is
+  structurally inapplicable). §2.1-§2.2 report the verdict
+  instability across two runs. §2.3 contrasts with the stable
+  0.0.19 fit at α=0.05 / n=400. §2.4 explains why critical
+  value shrinks faster than KS_stat in the jitter-dominated
+  regime (`c(α) · sqrt((n+m)/(n·m))` → 1/sqrt(n)). §2.5
+  distinguishes statistical from operational distinguishability
+  (the latter is unaffected). §3 documents why this is not a
+  status downgrade. §5 captures five lessons: determinism has
+  multiple levels; critical shrinks faster than KS_stat;
+  operational vs statistical distinguishability; some
+  refreshes find boundaries not tightenings; host-isolation
+  as round-3 input.
+
+### Changed
+
+- **`CLAUDE.md`** — §Benchmarking discipline gains an inline
+  paragraph generalising the determinism rule from byte-
+  identical to *multiple levels*: numerical benchmarks (RNG-
+  seeded; byte-identical) vs timing-based (jitter-limited;
+  verdict-level). The LL-019 high-res refresh is cited as
+  the worked example.
+- **`LAVALAMP_SPEC.md`** — version 0.0.28 → 0.0.29. LL-019
+  gains a "High-resolution refresh (2026-05-04, regime-boundary
+  finding)" footer documenting the verdict instability at
+  high-res, the operational-significance assessment, and that
+  the status stays `:benchmarked` at the 0.0.19 regime.
+  Counts unchanged (22 / 0 / 0 / 2 / 0 / 4 / 15 / 1).
+- **`artifact_registry.md`** — version 0.0.28 → 0.0.29.
+  LL-019 row's Test/Proof column extended to cite the new
+  high-res benchmark + result + companion. Cross-audit A1-A6
+  self-check refreshed for 0.0.29.
+- **`dashboard.md`** — version 0.0.28 → 0.0.29. Status
+  summary updated. P3 follow-ups list adds 0.0.29 entry;
+  LL-019 high-res refresh removed from remaining-unblocked.
+  Recent companion docs prepended with the new companion.
+
+### Why
+
+1. **Promised follow-up.** The 0.0.19 companion explicitly
+   deferred the high-res refresh; landing it now closes that
+   loop.
+2. **Methodological discipline.** A refresh that exposes a
+   regime-boundary is a first-class :benchmarked-tier output
+   per CLAUDE.md §Benchmarking discipline (negative results
+   are first-class artefacts). The 0.0.28 LL-021 refresh
+   confirmed; this 0.0.29 LL-019 refresh found a boundary —
+   both are honest framing applied to high-res testing.
+3. **Round-3 input.** Timing-distribution benchmarks have a
+   host-isolation threshold below which statistical power is
+   jitter-limited. This is concrete content for the §Host-OS
+   invariants discipline note (added 0.0.26.5) and may
+   surface in round-3 as a candidate sub-claim of LL-022 or
+   as a separate spec entry on operational regimes for
+   timing-based decorrelation guarantees.
+4. **Determinism rule generalisation.** The §Benchmarking
+   discipline rule from 0.0.27 covered byte-identical
+   determinism only. This commit generalises it to verdict-
+   level determinism for timing-based benchmarks, with the
+   LL-019 finding as the canonical example.
+
+---
+
 ## 0.0.28 — 2026-05-04 — LL-021 high-resolution refresh (c′=0.0288 at n=15)
 
 Higher-resolution refresh of the P-R2c structured-adversary

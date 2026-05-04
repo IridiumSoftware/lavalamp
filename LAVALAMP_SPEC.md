@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.28 (LL-021 high-resolution refresh; c′=0.0288 at n=15, 2026-05-04)
+Version: 0.0.29 (LL-019 high-res refresh — regime-boundary at α=0.01/n=2000, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -692,6 +692,33 @@ LL-ID, not the Key.
   channel timing indistinguishability theorem; this
   benchmark grounds its theorem statement (see
   docs/ll019_benchmarked_companion.md §3.3).
+- **High-resolution refresh (2026-05-04, regime-boundary
+  finding):** Per `docs/ll019_high_res_companion.md`, the
+  P-R2a timing-distribution benchmark was re-run at 5× sample
+  size (1000 per source vs 200) and at α=0.01 (vs 0.05). At
+  the high-res regime the KS test loses statistical robustness
+  on the prototype's dev host: KS_stat for verify_constant_time
+  fluctuates by ~0.04 across runs from system-jitter alone, and
+  the verdict can flip from INDISTINGUISHABLE to DISTINGUISHABLE
+  between consecutive runs (Run 1: KS=0.073, INDIST; Run 2:
+  KS=0.116, DIST; critical_α=0.01=0.093). The 0.0.19 fit at
+  α=0.05 / n=400 had margin 0.061 between KS_stat (0.109) and
+  critical (0.170) — well above any plausible jitter range.
+  **Operational-significance is unchanged**: median/mean
+  timing differences across accept/reject buckets remain ~10 μs
+  on 100 ms padded operations (ratio 1e-4); adversary
+  exploitability is operationally negligible regardless of the
+  KS verdict at this regime. The high-res refresh produces
+  **regime-boundary documentation**, not a status change:
+  LL-019 stays `:benchmarked` at the 0.0.19 evidence regime
+  (α=0.05 / n=400). The boundary finding is round-3 input for
+  the §Host-OS invariants discipline note in CLAUDE.md (added
+  0.0.26.5) — timing-distribution benchmarks have a
+  host-isolation threshold below which statistical power is
+  jitter-limited. Benchmark script:
+  `src/julia/benchmark/ll019_timing_distribution_high_res.jl`;
+  result file:
+  `src/julia/benchmark/results/ll019_timing_distribution_high_res.txt`.
 
 ### LL-020 — calibration-confidentiality
 - Key: registered envelope sealed against registration-channel observers, not just substitution

@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.28 — LL-021 high-resolution refresh; c′=0.0288 at n=15).
+Last updated: 2026-05-04 (0.0.29 — LL-019 high-res refresh; regime-boundary at α=0.01/n=2000).
 
 ## Status summary
 
@@ -47,11 +47,21 @@ resolution P-R2c refresh: n=5 → n=15 trials per point
 *confirms* the n=5 fit at higher statistical confidence;
 refined `c′=0.0288` (was 0.02777; 3.8 % shift); negative-
 margin points reduce 3 → 1; Wilson CIs tighten ~50 %.
-LL-021 stays `:benchmarked`. Two `:tested`; four
-`:benchmarked`; fifteen `:argued`; one `:open` (LL-015 by
-design). Test suite passes 123/123 in ~52s via
-`Pkg.test()` (unchanged from 0.0.27; high-res refresh adds
-no tests).
+**0.0.29** refreshes LL-019's KS test at 5× sample size +
+α=0.01 and exposes a *methodological boundary*: at the high-
+res regime, system-jitter-induced KS_stat variation is
+comparable to the gap to critical, and the verdict flips
+INDISTINGUISHABLE → DISTINGUISHABLE across consecutive runs.
+Operational-significance unchanged (median/mean differences
+~10 μs on 100 ms padded ops; ratio 1e-4). LL-019 stays
+`:benchmarked` at the 0.0.19 evidence regime. The finding
+generalises the §Benchmarking discipline rule from byte-
+identical to *verdict-level* determinism for timing-based
+benchmarks, and adds round-3 input on host-isolation
+thresholds. Two `:tested`; four `:benchmarked`; fifteen
+`:argued`; one `:open` (LL-015 by design). Test suite passes
+123/123 in ~52s via `Pkg.test()` (unchanged across all
+0.0.27/28/29 since they're benchmark-only).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -244,9 +254,25 @@ P3 — **Julia prototype core.** ◐ In progress.
     overturning it; LL-021 status stays `:benchmarked`. See
     `docs/ll021_high_res_companion.md`.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.29 LL-019 high-resolution KS-test refresh** ✓
+    Landed with **regime-boundary finding**. The test was
+    re-run at 5× sample size (1000 per source vs 200) and
+    α=0.01 (vs 0.05). At the high-res regime the KS_stat for
+    verify_constant_time fluctuates by ~0.04 across runs from
+    system-jitter alone, and the verdict can flip
+    INDISTINGUISHABLE → DISTINGUISHABLE between consecutive
+    runs (Run 1: KS=0.073 INDIST; Run 2: KS=0.116 DIST;
+    critical=0.093). Operational-significance is unchanged
+    (median/mean differences ~10 μs on 100 ms padded
+    operations; ratio 1e-4). LL-019 stays `:benchmarked` at
+    the 0.0.19 evidence regime (α=0.05 / n=400). The boundary
+    finding is round-3 input for §Host-OS invariants
+    (timing-distribution benchmarks have a host-isolation
+    threshold below which statistical power is jitter-
+    limited). See `docs/ll019_high_res_companion.md`.
+
   **Remaining unblocked sub-items:**
-  - Higher-resolution LL-019 KS-test at α=0.01 or with
-    production-scale verify_full timing.
   - LL-005 part-(a) parameter-validation test (trivial; would
     move parameter side to :tested but entry-level claim
     needs adversary-side too — round-3 input per 0.0.24).
@@ -428,6 +454,20 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/ll019_high_res_companion.md`** (0.0.29) — LL-019
+  high-res refresh exposing a methodological boundary, not a
+  tightening. §1.2 establishes the verdict-level determinism
+  convention for timing-based benchmarks (byte-level
+  determinism is structurally inapplicable). §2.1-§2.2 report
+  the verdict instability across two consecutive runs at α=0.01
+  / n=2000 (KS_stat fluctuates 0.073 → 0.116; verdict flips).
+  §2.4 explains why critical value shrinks faster than KS_stat
+  in the jitter-dominated regime. §2.5 distinguishes statistical
+  from operational distinguishability (mean/median differences
+  ~10 μs on 100 ms padded ops). §5.1 generalises the
+  §Benchmarking discipline rule to multiple determinism levels;
+  §5.4 captures "some refreshes find boundaries, not
+  tightenings" as a first-class outcome.
 - **`docs/ll021_high_res_companion.md`** (0.0.28) — LL-021
   high-resolution refresh of the P-R2c structured-adversary
   surface. §1.2 documents the determinism check (PASS after

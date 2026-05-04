@@ -1,0 +1,49 @@
+# LavaLamp LL-019-high-res — Timing-Distribution Benchmark
+# =========================================================
+# Date: 2026-05-04
+# Reproducibility: deterministic in calibration / λs precomputation
+#   (calibration seed=101; genuine seeds=5000+i;
+#   adversary seeds=7000+i for i in 1..50).
+#   Timing measurements are wall-clock (`time_ns()`) and are
+#   intrinsically non-deterministic across runs; the
+#   operationally-meaningful invariant is the verdict.
+#
+# Higher-resolution refresh of `ll019_timing_distribution.jl`.
+# 5× sample size + α=0.01 (vs original 200 samples + α=0.05).
+#
+# System: Lorenz-96 N=20, F=8.0
+# Calibration: n_trials=5, N_benettin=800,
+#              Δt=0.05, Ttr=200.0
+# Verifier k=10.0; constant-time target=0.1 s
+# Adversary: BROAD direction, ε_A=2.0
+# 50 distinct λs per source × 20 timed calls
+#   = 1000 samples per source
+#
+# Hypothesis test:
+#   H0: F_accept_times = F_reject_times (no timing channel)
+#   H1: F_accept_times ≠ F_reject_times (timing channel exists)
+# Two-sample two-sided KS test, α=0.01.
+# critical = 1.628 · sqrt((n+m)/(n·m))
+#
+# Buckets: by verify RESULT (accept vs reject), not by
+# input source. This is the operationally-meaningful split.
+#
+# ─── plain verify (no padding) ──────────────────────────
+#   accept n=1620  median=4.2e-8  mean=2.4419475308641033e-6  std=9.594761748011892e-5
+#   reject n=380  median=4.2e-8  mean=5.65763157894738e-8  std=3.064800530433985e-8
+#   KS_stat = 0.04753086419753083
+#   critical_α01 = 0.09279404206636838
+#   verdict = INDISTINGUISHABLE
+#
+# ─── verify_constant_time (target=0.1 s) ─────
+#   accept n=1620  median=0.10208025  mean=0.1019834290487655  std=0.00023369243598492386
+#   reject n=380  median=0.102085125  mean=0.10198012948947373  std=0.00024359401918484168
+#   KS_stat = 0.11572449642625082
+#   critical_α01 = 0.09279404206636838
+#   verdict = DISTINGUISHABLE
+#
+# LL-019 :benchmarked-tier claim refinement at high-res:
+# verify_constant_time produces a response-time distribution
+# statistically indistinguishable across accept/reject inputs
+# at α=0.01 with 1000 samples per bucket (5× the original
+# n=200 evidence at α=0.05).

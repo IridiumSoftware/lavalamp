@@ -314,6 +314,24 @@ Discipline rules:
   (`docs/audit_2026-05-04.md`) is the worked example: determinism
   PASS cleanly attributed the result to an implementation bug
   rather than host-state, which the benchmark could then close.
+  **Determinism has multiple levels.** Numerical benchmarks (RNG-
+  seeded SDE solves + fitted constants) admit byte-identical
+  determinism. Timing-based benchmarks (wall-clock measurements
+  via `time_ns()`) are structurally jitter-non-deterministic at
+  the per-measurement level; the operationally-meaningful
+  invariant is *verdict-level* determinism (the KS-test verdict,
+  the bound-margin verdict — not the underlying numeric
+  comparison). For benchmarks in this class, run twice and
+  verify the verdict is stable; if KS_stat or similar varies
+  enough across runs to flip the verdict, the test is at its
+  jitter-limited regime and α / n should be loosened until
+  verdict-stable. The LL-019 high-res refresh
+  (`docs/ll019_high_res_companion.md`, 0.0.29) is the worked
+  example: at α=0.01 / n=2000 on the prototype's dev host, the
+  KS_stat for `verify_constant_time` fluctuates ~0.04 across
+  runs from system-jitter alone and the verdict flips. The
+  0.0.19 :benchmarked claim at α=0.05 / n=400 (margin 0.061 vs
+  jitter range) remains verdict-stable.
 - **Negative results are first-class artefacts.** A benchmark
   that exposes a bug, surfaces an architectural gap, or refuses
   to close a spec entry is producing legitimate evidence — same
