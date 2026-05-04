@@ -57,7 +57,7 @@ with the LL-002 decoupling invariant made executable via static
 text-search assertions on every commit. CI runs `Pkg.test()` on
 every push (184 assertions pass in ~51s).
 
-**Spec ledger:** 22 entries with the current breakdown:
+**Spec ledger:** 23 entries with the current breakdown:
 
 | status | count | entries |
 |---|---:|---|
@@ -65,7 +65,7 @@ every push (184 assertions pass in ~51s).
 | `:verified` | 0 | — |
 | `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
 | `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
-| `:argued` | 14 | (P2 design + round-2 closures + closure-pass arguments + P-OS OS-trust-stack scoping) |
+| `:argued` | 15 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward trust-stack scoping + P-PharOS upward trust-stack scoping) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 **Trajectory:** 0.0.1 (concept-stage scaffold) → 0.0.3
@@ -84,7 +84,10 @@ refresh; regime-boundary at α=0.01/n=2000) → 0.0.30
 operational balance) → 0.0.32 (LL-005 part-(a) parameter-
 validation test; entry stays :argued — last unblocked queue
 item now closed) → 0.0.33 (LL-002 :tested via decoupled
-visual layer + decoupling-assertion testset).
+visual layer + decoupling-assertion testset) → 0.0.34
+(P-PharOS scoping pass; LL-023 added :argued — upward trust-
+stack scoping paired with LL-022 to close the trust-stack
+scoping question on both ends).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -140,7 +143,8 @@ lavalamp/
 │   ├── ll019_high_res_companion.md
 │   ├── p3e_n_scaling_companion.md
 │   ├── p3f_per_sde_detection_power_companion.md
-│   └── ll005_part_a_companion.md
+│   ├── ll005_part_a_companion.md
+│   └── pharos_scoping_companion.md
 ├── visual/                                     ← decoupled visual layer (LL-002)
 │   ├── index.html                              ← canvas entry point
 │   ├── lavalamp.js                             ← Math.random() bubble simulator

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.33 (LL-002 :tested via decoupled visual layer + decoupling-assertion testset, 2026-05-04)
+Version: 0.0.34 (PharOS scoping pass; LL-023 added :argued — upward trust-stack scoping, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -535,6 +535,14 @@ LL-ID, not the Key.
   fall back to multi-party registration (variant A) per
   LL-022 §2.2.1's stated graceful-fallback path. See
   `docs/os_identity_security_scoping_companion.md`.
+- **Consumer framing (2026-05-04, P-PharOS):** The
+  registration ceremony is called from the consumer-side
+  (PharOS install / first-boot flow; Lazarus onboarding;
+  future SDK consumers) per LL-023's `register(...)`
+  surface. PharOS is the canonical first consumer; the
+  protocol's variants (B+D / A / C) map to deployment-time
+  consumer choices. See
+  `docs/pharos_scoping_companion.md` §2.2.1.
 
 ### LL-012 — cold-start-window
 - Key: behavior of just-booted device before trajectory has converged
@@ -693,6 +701,14 @@ LL-ID, not the Key.
 - Notes: Adaptive thresholding (threshold learning from genuine-
   device history) is recommended future hardening; round-1 uses
   fixed τ.
+- **Consumer framing (2026-05-04, P-PharOS):** The no-oracle
+  protocol is enforced at the LL-023 consumer-API surface.
+  PharOS's `verify(...)` returns Bool only (or one of the
+  enumerated state codes); platform shims (PAM module on
+  Linux, Authorization Plug-in on macOS, Credential Provider
+  on Windows) translate the Bool into platform-native
+  authentication results without leaking distance information.
+  See `docs/pharos_scoping_companion.md` §2.2.2.
 
 ---
 
@@ -1030,19 +1046,69 @@ LL-ID, not the Key.
   the OS dependency explicit in the theorem statement, not
   implicit in surrounding text. See
   `docs/os_identity_security_scoping_companion.md` §2.6.
+- **Closure with LL-023 (2026-05-04, P-PharOS):** LL-022 is the
+  *downward* trust-stack boundary (what LavaLamp depends on
+  from below); LL-023 is the *upward* trust-stack boundary
+  (what consumers depend on LavaLamp for). The pair closes the
+  trust-stack scoping question on both ends. Either alone is
+  incomplete; together they are the asymmetry-trap defence at
+  the trust-stack boundary. See
+  `docs/pharos_scoping_companion.md` §2.5.
+
+### LL-023 — consumer-API-surface
+- Key: stable API surface LavaLamp exposes to OS-deployment consumers
+- Logic tier: Boundary
+- Description: Formal statement of the consumer-API contract
+  LavaLamp commits to expose for downstream OS-deployment
+  consumers. Four operations: `register(device,
+  envelope_storage_path) → registration_handle` (called once
+  at install / first-boot per LL-011); `verify(handle,
+  trajectory) → Bool` (per-request authentication; LL-017
+  no-oracle; variants `verify_full` per LL-019 and
+  `verify_constant_time` per LL-019); `device_state() →
+  GuardState` (chaos-guard status per LL-007; INVALID /
+  WARMUP / VALID); `re_register(handle, new_path) →
+  new_handle` (time-bounded re-registration per LL-011
+  variant C). PharOS is the canonical first instantiation
+  (forthcoming OS-level identity layer; lighthouse-metaphor
+  reference in the Triad Deployments portfolio); Lazarus and
+  future embedded SDK consumers also conform. The surface is
+  Boundary-tier because it scopes what LavaLamp exposes, not
+  what the security primitive does internally — analogous to
+  LL-022 (downward) and LL-015 (kernel OOS).
+- Evidence type: manual
+- Status: :argued
+- Source: docs/pharos_scoping_companion.md §2.
+- Notes: PharOS does not yet exist as a separate repo. This
+  entry documents LavaLamp's *commitment to expose* the
+  surface; the consumer-side conformance evidence (PharOS's
+  spec / tests) will land in PharOS's future repo. LL-023
+  pairs with LL-022 to close the trust-stack scoping question
+  (downward + upward). `:tested` upgrade requires a
+  deployment-spec test suite that loads a candidate consumer
+  and verifies LL-023 conformance — operational tooling that
+  lands when consumers themselves exist; deferred. `:proved`
+  requires Lean meta-theorems on consumer inheritance
+  (P5/P6 work).
+- **Theorem-shape implication:** A consumer (PharOS) that
+  conforms to LL-023's API contract inherits LavaLamp's
+  properties parametric in the consumer's OS assumptions.
+  The closure of LL-022 (downward) + LL-023 (upward) gives
+  the Triad Deployments collective security claim its formal
+  grounding. See `docs/pharos_scoping_companion.md` §2.6.
 
 ---
 
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 22
+- Total: 23
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 14 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 15 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022)
+  LL-018, LL-020, LL-022, LL-023)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -1053,6 +1119,9 @@ LL-019 timing-indistinguishability, LL-021 worst-case
 bound); three :tested entries (LL-002 visual ↔ security
 decoupling via the visual layer + decoupling-assertion
 testset added in 0.0.33; LL-004 sensor coupling; LL-007
-chaos-guard); fourteen :argued at design level; only LL-015
-remains :open as the honest scoping declaration that A3
-(kernel-level) adversaries are out of scope.**
+chaos-guard); fifteen :argued at design level (now including
+LL-023 consumer-API-surface from the 0.0.34 P-PharOS scoping
+pass — pairs with LL-022 to close the trust-stack scoping
+question on both ends); only LL-015 remains :open as the
+honest scoping declaration that A3 (kernel-level) adversaries
+are out of scope.**

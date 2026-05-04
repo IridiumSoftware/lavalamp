@@ -5,6 +5,123 @@ messages match entry summaries.
 
 ---
 
+## 0.0.34 — 2026-05-04 — PharOS scoping pass (LL-023 added :argued — upward trust-stack scoping)
+
+Lands the PharOS scoping pass as **parallel-safe upward
+trust-stack scoping work** while waiting for upstream
+(closure_forces_structure paper update + engine updates).
+Mirrors the 0.0.26 P-OS pass shape but oriented from the
+consumer side. The 0.0.26 pass scoped what *LavaLamp depends
+on from the OS layer below* (LL-022); this pass scopes what
+*consumers depend on LavaLamp for from above* (LL-023).
+
+**Net result.** New entry LL-023 (consumer-API-surface,
+Boundary tier, manual evidence, `:argued`) articulates the
+API contract LavaLamp commits to expose for downstream
+OS-deployment consumers — four operations: `register`,
+`verify` (with `verify_full` and `verify_constant_time`
+variants), `device_state`, `re_register`. PharOS is the
+canonical first instantiation (forthcoming OS-level identity
+layer in the Triad Deployments portfolio); Lazarus and future
+embedded SDK consumers also conform to the same surface.
+
+**LL-022 (downward) + LL-023 (upward) close the trust-stack
+scoping question on both ends.** Either alone is incomplete;
+together they are the asymmetry-trap defence at the trust-
+stack boundary. Three in-place amendments (LL-011, LL-017,
+LL-022) cross-reference LL-023 for the consumer-side framing.
+
+Counts: total 22 → 23; `:argued` 14 → 15; other counts
+unchanged. Test suite 184/184 unchanged (this version adds no
+new code or tests — design-only pass).
+
+### Added
+
+- **`docs/pharos_scoping_companion.md`** — substantive design
+  companion (~7 KB). §1 inputs (no code; design synthesis
+  only). §2.1 PharOS architectural role (lighthouse /
+  persistent reference for OS authentication; consumer of
+  LavaLamp's verifier API, not a re-implementation of the
+  security primitive). §2.2 enumerates the four LL-023 API
+  operations with inputs / outputs / errors / use cases. §2.3
+  maps OS integration points (PAM on Linux, Authorization
+  Plug-in on macOS, Credential Provider on Windows; SSH key
+  wrapping + biometric replacement as advanced integrations).
+  §2.4 articulates PharOS's narrower threat model. §2.5
+  closes the Triad Deployments trust-stack picture (Lazarus
+  / LavaLamp / PharOS as a closure-of-three). §2.6 pins
+  parametric Lean theorem-shape for consumer inheritance.
+  §5 captures four lessons including "the trust-stack scoping
+  question has two ends" and "PharOS's role is reference, not
+  gate."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.33 → 0.0.34. New entry
+  LL-023 in a new "Surfaced by P-PharOS scoping pass (0.0.34)"
+  section. Three in-place amendments:
+  - LL-011 — appends consumer-framing sub-bullet noting
+    PharOS as canonical OS-deployment consumer; cites
+    LL-023's `register` operation.
+  - LL-017 — appends consumer-framing sub-bullet noting the
+    no-oracle protocol enforced at the LL-023 surface;
+    cites platform shims (PAM / Auth Plug-in / Credential
+    Provider).
+  - LL-022 — appends "Closure with LL-023" note articulating
+    the downward + upward pair.
+  New entry LL-023 lands in its own section with the standard
+  Boundary-entry shape (manual / `:argued`). Counts: total
+  22 → 23; `:argued` 14 → 15.
+- **`artifact_registry.md`** — version 0.0.33 → 0.0.34. New
+  "Surfaced by P-PharOS scoping pass (0.0.34)" section with
+  LL-023 row. Counts updated. Cross-audit A1-A6 self-check
+  refreshed for 0.0.34.
+- **`dashboard.md`** — version 0.0.33 → 0.0.34. Status
+  summary updated. Spec status counts updated. P-PharOS
+  added to priority stack as a closed item (parallel to
+  P-OS shape). Recent companion docs prepended with the new
+  companion.
+- **`README.md`** — spec ledger counts updated; trajectory
+  extended.
+
+### Why
+
+1. **Symmetric scoping.** LL-022 (downward) was paired with
+   LL-015 (kernel OOS) at the 0.0.26 P-OS pass. LL-023
+   (upward) was the missing pair member — without it, the
+   trust-stack scoping was incomplete on the consumer side.
+   This pass closes that asymmetry.
+2. **Triad Deployments portfolio.** With LL-023 landed,
+   LavaLamp's spec articulates *what consumers can rely on*
+   — the contract PharOS / Lazarus / future SDKs conform to.
+   The portfolio's closure-of-three structure (per the
+   2026-05-04 branding decision; see
+   `~/.claude/projects/.../memory/reference_triad_deployments.md`)
+   has its formal grounding in this pair of Boundary entries.
+3. **Parallel-safe with no round-3 risk.** Same justification
+   as 0.0.26 P-OS / 0.0.33 visual layer: zero connection to
+   C-conjugate / Q₅₁ / 0/5202 round-3-blocked territory.
+   Pure architectural-scoping work.
+4. **Pre-PharOS design discipline.** When PharOS lands
+   operationally (forthcoming repo), it inherits the LL-023
+   contract as the consumer-side conformance target. This
+   pass therefore *de-risks* PharOS's eventual implementation
+   by pinning the API surface in advance.
+
+### Counts
+
+- Total: 22 → 23 (+LL-023)
+- `:proved`: 0 (unchanged)
+- `:tested`: 3 (unchanged)
+- `:verified`: 0 (unchanged)
+- `:benchmarked`: 4 (unchanged)
+- `:argued`: 14 → 15 (+LL-023)
+- `:open`: 1 (unchanged)
+
+Test suite: 184/184 unchanged (design-only pass adds no tests).
+
+---
+
 ## 0.0.33 — 2026-05-04 — LL-002 :tested via decoupled visual layer + decoupling-assertion testset
 
 Lands the long-deferred P8 visual-skin item from the dashboard
