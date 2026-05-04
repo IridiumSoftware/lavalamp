@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.26 — P-OS OS-level scoping pass; LL-022 added :argued).
+Last updated: 2026-05-04 (0.0.27 — LL-020 Strategy 2 :benchmarked-tier evidence; entry stays :argued).
 
 ## Status summary
 
@@ -29,9 +29,24 @@ benchmark (LL-003 → :benchmarked). 0.0.26 closed the
 positive enumeration of OS / firmware / hardware-root
 mechanisms LavaLamp's claims depend on, paired with LL-015
 (downward boundary, A3 OOS) to close the trust-stack
-scoping question. Two `:tested`; four `:benchmarked`;
+scoping question. **0.0.27** closes Strategy 2 of LL-020
+to `:benchmarked`-tier evidence: the detection-power-vs-ε
+benchmark exposed an implementation bug (symmetric Gaussian
+noise on σ + floor → 100% FPR), the determinism re-check
+attributed it cleanly to the implementation, the fix
+(variance-convolution `σ_pub = sqrt(env.σ²+σ_DP²)`) lands,
+and the post-fix benchmark produces the expected
+privacy/detection trade-off curve (ε_DP=10 gives K=3.106,
+c'=0.01325, FPR=0). LL-020 entry-level stays `:argued`
+because the multi-strategy approach is the entry's claim;
+Strategy 2 component is `:benchmarked`-tier per the new
+benchmark. CLAUDE.md gains a §Benchmarking discipline
+section codifying determinism checks + negative-results-
+as-first-class. Two `:tested`; four `:benchmarked`;
 fifteen `:argued`; one `:open` (LL-015 by design). Test
-suite passes 117/117 in ~52s via `Pkg.test()`.
+suite passes 123/123 in ~52s via `Pkg.test()` (was 117 in
+0.0.26; +6 new assertions for variance-convolution σ
+guarantees).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -180,14 +195,36 @@ P3 — **Julia prototype core.** ◐ In progress.
     `:tested` → `:benchmarked`. See
     `docs/p3d_sde_selection_companion.md`.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.27 LL-020 Strategy 2 detection-power-vs-ε
+    benchmark** ✓ Landed. Initial benchmark (2026-05-04 first
+    pass) produced a pathological 100% FPR across all DP
+    cells; determinism re-check (`diff` exit 0) cleanly
+    attributed the result to a bug in
+    `differentially_private_envelope` (symmetric Gaussian
+    noise on σ + 1e-10 floor pushed σ_pub near zero,
+    collapsing the threshold). Fix: variance-convolution
+    `σ_pub = sqrt(env.σ² + σ_DP²)` (deterministic σ
+    inflation; spectrum stays Gaussian-mechanism (ε,δ)-DP).
+    Re-benchmark produces the expected privacy/detection
+    trade-off: ε_DP=10 gives K=3.106, c'=0.01325, FPR=0
+    (vs no-DP K=0.798, c'=0.00418, FPR=0.10); ε_DP=3 reaches
+    58% detection at ε_A=3.0; ε_DP=1/0.3 are operationally
+    vacuous. **σ_DP / σ_true_min** is the operationally
+    meaningful predictor (ratio > ~3 → weak adversaries
+    blend in). Strategy 2 closes to `:benchmarked`-tier
+    evidence; LL-020 entry-level stays `:argued`. CLAUDE.md
+    gains a §Benchmarking discipline section codifying
+    determinism checks + negative-results-as-first-class.
+    See `docs/audit_2026-05-04.md` (negative-result phase) +
+    `docs/ll020_strategy_2_benchmarked_companion.md`
+    (post-fix evidence).
+
   **Remaining unblocked sub-items:**
   - Higher-resolution P-R2c refresh (15+ trials per point)
     to tighten LL-021's c′ binding constraint.
   - Higher-resolution LL-019 KS-test at α=0.01 or with
     production-scale verify_full timing.
-  - Detection-power-vs-ε benchmark for LL-020 Strategy 2
-    (would support a :benchmarked upgrade for Strategy 2
-    specifically).
   - LL-005 part-(a) parameter-validation test (trivial; would
     move parameter side to :tested but entry-level claim
     needs adversary-side too — round-3 input per 0.0.24).
@@ -369,6 +406,29 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/audit_2026-05-04.md`** (between 0.0.26 and 0.0.27) —
+  Diagnostic finding from the LL-020 Strategy 2 benchmark
+  attempt. §2.1 documents the determinism re-check (PASS;
+  byte-identical across two runs). §2.2 attributes the
+  pathological 100% FPR to a bug in
+  `differentially_private_envelope` (symmetric Gaussian noise
+  on σ + 1e-10 floor). §3 lays out three architectural fix
+  options; recommends variance-convolution form. Same shape
+  as a P3-Nyq negative result + diagnostic note; this
+  pre-dated the fix and grounds the post-fix companion.
+- **`docs/ll020_strategy_2_benchmarked_companion.md`** (0.0.27) —
+  Strategy 2 detection-power-vs-ε benchmark + companion. §1.1
+  documents the variance-convolution σ refinement (response
+  to the diagnostic above). §2.1 reports the empirical
+  detection-power surface across the (ε_DP, ε_A) plane. §2.2
+  tabulates σ_DP per privacy budget. §2.3 fits bound
+  constants per ε_DP. §2.4 articulates the operational design
+  rule σ_DP ≤ X/3 (where X is the smallest adversary
+  magnitude that must be detected). §3 explains why Strategy 2
+  closes to `:benchmarked`-tier while LL-020 entry-level stays
+  `:argued`. §5 captures five lessons including end-to-end
+  correctness lives in benchmarks not unit tests, and the
+  σ_DP/σ_true_min ratio as the meaningful predictor.
 - **`docs/os_identity_security_scoping_companion.md`** (0.0.26) —
   P-OS OS-level identity-security scoping pass. §2.1 lays out the
   trust stack (LavaLamp / OS userspace / kernel / bootloader /

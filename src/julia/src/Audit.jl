@@ -330,12 +330,41 @@ end
                                      ) -> Envelope
 
 Construct an `(ε, δ)`-differentially-private published version
-of `env` by adding calibrated Gaussian noise to each component
-of `env.spectrum` and `env.σ` per the standard Gaussian mechanism.
+of `env`. The published spectrum is obtained by adding calibrated
+Gaussian noise (Dwork-Roth Gaussian mechanism); the published σ
+is the *variance-convolution* form `sqrt(env.σ² + σ_DP²)` rather
+than a noised σ.
 
-The Gaussian mechanism: for a function with L2-sensitivity Δ_2,
-adding `Gaussian(0, σ²)` noise per component satisfies
-`(ε, δ)`-DP when
+**Why σ is treated differently from spectrum.** Naive symmetric
+Gaussian noise on σ (the obvious application of the Gaussian
+mechanism) can push σ near zero or negative, requiring a floor
+that operationally collapses the verifier's threshold to ~0 and
+forces every candidate trajectory to be rejected (including the
+genuine device — see `docs/audit_2026-05-04.md` for the negative
+result that surfaced this). The variance-convolution form sidesteps
+the issue by computing the σ a verifier *needs* to see: the
+expected variance of the residual `λ_genuine - spectrum_pub`,
+which is the convolution `Var(genuine_residual) + Var(DP_shift)
+= σ_true² + σ_DP²`. This is deterministically larger than σ_true
+so detection thresholds widen monotonically with σ_DP, matching
+the operational intent of the privacy/detection trade-off.
+
+**Privacy implications of the σ choice.**
+
+- *Spectrum* is fully `(ε, δ)`-DP via the Gaussian mechanism.
+- *σ is not DP* under this implementation. `σ_pub` is a
+  deterministic function of `env.σ` and the public `σ_DP`, so
+  it leaks `env.σ ≤ σ_pub`. Operationally σ is calibration
+  *confidence* metadata (estimator standard deviation across
+  registration trials), strictly less sensitive than the
+  spectrum itself; for a calibration-confidentiality strategy
+  this is honest. A deployment that needs σ to be DP-protected
+  must substitute Strategy 1 (TPM-sealed storage) or Strategy 3
+  (Shamir threshold) for that field.
+
+The Gaussian mechanism on the spectrum: for a function with
+L2-sensitivity Δ_2, adding `Gaussian(0, σ²)` noise per component
+satisfies `(ε, δ)`-DP when
 
 ```
 σ ≥ Δ_2 · sqrt(2 · ln(1.25 / δ)) / ε
@@ -345,7 +374,7 @@ adding `Gaussian(0, σ²)` noise per component satisfies
 Privacy" §A.1 / Thm A.1.)
 
 **Sensitivity argument.** The L2-sensitivity Δ_2 of the registered
-envelope w.r.t. swapping a single calibration trial is bounded
+spectrum w.r.t. swapping a single calibration trial is bounded
 by the per-trial λ̂ deviation: at the prototype's calibration
 config (n_trials = 5–10, N_benettin ≈ 1200), per-exponent λ̂
 varies by ≈ 0.1 across trials (per `register_envelope`'s sample
@@ -356,24 +385,29 @@ deployment.
 
 **Privacy-vs-detection trade-off.** A registration-channel
 observer who sees only `differentially_private_envelope(env)`
-gains at most `ε`-bounded information about the true envelope
+gains at most `ε`-bounded information about the true spectrum
 (per the DP guarantee). The verifier using the perturbed envelope
-has correspondingly *wider* threshold tolerances (k · σ_perturbed
-vs k · σ_original where σ_perturbed > σ_original due to the
-added noise), so detection power decreases as ε decreases.
+has correspondingly *wider* threshold tolerances
+(k · sqrt(σ_true² + σ_DP²) vs k · σ_true) so weak adversaries
+slip through more easily; detection power decreases monotonically
+as ε decreases.
 
 This implements LL-020 Strategy 2 from
-`docs/p_r2b_calibration_confidentiality_companion.md` §2.2.
-Other LL-020 strategies (TPM-sealed storage; multi-party
-threshold scheme) require platform / cryptographic-library
-coupling and live in P7 hardening / P5 Haskell tracks.
+`docs/p_r2b_calibration_confidentiality_companion.md` §2.2,
+with the variance-convolution σ refinement landed 2026-05-04
+in response to the diagnostic finding documented in
+`docs/audit_2026-05-04.md`. Other LL-020 strategies (TPM-sealed
+storage; multi-party threshold scheme) require platform /
+cryptographic-library coupling and live in P7 hardening / P5
+Haskell tracks.
 
 # Examples
 ```julia-repl
 julia> env_pub = differentially_private_envelope(env;
                                                   ε=1.0, δ=1e-6,
                                                   sensitivity=0.1);
-# env_pub satisfies (1.0, 1e-6)-DP w.r.t. env's calibration trials
+# env_pub.spectrum satisfies (1.0, 1e-6)-DP; env_pub.σ leaks a
+# lower bound on env.σ but is operationally usable for verification.
 ```
 
 API STABILITY: experimental.
@@ -390,13 +424,13 @@ function differentially_private_envelope(env::Envelope;
     σ_DP = sensitivity * sqrt(2 * log(1.25 / δ)) / ε
 
     n = length(env.spectrum)
+    # Spectrum: Gaussian-mechanism (ε, δ)-DP.
     spectrum_pub = env.spectrum .+ σ_DP .* randn(rng, n)
-    σ_pub = env.σ .+ σ_DP .* randn(rng, n)
-    # Floor σ at a small positive value — DP-perturbed σ can go
-    # negative, which would make the verifier reject every
-    # candidate (k · σ < 0). Floor preserves the (ε, δ)-DP
-    # guarantee since the floor is data-independent.
-    σ_pub = max.(σ_pub, 1e-10)
+    # σ: variance-convolution. Deterministic in env.σ; reflects the
+    # expected variance of the verifier's residual under DP-perturbed
+    # spectrum. Strictly ≥ env.σ; no floor required (σ ≥ 0 always
+    # for a valid envelope, so sqrt(σ² + σ_DP²) ≥ σ_DP > 0).
+    σ_pub = sqrt.(env.σ .^ 2 .+ σ_DP^2)
 
     metadata = copy(env.metadata)
     metadata[:dp_ε] = Float64(ε)

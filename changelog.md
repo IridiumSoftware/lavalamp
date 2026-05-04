@@ -5,6 +5,137 @@ messages match entry summaries.
 
 ---
 
+## 0.0.27 — 2026-05-04 — LL-020 Strategy 2 :benchmarked-tier (entry stays :argued)
+
+Closes Strategy 2 of LL-020 (ε-DP envelope perturbation) to
+`:benchmarked`-tier evidence with empirically-validated
+privacy/detection trade-off constants. Entry-level LL-020
+stays `:argued` because the multi-strategy approach
+(Strategies 1+2+3) is the entry's claim and only Strategy 2
+has been exercised at `:benchmarked` evidence quality.
+
+The session ran in two phases. **Phase 1 (commit `8574670`,
+landed prior to this changelog entry):** the initial
+benchmark produced a pathological 100% FPR across every
+(ε_DP, ε_A) cell. A determinism re-check (`diff` exit 0)
+attributed the result cleanly to a bug in
+`differentially_private_envelope` rather than host-state
+contamination; CLAUDE.md gained a §Benchmarking discipline
+section codifying the determinism-check rule going forward.
+
+**Phase 2 (this version, 0.0.27):** the bug fix landed and
+the re-benchmark produced the expected trade-off curve.
+
+### Changed
+
+- **`src/julia/src/Audit.jl`** — `differentially_private_envelope`
+  refined: spectrum stays Gaussian-mechanism (ε,δ)-DP;
+  σ replaced with variance-convolution form
+  `σ_pub = sqrt(env.σ² + σ_DP²)`. Deterministic in
+  `env.σ`+`σ_DP`; strictly inflates each component; matches
+  the docstring's "wider tolerances" intent. Trade-off:
+  σ leaks `env.σ ≤ σ_pub` (not DP-protected); only spectrum
+  is DP. Operationally σ is calibration *confidence*, less
+  sensitive than the spectrum itself; deployments needing
+  DP on σ substitute Strategy 1 (TPM-sealed) or Strategy 3
+  (Shamir threshold). Docstring updated to reflect the
+  refinement and reference `docs/audit_2026-05-04.md` /
+  `docs/ll020_strategy_2_benchmarked_companion.md`.
+- **`src/julia/test/runtests.jl`** — added 6 new test
+  assertions for the variance-convolution σ guarantees:
+  σ_pub deterministic in env.σ + σ_DP (different RNG seeds
+  give identical σ_pub); σ_pub formula
+  `σ_pub_i = sqrt(env.σ_i² + σ_DP²)`; σ_pub strictly inflates
+  env.σ; σ_pub ≥ σ_DP per component; end-to-end operational
+  correctness via verify against the perturbed envelope.
+  Total: 117/117 → 123/123.
+
+### Added
+
+- **`docs/ll020_strategy_2_benchmarked_companion.md`** —
+  companion. §1.1 documents the variance-convolution σ
+  refinement and the privacy implications of the σ choice.
+  §2.1 reports the empirical detection-power surface across
+  the (ε_DP, ε_A) plane. §2.2 tabulates σ_DP per privacy
+  budget. §2.3 fits bound constants per ε_DP per the LL-006
+  P3-bound shape. §2.4 articulates the operational design
+  rule: σ_DP ≤ X/3 (where X is the smallest adversary
+  magnitude that must be detected) translates the (ε,δ)
+  privacy budget into an adversary-magnitude bound. §3
+  documents Strategy 2 :benchmarked-tier evidence and why
+  LL-020 entry-level stays :argued. §5 captures five
+  lessons including end-to-end correctness lives in
+  benchmarks not unit tests; σ_DP/σ_true_min ratio as the
+  meaningful predictor; DP at moderate ε_DP gives FPR
+  elimination as a side benefit.
+- **`src/julia/benchmark/results/ll020_strategy_2_detection_power_lorenz96.txt`** —
+  post-fix result file. The pre-fix (negative) result is
+  preserved in commit `8574670` and described in
+  `docs/audit_2026-05-04.md`.
+
+### Empirical summary
+
+Detection-power surface at the prototype's calibration
+config (Lorenz-96 N=20, F=8, k=5, n_trials=10,
+N_benettin=1200, T=60):
+
+| ε_DP   | σ_DP    | n_fit | K     | c'        | P_genuine_FPR |
+|--------|---------|-------|-------|-----------|---------------|
+| no DP  | 0.0000  | 3     | 0.798 | 0.00418   | 0.100         |
+| 10.00  | 0.0530  | 3     | 3.106 | 0.01325   | 0.000         |
+| 3.00   | 0.1766  | 1     | (insufficient transition-region points) | 0.000 |
+| 1.00   | 0.5299  | 0     | (saturated at FPR floor) | 0.000 |
+| 0.30   | 1.7663  | 0     | (saturated at FPR floor) | 0.000 |
+
+DP at ε_DP=10 brings baseline FPR from 0.100 to 0.000
+across all adversary magnitudes — a clean side-benefit
+alongside the privacy guarantee (eliminates the round-2
+§1C-A5 DoS vector at scale). Detection saturation moves
+from ε_A=2 (no DP) to ε_A=3 (ε_DP=10).
+
+### Spec impact
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.26 → 0.0.27. LL-020
+  gains a "Round-2 follow-up (2026-05-04, Strategy 2
+  :benchmarked-tier)" footer documenting the variance-
+  convolution refinement, the benchmark result, and the
+  σ_DP/σ_true_min ≈ 3 operational threshold.
+  Counts unchanged (22 / 0 / 0 / 2 / 0 / 4 / 15 / 1).
+- **`artifact_registry.md`** — version 0.0.26 → 0.0.27.
+  LL-020 row's Test/Proof column updated to cite the new
+  benchmark + companion + diagnostic note. Cross-audit
+  A1-A6 self-check refreshed for 0.0.27.
+- **`dashboard.md`** — version 0.0.26 → 0.0.27. Status
+  summary updated. P3 follow-ups list adds 0.0.27 entry;
+  LL-020 detection-power benchmark removed from
+  remaining-unblocked. Recent companion docs prepended
+  with the post-fix companion + diagnostic note. Test
+  suite count updated 117 → 123.
+
+### Why
+
+1. **Honest evidence quality.** The original LL-020 Strategy
+   2 implementation (0.0.23) had unit tests passing but the
+   end-to-end operational correctness (genuine device
+   verification under DP) was untested. The benchmark caught
+   it; the fix landed; the benchmark re-ran successfully.
+   This pattern — function-level tests insufficient,
+   benchmark catches operational bug — is now codified in
+   CLAUDE.md §Benchmarking discipline.
+2. **Privacy/detection trade-off operationalised.** The
+   benchmark's σ_DP/σ_true_min predictor converts the
+   abstract (ε,δ)-DP budget into a deployment design rule
+   (`σ_DP ≤ X/3` for adversary magnitude X). Useful for
+   threat-model reasoning that's directly comparable across
+   deployment configs.
+3. **Independent of round-3 trigger.** Same as the 0.0.23
+   ε-DP envelope work: this is empirical refinement of an
+   already-:argued strategy, not a structural claim that
+   would need to wait for the closure_forces_structure paper
+   update.
+
+---
+
 ## 0.0.26 — 2026-05-03 — P-OS OS-level scoping pass (LL-022 added :argued)
 
 Adds the OS-level identity-security scoping pass — a P2-style

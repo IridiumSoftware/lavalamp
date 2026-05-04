@@ -52,7 +52,7 @@ layer would want to use) returns.
 Prototype-stage. The Julia prototype core (`src/julia/`)
 implements the SDE substrate (Lorenz-96), sensor-coupling layer,
 Lyapunov-spectrum residue audit, chaos-guard, and side-channel
-hardening. CI runs `Pkg.test()` on every push (117 assertions
+hardening. CI runs `Pkg.test()` on every push (123 assertions
 pass in ~52s).
 
 **Spec ledger:** 22 entries with the current breakdown:
@@ -72,7 +72,9 @@ pass in ~52s).
 2) → 0.0.14 - 0.0.16 (P-R2 trio) → 0.0.17 - 0.0.19 (round-2
 :benchmarked cohort) → 0.0.20 (closure pass) → 0.0.23 - 0.0.25
 (LL-020 ε-DP envelope, P3-Nyq negative result, P3d
-SDE-selection) → 0.0.26 (P-OS OS-level scoping pass).
+SDE-selection) → 0.0.26 (P-OS OS-level scoping pass) →
+0.0.27 (LL-020 Strategy 2 :benchmarked-tier; variance-
+convolution σ refinement).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -121,12 +123,14 @@ lavalamp/
 │   ├── ll020_strategy_2_epsilon_dp_companion.md
 │   ├── p3_nyq_companion.md
 │   ├── p3d_sde_selection_companion.md
-│   └── os_identity_security_scoping_companion.md
+│   ├── os_identity_security_scoping_companion.md
+│   ├── audit_2026-05-04.md
+│   └── ll020_strategy_2_benchmarked_companion.md
 └── src/
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
         ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard}.jl
-        ├── test/runtests.jl                     ← 117 assertions, run via Pkg.test()
+        ├── test/runtests.jl                     ← 123 assertions, run via Pkg.test()
         └── benchmark/
             ├── p3b_detection_probability.jl
             ├── p_r2c_structured_adversary.jl
@@ -134,6 +138,7 @@ lavalamp/
             ├── ll019_timing_distribution.jl
             ├── p3_nyq_adversary_rate.jl
             ├── p3d_sde_selection.jl
+            ├── ll020_strategy_2_detection_power.jl
             └── results/*.txt                    ← committed benchmark outputs
 
 # Future language tracks (per dashboard priority stack):

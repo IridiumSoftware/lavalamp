@@ -514,6 +514,53 @@ end
                                                    rng=Random.Xoshiro(123))
         @test env_dp1.spectrum == env_dp2.spectrum
         @test env_dp1.σ == env_dp2.σ
+
+        # Variance-convolution σ refinement (post-2026-05-04 fix).
+        # σ_pub is deterministic in env.σ + σ_DP; does NOT consume RNG.
+        # Different seeds with same parameters → identical σ_pub
+        # (only the spectrum draw differs).
+        env_dp_seedA = differentially_private_envelope(env;
+                                                        ε=1.0, δ=1e-6,
+                                                        sensitivity=0.1,
+                                                        rng=Random.Xoshiro(1))
+        env_dp_seedB = differentially_private_envelope(env;
+                                                        ε=1.0, δ=1e-6,
+                                                        sensitivity=0.1,
+                                                        rng=Random.Xoshiro(99999))
+        @test env_dp_seedA.σ == env_dp_seedB.σ
+        @test env_dp_seedA.spectrum != env_dp_seedB.spectrum
+
+        # σ_pub formula: σ_pub_i = sqrt(env.σ_i² + σ_DP²).
+        σ_DP_value = env_dp.metadata[:dp_σ]
+        expected_σ_pub = sqrt.(env.σ .^ 2 .+ σ_DP_value^2)
+        @test all(isapprox.(env_dp.σ, expected_σ_pub; rtol=1e-12))
+
+        # σ_pub strictly inflates env.σ (strict because σ_DP > 0).
+        @test all(env_dp.σ .> env.σ)
+
+        # σ_pub ≥ σ_DP per component (variance-convolution lower bound).
+        @test all(env_dp.σ .>= σ_DP_value)
+
+        # End-to-end operational correctness: with a sensible ε_DP,
+        # the genuine envelope's spectrum still verifies against the
+        # DP-perturbed envelope at moderate k.
+        # (This is the test the original implementation failed.)
+        # Construct a more realistic small envelope and check that
+        # the genuine spectrum (= env.spectrum) verifies against
+        # env_dp_loose at k=5.
+        env_realistic = LavaLamp.Audit.Envelope(
+            [1.5, 0.5, -0.5, -2.0],
+            [0.08, 0.08, 0.08, 0.08],
+            10,
+            Dict{Symbol,Any}(:dim => 4, :N => 1200, :Δt => 0.05, :Ttr => 300.0),
+        )
+        env_realistic_dp = differentially_private_envelope(env_realistic;
+                                                            ε=10.0, δ=1e-6,
+                                                            sensitivity=0.1,
+                                                            rng=Random.Xoshiro(2026))
+        # The genuine spectrum should pass verification against the
+        # DP-perturbed envelope: |spectrum - spectrum_pub| < k · σ_pub.
+        @test verify(env_realistic.spectrum, env_realistic_dp; k=5.0)
     end
 
     # ─── Chaos-guard / periodic-window safety signal (LL-007 / LL-002) ──

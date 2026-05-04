@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.26 (P-OS OS-level scoping pass; LL-022 added :argued, 2026-05-03)
+Version: 0.0.27 (LL-020 Strategy 2 :benchmarked-tier; entry stays :argued, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -85,7 +85,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
 | LL-019 | side-channel hardening (reseed timing + audit-on-verify) | Core | benchmarked | src/julia/test/runtests.jl + src/julia/benchmark/results/ll019_timing_distribution.txt + docs/ll019_benchmarked_companion.md | src/julia/src/Audit.jl | :benchmarked |
-| LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 + docs/ll020_strategy_2_epsilon_dp_companion.md (Strategy 2 example-tested) | src/julia/src/Audit.jl (Strategy 2 only) | :argued |
+| LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 + docs/ll020_strategy_2_epsilon_dp_companion.md (Strategy 2 example-tested) + docs/ll020_strategy_2_benchmarked_companion.md (Strategy 2 :benchmarked-tier; variance-convolution σ refinement) + src/julia/benchmark/results/ll020_strategy_2_detection_power_lorenz96.txt + docs/audit_2026-05-04.md | src/julia/src/Audit.jl (Strategy 2 only) | :argued |
 | LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | benchmarked | src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md | src/julia/src/Audit.jl | :benchmarked |
 
 ## Surfaced by P-OS OS-level scoping pass (0.0.26)
@@ -106,7 +106,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 15
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.26)
+## Cross-audit A1–A6 self-check (post-0.0.27)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (22 of 22).
@@ -129,15 +129,19 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   evidence — the strongest status its evidence type supports.
   No entry has a status its evidence type cannot support.
 - **A5 — Stale counts.** Counts above (22 / 0 / 0 / 2 / 0 / 4 /
-  15 / 1) match `LAVALAMP_SPEC.md` 0.0.26 final-section counts
-  and `dashboard.md` 0.0.26 spec-status section.
+  15 / 1) match `LAVALAMP_SPEC.md` 0.0.27 final-section counts
+  and `dashboard.md` 0.0.27 spec-status section. Counts
+  unchanged from 0.0.26 since this version refines Strategy 2's
+  evidence quality without changing LL-020's entry-level status.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
-  `Pkg.test()` from `src/julia/`. The 0.0.26 P-OS scoping
-  pass adds no new code and no new tests (design-only pass);
-  the existing suite remains the authoritative test sync. LL-022
-  is design-pass `:argued` and has no test/proof file beyond
-  the companion.
+  `Pkg.test()` from `src/julia/`; 123/123 assertions pass in
+  ~52 s (was 117/117 in 0.0.26; added 6 new assertions for
+  Strategy 2 variance-convolution σ guarantees per
+  `docs/ll020_strategy_2_benchmarked_companion.md` §3.1).
+  LL-020 entry-level remains `:argued` (manual evidence at
+  the multi-strategy level); Strategy 2 is `:benchmarked`-tier
+  per the new benchmark.
 
 ## Test-coverage notes
 

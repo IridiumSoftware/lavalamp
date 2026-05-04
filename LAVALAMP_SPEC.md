@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.26 (P-OS OS-level scoping pass; LL-022 added :argued, 2026-05-03)
+Version: 0.0.27 (LL-020 Strategy 2 :benchmarked-tier; entry stays :argued, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -749,6 +749,31 @@ LL-ID, not the Key.
   because the multi-strategy approach is the entry's
   claim and partial implementation tests one component,
   not the whole.
+- **Round-2 follow-up (2026-05-04, Strategy 2 :benchmarked-
+  tier):** The Strategy 2 implementation was refined from
+  symmetric Gaussian noise on σ + 1e-10 floor (which
+  produced 100% FPR — see `docs/audit_2026-05-04.md`) to a
+  variance-convolution form: `σ_pub = sqrt(env.σ² + σ_DP²)`.
+  Spectrum stays Gaussian-mechanism (ε,δ)-DP; σ becomes
+  deterministic in `env.σ`+`σ_DP` (leaks `env.σ` lower bound
+  but is operationally usable for verification). The fix is
+  documented in
+  `docs/ll020_strategy_2_benchmarked_companion.md` §1.1.
+  The detection-power-vs-ε benchmark
+  (`src/julia/benchmark/ll020_strategy_2_detection_power.jl`
+  + result file
+  `src/julia/benchmark/results/ll020_strategy_2_detection_power_lorenz96.txt`)
+  produces the expected privacy/detection trade-off curve:
+  ε_DP=10 (σ_DP≈0.053) gives K=3.106, c'=0.01325, FPR=0
+  (vs no-DP baseline K=0.798, c'=0.00418, FPR=0.10);
+  ε_DP=3 (σ_DP≈0.18) reaches 58% detection at ε_A=3.0;
+  ε_DP=1/0.3 are operationally vacuous at the prototype's
+  N=20 / k=5 / n_trials=10 calibration. **σ_DP /
+  σ_true_min** is the operationally meaningful predictor:
+  when this ratio exceeds ~3, weak adversaries blend into
+  the rejection ball. Strategy 2 closes to `:benchmarked`-
+  tier evidence; LL-020 entry-level stays `:argued`
+  (multi-strategy approach is the entry's claim).
 
 ### LL-021 — worst-case-adversary-bound
 - Key: detection-probability claim stated against worst-case adversary direction, not isotropic
