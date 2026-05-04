@@ -26,6 +26,7 @@ include("Sensors.jl")
 include("Engine.jl")
 include("Audit.jl")
 include("ChaosGuard.jl")
+include("RealSensors.jl")
 
 using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
@@ -38,6 +39,9 @@ using .Audit: differentially_private_envelope
 using .ChaosGuard: GuardState, INVALID, WARMUP, VALID
 using .ChaosGuard: GuardConfig, default_config
 using .ChaosGuard: Guard, update!, is_valid, current_lambda, reseed!
+using .RealSensors: real_thermal_stream, real_battery_stream
+using .RealSensors: real_ac_stream, real_usb_stream
+using .RealSensors: real_cpu_governor_stream, real_loadavg_stream
 
 # Engine + spectrum estimator (LL-003).
 export lorenz96, lyapunov_spectrum
@@ -58,5 +62,12 @@ export differentially_private_envelope
 export GuardState, INVALID, WARMUP, VALID
 export GuardConfig, default_config
 export Guard, update!, is_valid, current_lambda, reseed!
+
+# Real-sensor scaffold (LL-024). Scaffold tier — calling these
+# functions errors pointing to the scoping companion. Per-platform
+# FFI implementations land per the Phase 1 / 2 / 3 roadmap.
+export real_thermal_stream, real_battery_stream
+export real_ac_stream, real_usb_stream
+export real_cpu_governor_stream, real_loadavg_stream
 
 end # module LavaLamp

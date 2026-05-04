@@ -54,10 +54,13 @@ implements the SDE substrate (Lorenz-96), sensor-coupling layer,
 Lyapunov-spectrum residue audit, chaos-guard, and side-channel
 hardening. The decoupled visual layer (`visual/`) lands in 0.0.33
 with the LL-002 decoupling invariant made executable via static
-text-search assertions on every commit. CI runs `Pkg.test()` on
-every push (184 assertions pass in ~51s).
+text-search assertions on every commit. The real-sensor scaffold
+(`src/julia/src/RealSensors.jl`) lands in 0.0.38 with API stubs
+for hardware-bound deployment (Linux-first roadmap; FFI
+implementations forthcoming post-round-3). CI runs `Pkg.test()`
+on every push (202 assertions pass in ~53s).
 
-**Spec ledger:** 23 entries with the current breakdown:
+**Spec ledger:** 24 entries with the current breakdown:
 
 | status | count | entries |
 |---|---:|---|
@@ -65,7 +68,7 @@ every push (184 assertions pass in ~51s).
 | `:verified` | 0 | — |
 | `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
 | `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
-| `:argued` | 15 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward trust-stack scoping + P-PharOS upward trust-stack scoping) |
+| `:argued` | 16 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 **Trajectory:** 0.0.1 (concept-stage scaffold) → 0.0.3
@@ -92,7 +95,10 @@ audit pre-round-3; CLAUDE.md drift fixed; PASS across all
 six checks) → 0.0.36 (Lean 4 scaffold landed at src/lean4/;
 lake build clean; round-3 proof work picks up from a
 buildable starting point) → 0.0.37 (Lean 4 CI workflow at
-.github/workflows/lean.yml; lake build on every push).
+.github/workflows/lean.yml; lake build on every push) →
+0.0.38 (P-RS real-sensor scoping pass + RealSensors.jl
+scaffold; LL-024 added :argued; deployment-stack triple
+LL-022 + LL-023 + LL-024 closes scoping on all three ends).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -151,7 +157,8 @@ lavalamp/
 │   ├── p3f_per_sde_detection_power_companion.md
 │   ├── ll005_part_a_companion.md
 │   ├── pharos_scoping_companion.md
-│   └── audit_2026-05-04_full.md
+│   ├── audit_2026-05-04_full.md
+│   └── p_real_sensor_scoping_companion.md
 ├── visual/                                     ← decoupled visual layer (LL-002)
 │   ├── index.html                              ← canvas entry point
 │   ├── lavalamp.js                             ← Math.random() bubble simulator
@@ -167,8 +174,8 @@ lavalamp/
     │   └── README.md                           ← discipline + theorem plan
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
-        ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard}.jl
-        ├── test/runtests.jl                     ← 184 assertions, run via Pkg.test()
+        ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard,RealSensors}.jl
+        ├── test/runtests.jl                     ← 202 assertions, run via Pkg.test()
         └── benchmark/
             ├── p3b_detection_probability.jl
             ├── p_r2c_structured_adversary.jl

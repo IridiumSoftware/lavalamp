@@ -778,6 +778,47 @@ end
         @test λ1s[3] - λ1s[2] > 0.05
     end
 
+    # ─── LL-024 Real-sensor scaffold ──────────────────────────────────
+
+    @testset "Real-sensor scaffold (LL-024)" begin
+        # Scaffold-tier API surface exists but errors meaningfully.
+        # Per LL-024 :argued at 0.0.38; per-platform FFI implementations
+        # land per the docs/p_real_sensor_scoping_companion.md §2.5
+        # roadmap (Linux first, then macOS, then Windows). These tests
+        # confirm the module imports + the API surface + the error
+        # discipline (scaffold stubs error rather than silently
+        # returning garbage SensorStream values, per CLAUDE.md
+        # "stubs that return data are forbidden").
+
+        # All six real-sensor constructors are callable as functions.
+        @test isa(real_thermal_stream, Function)
+        @test isa(real_battery_stream, Function)
+        @test isa(real_ac_stream, Function)
+        @test isa(real_usb_stream, Function)
+        @test isa(real_cpu_governor_stream, Function)
+        @test isa(real_loadavg_stream, Function)
+
+        # Calling each constructor at scaffold tier throws an error.
+        # The error message must point to the scoping companion so
+        # operators can find the implementation roadmap.
+        @test_throws ErrorException real_thermal_stream()
+        @test_throws ErrorException real_battery_stream()
+        @test_throws ErrorException real_ac_stream()
+        @test_throws ErrorException real_usb_stream()
+        @test_throws ErrorException real_cpu_governor_stream()
+        @test_throws ErrorException real_loadavg_stream()
+
+        # The error message references the scoping companion.
+        try
+            real_thermal_stream()
+            @test false  # should not reach here
+        catch e
+            msg = sprint(showerror, e)
+            @test occursin("p_real_sensor_scoping_companion.md", msg)
+            @test occursin("LL-024", msg)
+        end
+    end
+
     # ─── LL-002 Visual ↔ security decoupling ──────────────────────────
 
     @testset "Visual layer decoupling (LL-002)" begin

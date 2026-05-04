@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.37 (Lean 4 CI workflow live at .github/workflows/lean.yml; no spec changes, 2026-05-04)
+Version: 0.0.38 (P-RS real-sensor scoping pass; LL-024 added :argued; Linux-first roadmap, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -1099,16 +1099,71 @@ LL-ID, not the Key.
 
 ---
 
+## Surfaced by P-RS real-sensor scoping pass (0.0.38)
+
+### LL-024 — real-sensor-deployment-strategy
+- Key: per-platform FFI strategy bridging synthetic-stream prototype to hardware-bound deployment
+- Logic tier: Operational
+- Description: Articulates the per-platform real-sensor
+  implementation strategy that bridges the current
+  synthetic-stream prototype (Level 1 — Sensors.jl
+  primitives) to a hardware-bound deployment (Level 2 —
+  RealSensors.jl FFI). Six sensor categories per LL-004
+  enumeration: thermal, battery, AC adapter, USB peripheral,
+  CPU governor, scheduler timing / load average. Per-platform
+  surface: Linux uses pure file I/O via sysfs/procfs (target
+  first platform; ~3-5 days dev work; no FFI); macOS uses
+  IOKit / SMC FFI (~2 weeks; per-Mac-model sensor discovery);
+  Windows uses WMI + PDH (~2-3 weeks). Sample rates per LL-005
+  nyquist_compliant must hold per (sensor, assumed adversary
+  bandwidth) pair at deployment-config time. Authenticity
+  strategies per LL-016 in real-hardware context: strategy 2
+  (multi-sensor cross-validation) is the prototype-tier
+  default; strategy 1.5 (eBPF on Linux) for hardened
+  deployments; strategy 1 (TPM-signed reads) deferred to P7
+  hardening per LL-022 §2.2.1. Phase 1 roadmap: Linux baseline
+  first (~1 week post-round-3); Phase 2 macOS; Phase 3
+  Windows; Phase 4 (P7) TPM integration on all platforms.
+- Evidence type: manual
+- Status: :argued
+- Source: docs/p_real_sensor_scoping_companion.md §2.
+- Notes: Scaffold module `src/julia/src/RealSensors.jl`
+  landed at 0.0.38 with API stubs that error meaningfully
+  pointing to the scoping companion. Scaffold tier
+  (mirrors the 0.0.36 Lean scaffold pattern: infrastructure-
+  prep, not evidence). LL-024's `:argued` evidence is the
+  design synthesis at the scoping-companion level, not the
+  scaffold module. `:tested` upgrade requires Phase 1
+  (Linux baseline) implementation + tests on real or
+  recorded sensor traces; `:benchmarked` upgrade requires
+  empirical performance characterisation on real hardware
+  (real-sensor SNR vs synthetic-stream SNR; detection bound
+  preserved against parameter-perturbation adversaries;
+  cross-validation catches V-006 manipulation attempts).
+  Both promotion paths are post-round-3 and post-engine.
+- **Three-layer deployment-stack triple (2026-05-04, P-RS):**
+  LL-022 (downward — what OS surfaces are required) +
+  LL-023 (upward — what consumers see) + LL-024 (operational
+  — which sensors get read at what rates with what
+  authenticity strategy) form a three-layer commitment
+  that closes the deployment-stack scoping question. The
+  triple is corpus-honest: Aaron's closure work targets
+  three-element relational closures, and the three Boundary/
+  Operational entries here mirror that pattern at the
+  spec level.
+
+---
+
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 23
+- Total: 24
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 15 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 16 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022, LL-023)
+  LL-018, LL-020, LL-022, LL-023, LL-024)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -1119,9 +1174,9 @@ LL-019 timing-indistinguishability, LL-021 worst-case
 bound); three :tested entries (LL-002 visual ↔ security
 decoupling via the visual layer + decoupling-assertion
 testset added in 0.0.33; LL-004 sensor coupling; LL-007
-chaos-guard); fifteen :argued at design level (now including
-LL-023 consumer-API-surface from the 0.0.34 P-PharOS scoping
-pass — pairs with LL-022 to close the trust-stack scoping
-question on both ends); only LL-015 remains :open as the
-honest scoping declaration that A3 (kernel-level) adversaries
-are out of scope.**
+chaos-guard); sixteen :argued at design level (now
+including LL-024 real-sensor-deployment-strategy from the
+0.0.38 P-RS scoping pass — completes the deployment-stack
+triple alongside LL-022 / LL-023); only LL-015 remains
+:open as the honest scoping declaration that A3 (kernel-
+level) adversaries are out of scope.**

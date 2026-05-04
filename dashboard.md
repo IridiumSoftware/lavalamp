@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.37 — Lean 4 CI workflow live at .github/workflows/lean.yml; no spec changes).
+Last updated: 2026-05-04 (0.0.38 — P-RS real-sensor scoping pass; LL-024 added :argued; Linux-first roadmap).
 
 ## Status summary
 
@@ -86,13 +86,26 @@ LL-002 closes `:argued` → `:tested`. **0.0.34** lands the
 to the 0.0.26 P-OS pass: new entry LL-023
 (consumer-API-surface, Boundary, :argued) articulates the API
 contract LavaLamp commits to expose for OS-deployment
-consumers (PharOS as canonical instantiation). LL-022
-(downward) + LL-023 (upward) close the trust-stack scoping
-question on both ends. Total 22 → 23; :argued 14 → 15. Three
-`:tested`; four `:benchmarked`; fifteen `:argued`; one `:open`
-(LL-015 by design). Test suite passes 184/184 in ~51s via
-`Pkg.test()` (unchanged from 0.0.33; P-PharOS pass is
-design-only).
+consumers. LL-022 (downward) + LL-023 (upward) close the
+trust-stack scoping question on both ends. **0.0.35** ran a
+full A0-A6 cross-audit (PASS post-fix; CLAUDE.md drift
+fixed). **0.0.36** landed the Lean 4 scaffold
+(`src/lean4/`; lake build clean). **0.0.37** added the Lean
+CI workflow (`lake build` on every push). **0.0.38** lands
+the **P-RS real-sensor scoping pass** + scaffold module —
+new entry LL-024 (real-sensor-deployment-strategy,
+Operational, :argued) articulates per-platform FFI strategy
+(Linux first; macOS / Windows later); scaffold module
+`src/julia/src/RealSensors.jl` exports six sensor
+constructors that error at scaffold tier. **LL-022 +
+LL-023 + LL-024 form the deployment-stack triple** — three-
+layer commitment closing the scoping question on the
+upward, downward, and operational-instantiation ends. Total
+23 → 24; :argued 15 → 16. Three `:tested`; four
+`:benchmarked`; sixteen `:argued`; one `:open` (LL-015 by
+design). Test suite passes 202/202 in ~53s via
+`Pkg.test()` (was 184; +18 RealSensors scaffold-discipline
+assertions).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -399,6 +412,25 @@ P-R2 — **Round-2 architectural responses.** ◐ Promoted from
     upgrade (K, c constant fitting) and Lean theorem
     (round-2 §1D.v priority 1) are P5/P6 followups.
 
+P-RS — **Real-sensor scoping pass (Level-2 prototype prep).** ✓
+  Landed in 0.0.38 (`docs/p_real_sensor_scoping_companion.md`
+  + `src/julia/src/RealSensors.jl` scaffold). New entry
+  LL-024 (real-sensor-deployment-strategy, Operational tier,
+  `:argued`) articulates per-platform FFI strategy: Linux
+  first (sysfs/procfs; ~3-5 days dev work; no FFI), macOS
+  second (IOKit/SMC; ~2 weeks), Windows third (WMI; ~2-3
+  weeks), TPM at P7 (months). Scaffold module exports six
+  sensor constructors that error at scaffold tier pointing
+  to the scoping companion (mirrors the 0.0.36 Lean
+  scaffold pattern). **LL-022 (downward) + LL-023 (upward)
+  + LL-024 (operational instantiation) form the
+  deployment-stack triple** — three-layer commitment that
+  closes the deployment-stack scoping question. Test suite
+  184 → 202 (+18 scaffold-discipline assertions). Phase 1
+  (Linux baseline) lands ~1 week post-round-3; the scoping
+  is parallel-safe and ready for the implementation push
+  when round-3 lands.
+
 P-PharOS — **PharOS scoping pass (upward trust-stack scoping).** ✓
   Landed in 0.0.34 (`docs/pharos_scoping_companion.md`).
   Mirrors the 0.0.26 P-OS pass shape but oriented from the
@@ -482,14 +514,15 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 23 (was 22; +LL-023 from 0.0.34 P-PharOS pass)
+- Total spec entries: 24 (was 23; +LL-024 from 0.0.38 P-RS pass)
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007 — unchanged)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021 — unchanged)
-- `:argued`: 15 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 16 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022, LL-023 — LL-023 added 0.0.34)
+  LL-018, LL-020, LL-022, LL-023, LL-024 — LL-024 added
+  0.0.38)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -553,6 +586,32 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/p_real_sensor_scoping_companion.md`** + **`src/julia/src/RealSensors.jl`**
+  (0.0.38) — P-RS real-sensor scoping pass + scaffold module.
+  §1 inputs (LL-004 / LL-005 / LL-016 / LL-022). §2.1 per-
+  platform sensor surface (Linux sysfs/procfs simplest;
+  macOS IOKit/SMC; Windows WMI). §2.2 maps the §2.1 surface
+  to LL-004's six sensor categories. §2.3 per-sensor
+  sample-rate constraints with LL-005 nyquist_compliant
+  table. §2.4 authenticity strategies in real-hardware
+  context (strategy 2 cross-validation as prototype
+  default; strategy 1.5 eBPF on Linux for hardened
+  deployments; strategy 1 TPM at P7 hardening). §2.5
+  Linux-first implementation roadmap (Phase 1 ~1 week post-
+  round-3; Phase 2 macOS ~2-4 weeks; Phase 3 Windows ~4-6
+  weeks; Phase 4 P7 TPM). §2.6 test strategy (recorded
+  sensor traces; CI on Linux). §2.7 connection to LL-022 /
+  LL-023 (deployment-stack triple). §5 captures four
+  lessons including "the deployment-stack triple closes
+  scoping below LL-023" and "Linux-first roadmap minimises
+  infrastructure cost." Scaffold module
+  `src/julia/src/RealSensors.jl` exports six sensor
+  constructors (real_thermal_stream, real_battery_stream,
+  real_ac_stream, real_usb_stream, real_cpu_governor_stream,
+  real_loadavg_stream); each errors at scaffold tier
+  pointing to the companion. New entry LL-024
+  (real-sensor-deployment-strategy, Operational, `:argued`).
+  Test suite 184 → 202 (+18 scaffold-discipline assertions).
 - **`.github/workflows/lean.yml`** (0.0.37) — Lean 4 CI
   workflow. `leanprover/lean-action@v1` runs `lake build` on
   push to master + PRs (mirror of the Julia CI structure).

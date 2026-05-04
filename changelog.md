@@ -5,6 +5,129 @@ messages match entry summaries.
 
 ---
 
+## 0.0.38 — 2026-05-04 — P-RS real-sensor scoping pass (LL-024 added :argued; Linux-first roadmap)
+
+Lands the P-RS real-sensor scoping pass + scaffold module as
+**parallel-safe Level-2 prototype prep work**. The current
+prototype (Level 1, `src/julia/src/Sensors.jl`) uses synthetic
+sensor streams; Level 2 reads actual hardware sensors via
+platform-specific FFI. This pass scopes the per-platform
+strategy without committing to FFI code yet (the scaffold
+module errors meaningfully at every entry point pointing to
+the scoping companion).
+
+**Net result.** New entry LL-024 (real-sensor-deployment-
+strategy, Operational tier, manual evidence, `:argued`) +
+scaffold `src/julia/src/RealSensors.jl` with six API stubs.
+LL-022 (downward) + LL-023 (upward) + LL-024 (operational
+instantiation) form the **deployment-stack triple** — three-
+layer architectural commitment closing the scoping question
+on all three ends.
+
+Counts: total 23 → 24; `:argued` 15 → 16. Test suite
+184/184 → 202/202 (+18 scaffold-discipline assertions).
+
+### Added
+
+- **`docs/p_real_sensor_scoping_companion.md`** (~9 KB)
+  — substantive design companion. §1 inputs (LL-004 / LL-005
+  / LL-016 / LL-022). §2.1 per-platform sensor surface
+  (Linux sysfs/procfs simplest first platform; macOS
+  IOKit/SMC; Windows WMI). §2.2 maps surfaces to LL-004's
+  six sensor categories. §2.3 sample-rate constraints with
+  LL-005 nyquist_compliant compatibility table. §2.4
+  authenticity strategies in real-hardware context (strategy
+  2 cross-validation as prototype default; strategy 1.5
+  eBPF for hardened Linux; strategy 1 TPM at P7). §2.5
+  Linux-first implementation roadmap (Phase 1 ~1 week
+  post-round-3; Phase 2 macOS ~2-4 weeks; Phase 3 Windows
+  ~4-6 weeks; Phase 4 P7 TPM). §2.6 test strategy. §2.7
+  connection to LL-022 / LL-023 (the deployment-stack
+  triple). §5 four lessons.
+- **`src/julia/src/RealSensors.jl`** — scaffold module
+  (~150 lines). Six sensor constructors:
+  `real_thermal_stream`, `real_battery_stream`,
+  `real_ac_stream`, `real_usb_stream`,
+  `real_cpu_governor_stream`, `real_loadavg_stream`. Each
+  errors at scaffold tier with a meaningful message
+  pointing to the scoping companion + suggesting a
+  synthetic substitute via `gaussian_noise_stream`. Per
+  CLAUDE.md "stubs that return data are forbidden" rule:
+  scaffold stubs error rather than silently returning
+  garbage SensorStream values. Mirrors the 0.0.36 Lean
+  scaffold pattern (infrastructure-prep, not evidence).
+- **Test additions in `src/julia/test/runtests.jl`** — new
+  `Real-sensor scaffold (LL-024)` testset with 18
+  assertions: 6 callability checks (each constructor is a
+  Function), 6 error-throws checks (each errors at
+  scaffold tier), 1 message-content check (error message
+  references the scoping companion + LL-024); plus the
+  testset header comment-block documenting the
+  scaffold-discipline framing. Suite 184 → 202.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.37 → 0.0.38. New
+  entry LL-024 in a new "Surfaced by P-RS real-sensor
+  scoping pass (0.0.38)" section. Counts: total 23 → 24;
+  `:argued` 15 → 16. Section header at bottom updated to
+  reflect the deployment-stack triple framing.
+- **`src/julia/src/LavaLamp.jl`** — adds `include(
+  "RealSensors.jl")` after ChaosGuard; imports + re-exports
+  the six new sensor constructors at the package top level.
+- **`artifact_registry.md`** — version 0.0.37 → 0.0.38.
+  New "Surfaced by P-RS real-sensor scoping pass (0.0.38)"
+  section with LL-024 row. Counts updated. Cross-audit
+  A1-A6 self-check refreshed for 0.0.38.
+- **`dashboard.md`** — version 0.0.37 → 0.0.38. P-RS added
+  to priority stack as a closed item (parallel to P-OS /
+  P-PharOS shape). Recent companion docs prepended with
+  the new companion + scaffold module description. Status
+  summary captures the deployment-stack triple framing.
+- **`README.md`** — spec ledger updated (24 entries; 16
+  `:argued`); trajectory extended; layout section adds
+  `src/julia/src/RealSensors.jl`.
+
+### Why
+
+1. **User asked.** "When can we prototype the lavalamp?"
+   prompted an honest articulation of the Level 1 → Level 4
+   prototype spectrum. Level 1 (algorithmic, synthetic
+   streams) is done; Level 2 (real-sensor) is the next step.
+   The scoping pass de-risks the eventual implementation.
+2. **Parallel-safe with no round-3 risk.** Same
+   justification as 0.0.26 P-OS, 0.0.34 P-PharOS, 0.0.36
+   Lean scaffold, 0.0.37 Lean CI: zero connection to
+   C-conjugate / Q₅₁ / 0/5202 round-3-blocked territory.
+   Pure architectural-scoping + infrastructure-prep work.
+3. **Deployment-stack triple completes scoping.** LL-022
+   (downward) + LL-023 (upward) + LL-024 (operational
+   instantiation) form a three-layer architectural
+   commitment that closes the deployment-stack scoping
+   question on all three ends. The triple-of-three pattern
+   is corpus-honest (Aaron's closure work targets three-
+   element relational closures).
+4. **Phase 1 is post-round-3 work but ready to start.** When
+   round-3 lands and the LavaLamp project resumes, the
+   real-sensor work has its scoping done, its API surface
+   declared, its tests scaffolded, and its roadmap pinned —
+   ready for ~1 week of focused Linux-first implementation.
+
+### Counts
+
+- Total: 23 → 24 (+LL-024)
+- `:proved`: 0 (unchanged)
+- `:tested`: 3 (unchanged)
+- `:verified`: 0 (unchanged)
+- `:benchmarked`: 4 (unchanged)
+- `:argued`: 15 → 16 (+LL-024)
+- `:open`: 1 (unchanged)
+
+Test suite: 184/184 → 202/202 (+18 RealSensors scaffold-
+discipline assertions).
+
+---
+
 ## 0.0.37 — 2026-05-04 — Lean 4 CI workflow (.github/workflows/lean.yml; lake build on every push)
 
 Adds a Lean 4 CI workflow as **parallel-safe infrastructure

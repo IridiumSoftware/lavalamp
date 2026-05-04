@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.37 (Lean 4 CI workflow live at .github/workflows/lean.yml; no spec changes, 2026-05-04)
+Version: 0.0.38 (P-RS real-sensor scoping pass; LL-024 added :argued; Linux-first roadmap, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -100,22 +100,28 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-023 | consumer-API-surface | Boundary | manual | docs/pharos_scoping_companion.md §2 | — | :argued |
 
+## Surfaced by P-RS real-sensor scoping pass (0.0.38)
+
+| LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
+|---|---|---|---|---|---|---|
+| LL-024 | real-sensor-deployment-strategy | Operational | manual | docs/p_real_sensor_scoping_companion.md §2 + src/julia/test/runtests.jl (Real-sensor scaffold testset; 18 assertions) | src/julia/src/RealSensors.jl (scaffold tier) | :argued |
+
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 23
+- Total: 24
 - `:proved`: 0
 - `:tested`: 3
 - `:verified`: 0
 - `:benchmarked`: 4
-- `:argued`: 15
+- `:argued`: 16
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.34)
+## Cross-audit A1–A6 self-check (post-0.0.38)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (23 of 23).
+  here. ✓ (24 of 24).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
   LL-022 registry key (`OS-trust-stack-dependency`) matches
   spec key.
