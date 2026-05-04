@@ -5,6 +5,105 @@ messages match entry summaries.
 
 ---
 
+## 0.0.31 — 2026-05-04 — LL-006 per-SDE detection-power (Lorenz-96 has best operational balance)
+
+Adds the per-SDE detection-power benchmark — the last unblocked
+sub-item from the round-3-trigger memory's queue. Sweeps
+parameter-space adversaries against each of the three candidate
+SDEs (Lorenz-96 perturbing F, Lorenz-63 perturbing ρ, Rössler
+perturbing c) and characterises the LL-006 detection bound shape
+per engine.
+
+**Net result.** The detection-bound shape `P(detect) ≥ 1 - K ·
+exp(-c' · T · ε_A²)` is universal across the candidate SDE set.
+Per-SDE c′ values:
+
+| SDE       | param | c′       | binding ε_A |
+|-----------|-------|---------:|------------:|
+| Lorenz-96 | F     |  0.00372 |       1.000 |
+| Lorenz-63 | ρ     |  0.00168 |       4.000 |
+| Rössler   | c     |  0.38179 |       0.200 |
+
+c′ values are NOT directly comparable as detection-quality
+rankings (parameter scales differ). Combined with the 0.0.25 P3d
+h_KS comparison, **Lorenz-96 has the right operational balance**:
+high security margin (h_KS = 10× / 155× the alternatives) AND
+moderate per-param sensitivity (neither too low for adversary
+detection nor too high for genuine calibration tolerance).
+Lorenz-63 fails on both axes (low h_KS AND low per-param
+sensitivity → adversaries with ~14% drift slip through).
+Rössler fails on both axes (low h_KS AND extreme brittleness
+— narrow chaotic band makes ~3% genuine drift trigger
+spurious rejection).
+
+The architectural choice from 0.0.25 is confirmed on this
+complementary axis. LL-006 stays `:benchmarked`. Counts unchanged
+(22 / 0 / 0 / 2 / 0 / 4 / 15 / 1).
+
+### Added
+
+- **`src/julia/benchmark/p3f_per_sde_detection_power.jl`** —
+  per-SDE benchmark with inline parameter-space adversary
+  helpers per SDE (no new public APIs). Wall-clock excluded
+  from result file. ~5 minutes wall clock on Apple Silicon.
+- **`src/julia/benchmark/results/p3f_per_sde_detection_power.txt`**
+  — committed result file. Determinism check PASS
+  (byte-identical across two runs).
+- **`docs/p3f_per_sde_detection_power_companion.md`** —
+  companion. §1.1 establishes the parameter-space adversary
+  model (vs the 0.0.17 P3-bound's α-space adversary). §2.1
+  reports per-SDE detection sigmoids. §2.2 cautions on
+  comparability of c′ across parameters. §2.3 articulates the
+  two-axis operational-balance argument (h_KS + per-param
+  sensitivity). §2.4 explains Rössler's intrinsic brittleness
+  (narrow chaotic band). §2.5 compares F-space (this) to
+  α-space (0.0.17) for Lorenz-96. §5 captures five lessons
+  including the universal bound shape and "all known
+  unblocked sub-items now closed."
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.30 → 0.0.31. LL-006
+  gains a "Per-SDE detection-power characterisation
+  (2026-05-04)" footer documenting the bound shape's
+  universality across the candidate SDE set, the per-SDE
+  c′ values, and the two-axis operational-balance argument.
+  Status unchanged. Counts unchanged.
+- **`artifact_registry.md`** — version 0.0.30 → 0.0.31.
+  LL-006 row's Test/Proof column extended to cite the new
+  benchmark + result + companion. Cross-audit A1-A6
+  self-check refreshed for 0.0.31.
+- **`dashboard.md`** — version 0.0.30 → 0.0.31. Status
+  summary updated. P3 follow-ups list adds 0.0.31 entry;
+  per-SDE detection-probability surface removed from
+  remaining-unblocked. Recent companion docs prepended with
+  the new companion. Notes "all known unblocked sub-items
+  now closed" except LL-005 part-(a) deferred to round-3.
+
+### Why
+
+1. **Last unblocked queue item.** Per the round-3-trigger
+   memory's queue at session start, this was item 5 of 6
+   (LL-005 part-(a) is item 6, deferred to round-3). Closing
+   this item brings the prototype to a quiet state — no
+   further obvious benchmarks without round-3 trigger or new
+   architectural work.
+2. **Architectural-choice confirmation on a second axis.**
+   The 0.0.25 P3d benchmark rejected Lorenz-63 / Rössler on
+   h_KS alone (security margin). This benchmark adds parameter
+   robustness as a second axis. The combined picture
+   (security margin AND operational robustness) gives a
+   stronger architectural argument for Lorenz-96 than either
+   axis alone.
+3. **Bound shape universality.** The 0.0.17 P3-bound fitted
+   the bound for Lorenz-96 only, leaving open whether the
+   shape is Lorenz-96-specific or universal. This benchmark
+   confirms universality — the bound shape applies cleanly
+   to all three SDEs with SDE-specific c′ values reflecting
+   per-parameter sensitivity. Generalises the 0.0.17 claim.
+
+---
+
 ## 0.0.30 — 2026-05-04 — LL-003 N-scaling characterisation (Lyapunov density ≈ 0.255)
 
 Adds the Lorenz-96 N-scaling benchmark — the unblocked sub-item

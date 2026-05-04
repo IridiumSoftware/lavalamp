@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.30 — LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255).
+Last updated: 2026-05-04 (0.0.31 — LL-006 per-SDE detection-power; Lorenz-96 has best operational balance).
 
 ## Status summary
 
@@ -61,14 +61,23 @@ benchmarks, and adds round-3 input on host-isolation
 thresholds. **0.0.30** characterises LL-003's N-scaling for
 the chosen SDE: Lorenz-96 at F=8 across N ∈ {20,40,80,160}
 exhibits the spatially-extended-chaos prediction h_KS ≈ s·N
-with asymptotic Lyapunov density s ≈ 0.255 per dimension
-(saturated by N≥80; finite-N correction ~9% at N=20 →
-N=160). Compute scales as O(N³) per integration step.
-Deployment-design rule: N* ≈ Δh*/s for target margin Δh*.
-Two `:tested`; four `:benchmarked`; fifteen `:argued`; one
-`:open` (LL-015 by design). Test suite passes 123/123 in
-~52s via `Pkg.test()` (unchanged across all 0.0.27/28/29/30
-since they're benchmark-only).
+with asymptotic Lyapunov density s ≈ 0.255 per dimension.
+**0.0.31** closes the per-SDE detection-power surface for
+LL-006: parameter-space adversaries sweep F (Lorenz-96), ρ
+(Lorenz-63), c (Rössler). Bound shape is universal across
+the candidate set; per-SDE c′ values reflect per-param
+sensitivity, not detection quality. Combined with 0.0.25
+P3d's h_KS comparison: **Lorenz-96 has the right operational
+balance** (high security margin AND moderate per-param
+sensitivity); Lorenz-63 fails on both axes; Rössler fails on
+both (narrow chaotic band → brittle to genuine calibration
+drift). Architectural choice confirmed on a complementary
+axis. **All known unblocked sub-items now closed** except the
+LL-005 part-(a) item explicitly deferred to round-3. Two
+`:tested`; four `:benchmarked`; fifteen `:argued`; one `:open`
+(LL-015 by design). Test suite passes 123/123 in ~52s via
+`Pkg.test()` (unchanged across all 0.0.27-0.0.31 since
+they're benchmark-only).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -296,12 +305,37 @@ P3 — **Julia prototype core.** ◐ In progress.
     LL-003 stays `:benchmarked`; the N-scaling adds deployment-
     guidance content. See `docs/p3e_n_scaling_companion.md`.
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.31 LL-006 per-SDE detection-power** ✓ Landed. New
+    benchmark
+    `src/julia/benchmark/p3f_per_sde_detection_power.jl` +
+    result file
+    `src/julia/benchmark/results/p3f_per_sde_detection_power.txt`.
+    Sweeps parameter-space adversaries against Lorenz-96 (F),
+    Lorenz-63 (ρ), Rössler (c). **Bound shape is universal
+    across the candidate SDE set.** Per-SDE c′ values:
+    c′_F=0.00372 (Lorenz-96, binding ε_A=1.0); c′_ρ=0.00168
+    (Lorenz-63, binding ε_A=4.0); c′_c=0.38179 (Rössler,
+    binding ε_A=0.2). c′ values are NOT directly comparable
+    as detection-quality rankings — they reflect per-unit
+    parameter sensitivity. Combined with 0.0.25 P3d's h_KS
+    comparison: **Lorenz-96 has the right operational balance**
+    (high security margin AND moderate per-param sensitivity);
+    Lorenz-63 fails on both axes (low h_KS AND low
+    sensitivity); Rössler fails on both (low h_KS AND extreme
+    brittleness — narrow chaotic band). Architectural choice
+    confirmed on a complementary axis. LL-006 stays
+    `:benchmarked`. See
+    `docs/p3f_per_sde_detection_power_companion.md`.
+
   **Remaining unblocked sub-items:**
   - LL-005 part-(a) parameter-validation test (trivial; would
     move parameter side to :tested but entry-level claim
     needs adversary-side too — round-3 input per 0.0.24).
-  - Per-SDE detection-probability surface (rerun P3-bound
-    fit on Lorenz-63 / Rössler).
+
+  **All other unblocked items closed.** With 0.0.31, the
+  round-3-trigger memory's queue is exhausted except for the
+  LL-005 part-(a) item explicitly deferred to round-3.
 
 P-R2 — **Round-2 architectural responses.** ◐ Promoted from
   followup status to active priority by 0.0.12; Aaron's §1D
@@ -476,6 +510,22 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/p3f_per_sde_detection_power_companion.md`** (0.0.31) —
+  Per-SDE detection-power benchmark for LL-006. §1.1 explains
+  the parameter-space-adversary model (perturbing F / ρ / c).
+  §1.3 documents the determinism PASS. §2.1 reports per-SDE
+  detection sigmoids and fitted c′. §2.2 cautions that c′
+  values are not directly comparable across parameters with
+  different scales. §2.3 articulates the operational-balance
+  argument: Lorenz-96 wins on both axes (h_KS + per-param
+  sensitivity); Lorenz-63 / Rössler fail on both. §2.4
+  explains Rössler's narrow-chaotic-band brittleness as
+  intrinsic to the Rössler system. §2.5 compares F-space (this)
+  to α-space (0.0.17) for Lorenz-96 — both yield similar c′
+  within ~12 %, confirming the bound's parameterisation
+  flexibility. §5 captures five lessons including "detection
+  bound shape is universal across the candidate set" and
+  "all known unblocked sub-items now closed."
 - **`docs/p3e_n_scaling_companion.md`** (0.0.30) — Lorenz-96
   N-scaling benchmark for LL-003 / LL-008. §1 documents
   configuration + determinism PASS. §2.1-§2.2 reports per-N

@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.30 (LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255, 2026-05-04)
+Version: 0.0.31 (LL-006 per-SDE detection-power; Lorenz-96 has best operational balance, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -46,7 +46,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
-| LL-006 | Lyapunov-spectrum residue audit | Core | benchmarked | src/julia/benchmark/p3_bound_high_res.jl + src/julia/benchmark/results/p3_bound_high_res_lorenz96.txt + docs/p3_bound_companion.md | src/julia/src/Audit.jl | :benchmarked |
+| LL-006 | Lyapunov-spectrum residue audit | Core | benchmarked | src/julia/benchmark/p3_bound_high_res.jl + src/julia/benchmark/results/p3_bound_high_res_lorenz96.txt + docs/p3_bound_companion.md + src/julia/benchmark/p3f_per_sde_detection_power.jl + src/julia/benchmark/results/p3f_per_sde_detection_power.txt + docs/p3f_per_sde_detection_power_companion.md (per-SDE detection-power across Lorenz-96 / Lorenz-63 / Rössler) | src/julia/src/Audit.jl | :benchmarked |
 | LL-007 | chaos-guard | Operational | example-tested | src/julia/test/runtests.jl | src/julia/src/ChaosGuard.jl | :tested |
 | LL-008 | resolution-bounded security claim | Core | manual | docs/architecture_design_companion.md §2.2, §3.2 | — | :argued |
 
@@ -106,7 +106,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 15
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.30)
+## Cross-audit A1–A6 self-check (post-0.0.31)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (22 of 22).
@@ -129,19 +129,20 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   evidence — the strongest status its evidence type supports.
   No entry has a status its evidence type cannot support.
 - **A5 — Stale counts.** Counts above (22 / 0 / 0 / 2 / 0 / 4 /
-  15 / 1) match `LAVALAMP_SPEC.md` 0.0.30 final-section counts
-  and `dashboard.md` 0.0.30 spec-status section. Counts
-  unchanged from 0.0.29 since this version characterises
-  LL-003's N-scaling at the same `:benchmarked` evidence tier
-  rather than promoting or demoting the entry.
+  15 / 1) match `LAVALAMP_SPEC.md` 0.0.31 final-section counts
+  and `dashboard.md` 0.0.31 spec-status section. Counts
+  unchanged from 0.0.30 since this version characterises
+  LL-006's per-SDE detection power at the same `:benchmarked`
+  evidence tier rather than promoting or demoting the entry.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
   `Pkg.test()` from `src/julia/`; 123/123 assertions pass in
   ~52 s (unchanged; this version adds no new tests — the
-  N-scaling benchmark is benchmark-only). LL-003 remains
-  `:benchmarked`; the N-scaling characterisation adds
-  deployment-guidance content (linear extensive-chaos
-  scaling confirmed; asymptotic Lyapunov density s ≈ 0.255).
+  per-SDE benchmark is benchmark-only). LL-006 remains
+  `:benchmarked`; the per-SDE characterisation adds
+  deployment-guidance content (bound shape is universal
+  across candidate SDEs; per-SDE c′ values reflect per-param
+  sensitivity, not detection quality).
 
 ## Test-coverage notes
 

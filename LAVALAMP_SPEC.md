@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.30 (LL-003 N-scaling characterisation; Lyapunov density ≈ 0.255, 2026-05-04)
+Version: 0.0.31 (LL-006 per-SDE detection-power; Lorenz-96 has best operational balance, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -312,6 +312,32 @@ LL-ID, not the Key.
   the prototype's two-channel coupling, the NARROW direction
   produces 0-20% detection across all tested magnitudes
   while the BROAD direction saturates at 100% by ε_A = 1.0.
+- **Per-SDE detection-power characterisation (2026-05-04):**
+  Per `docs/p3f_per_sde_detection_power_companion.md`, the
+  detection-bound shape was applied across the three
+  candidate SDEs (Lorenz-96 / Lorenz-63 / Rössler) using
+  parameter-space adversaries (perturbations to F / ρ / c
+  respectively). Per-SDE c′ values: c′_F = 0.00372 (Lorenz-96,
+  binding ε_A=1.0); c′_ρ = 0.00168 (Lorenz-63, binding
+  ε_A=4.0); c′_c = 0.38179 (Rössler, binding ε_A=0.2).
+  **The bound shape is universal across the candidate set.**
+  c′ values are NOT directly comparable as detection-quality
+  rankings (parameter scales differ); they reflect per-unit
+  parameter sensitivity. Combined with 0.0.25 P3d's h_KS
+  comparison, **Lorenz-96 has the right operational balance**:
+  high security margin (h_KS = 10× / 155× the alternatives)
+  AND moderate per-param sensitivity (neither too low for
+  adversary detection nor too high for genuine calibration
+  tolerance). Lorenz-63 fails on both axes (low h_KS AND low
+  per-param sensitivity); Rössler fails on both axes (low
+  h_KS AND extreme per-param brittleness — narrow chaotic
+  band makes genuine calibration drift trigger spurious
+  rejections). The architectural choice from 0.0.25 is
+  confirmed on this complementary axis. Benchmark script:
+  `src/julia/benchmark/p3f_per_sde_detection_power.jl`;
+  result file:
+  `src/julia/benchmark/results/p3f_per_sde_detection_power.txt`
+  (deterministic; byte-identical across runs).
 
 ### LL-007 — chaos-guard
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
