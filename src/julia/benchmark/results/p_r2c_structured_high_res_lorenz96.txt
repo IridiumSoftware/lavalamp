@@ -1,0 +1,61 @@
+# LavaLamp P-R2c-high-res — Structured-Adversary Benchmark (LL-021)
+# ==================================================================
+# Date: 2026-05-04
+# Reproducibility: deterministic (Random.seed!=101 for
+#                    calibration; trial IC seeds = 3000+trial;
+#                    adversary direction is supplied explicitly).
+#
+# Higher-resolution refresh of `p_r2c_structured_adversary.jl`.
+# Same system / coupling / verifier / seeds; n=15
+# trials per point instead of n=5. Trials 1-5 reproduce the
+# original benchmark's outputs by construction; trials 6-15
+# are new evidence.
+#
+# System: Lorenz-96 N=20, F=8.0, two sensor channels:
+#   Channel 1 (NARROW): constant_stream(1.0), b_1 = e_1
+#   Channel 2 (BROAD):  constant_stream(1.0), b_2 = ones(20)
+# Genuine alphas = [1.0, 1.0]
+# Calibration: n_trials=5, N_benettin=1000,
+#              Δt=0.05, Ttr=200.0
+# Verifier: verify_full at k=5.0 (LL-019 audit-on-every-verify)
+# Adversary: synthetic_adversary with explicit direction in α-space,
+#            magnitude ε_A
+# Trials per (direction, magnitude) point: 15
+#
+# Result columns:
+#   direction       — adversary perturbation direction (NARROW/MIXED/BROAD)
+#   ε_A             — perturbation magnitude (L2 in α-space)
+#   p_reject        — empirical detection probability
+#   rejects         — count of rejections out of 15
+#
+# Wall-clock timings are printed to stdout but excluded
+# from the result file so the determinism check
+# (per CLAUDE.md §Benchmarking discipline) succeeds
+# byte-identically across runs.
+#
+direction    ε_A    p_reject   rejects/trials
+---------    ---    --------   ---------------
+NARROW       0.50      0.267      4 / 15
+NARROW       1.00      0.000      0 / 15
+NARROW       2.00      0.067      1 / 15
+NARROW       4.00      0.067      1 / 15
+MIXED        0.50      0.333      5 / 15
+MIXED        1.00      0.867     13 / 15
+MIXED        2.00      1.000     15 / 15
+MIXED        4.00      1.000     15 / 15
+BROAD        0.50      0.600      9 / 15
+BROAD        1.00      1.000     15 / 15
+BROAD        2.00      1.000     15 / 15
+BROAD        4.00      1.000     15 / 15
+
+# ===
+# Refit and Wilson 95% CI analysis live in the
+# companion: docs/ll021_high_res_companion.md.
+#
+# Expected outcome shape (per ll021_benchmarked_companion.md
+# §2.5 follow-up note): Wilson CI width on 0/n sample
+# frequencies tightens from 0.43 (n=5) to ~0.21 (n=15),
+# giving sharper discrimination for the 3 negative-margin
+# points. The binding constraint may shift if the n=15
+# sample frequency at MIXED ε_A=1.0 differs materially
+# from 0.60.

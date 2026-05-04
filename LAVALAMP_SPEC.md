@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.27 (LL-020 Strategy 2 :benchmarked-tier; entry stays :argued, 2026-05-04)
+Version: 0.0.28 (LL-021 high-resolution refresh; c′=0.0288 at n=15, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -827,6 +827,29 @@ LL-ID, not the Key.
   the empirical worst-case curve) and Lean theorem (round-2
   §1D.v priority 1) are P5/P6 followups. See
   docs/p_r2c_worst_case_adversary_companion.md.
+- **High-resolution refresh (2026-05-04, n=5 → n=15):** Per
+  `docs/ll021_high_res_companion.md`, the P-R2c surface was
+  re-benchmarked at 15 trials per (direction, magnitude)
+  point (vs the original 5). Refined fitted constants:
+  `K=1, c′=0.0288, T=60.0` (vs n=5 fit's c′=0.02777 — 3.8 %
+  shift, well within sampling-variance bounds). The binding
+  constraint migrates from MIXED ε_A=1.0 (P≈0.6 at n=5) to
+  NARROW ε_A=4.0 (P≈0.07 at n=15, FPR-floor regime — 1 of 15
+  trials reject). 11 of 12 points now hold pointwise (was
+  9 of 12 at n=5); the single remaining negative-margin
+  point (NARROW ε_A=1.00, margin -0.004) is FPR-floor and
+  Wilson-95%-CI-consistent ([0, 0.218] covers bound 0.004).
+  Wilson CIs tighten by ~50 % at the same P̂ (theoretical
+  sqrt(15/5)=1.73× tightening; empirical 0.5-0.7× width).
+  The high-res refresh **confirms** the n=5 fit at higher
+  statistical confidence rather than overturning it; LL-021
+  status stays `:benchmarked`. Benchmark script:
+  `src/julia/benchmark/p_r2c_structured_adversary_high_res.jl`;
+  result file:
+  `src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt`
+  (deterministic; wall-clock timings excluded from result
+  file per the CLAUDE.md §Benchmarking discipline byte-
+  identical convention).
 
 ---
 

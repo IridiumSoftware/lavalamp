@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.27 — LL-020 Strategy 2 :benchmarked-tier evidence; entry stays :argued).
+Last updated: 2026-05-04 (0.0.28 — LL-021 high-resolution refresh; c′=0.0288 at n=15).
 
 ## Status summary
 
@@ -42,11 +42,16 @@ because the multi-strategy approach is the entry's claim;
 Strategy 2 component is `:benchmarked`-tier per the new
 benchmark. CLAUDE.md gains a §Benchmarking discipline
 section codifying determinism checks + negative-results-
-as-first-class. Two `:tested`; four `:benchmarked`;
-fifteen `:argued`; one `:open` (LL-015 by design). Test
-suite passes 123/123 in ~52s via `Pkg.test()` (was 117 in
-0.0.26; +6 new assertions for variance-convolution σ
-guarantees).
+as-first-class. **0.0.28** delivers the LL-021 high-
+resolution P-R2c refresh: n=5 → n=15 trials per point
+*confirms* the n=5 fit at higher statistical confidence;
+refined `c′=0.0288` (was 0.02777; 3.8 % shift); negative-
+margin points reduce 3 → 1; Wilson CIs tighten ~50 %.
+LL-021 stays `:benchmarked`. Two `:tested`; four
+`:benchmarked`; fifteen `:argued`; one `:open` (LL-015 by
+design). Test suite passes 123/123 in ~52s via
+`Pkg.test()` (unchanged from 0.0.27; high-res refresh adds
+no tests).
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -220,9 +225,26 @@ P3 — **Julia prototype core.** ◐ In progress.
     `docs/ll020_strategy_2_benchmarked_companion.md`
     (post-fix evidence).
 
+  **Sub-items closed since round-2 (continued):**
+  - **0.0.28 LL-021 high-resolution P-R2c refresh** ✓
+    Landed. n=5 → n=15 trials per (direction, magnitude)
+    point. New benchmark
+    `src/julia/benchmark/p_r2c_structured_adversary_high_res.jl`
+    + result file
+    `src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt`.
+    Refined fitted constants: K=1, c′=0.0288 (was 0.02777
+    at n=5; 3.8 % shift). Binding constraint migrates from
+    MIXED ε_A=1.0 (transition-region, P≈0.6 at n=5) to
+    NARROW ε_A=4.0 (FPR-floor, P≈0.07 at n=15). Negative-
+    margin points reduce 3 → 1 (the remaining one is FPR-
+    floor and Wilson-95%-CI-consistent). Wilson CIs
+    tighten ~50 % at the same P̂ (theoretical sqrt(15/5)=
+    1.73× tightening). The refresh **confirms** the n=5 fit
+    at higher statistical confidence rather than
+    overturning it; LL-021 status stays `:benchmarked`. See
+    `docs/ll021_high_res_companion.md`.
+
   **Remaining unblocked sub-items:**
-  - Higher-resolution P-R2c refresh (15+ trials per point)
-    to tighten LL-021's c′ binding constraint.
   - Higher-resolution LL-019 KS-test at α=0.01 or with
     production-scale verify_full timing.
   - LL-005 part-(a) parameter-validation test (trivial; would
@@ -406,6 +428,19 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/ll021_high_res_companion.md`** (0.0.28) — LL-021
+  high-resolution refresh of the P-R2c structured-adversary
+  surface. §1.2 documents the determinism check (PASS after
+  stripping wall_s from result file). §2 reports the n=15
+  empirical surface and the n=5↔n=15 sample-frequency
+  comparison. §2.3 refits c′=0.0288 at n=15 (was 0.02777 at
+  n=5; 3.8 % shift). §2.4 tabulates Wilson CI tightening
+  (~50 % at same P̂). §2.5 verifies bound holds at 11 of
+  12 points pointwise (was 9 of 12 at n=5). §5 captures
+  five lessons including "confirmation is a positive
+  result" and the binding-point regime migration from
+  transition-region (MIXED ε_A=1.0 at n=5) to FPR-floor
+  (NARROW ε_A=4.0 at n=15).
 - **`docs/audit_2026-05-04.md`** (between 0.0.26 and 0.0.27) —
   Diagnostic finding from the LL-020 Strategy 2 benchmark
   attempt. §2.1 documents the determinism re-check (PASS;

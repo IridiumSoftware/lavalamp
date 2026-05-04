@@ -74,7 +74,8 @@ pass in ~52s).
 (LL-020 ε-DP envelope, P3-Nyq negative result, P3d
 SDE-selection) → 0.0.26 (P-OS OS-level scoping pass) →
 0.0.27 (LL-020 Strategy 2 :benchmarked-tier; variance-
-convolution σ refinement).
+convolution σ refinement) → 0.0.28 (LL-021 high-resolution
+P-R2c refresh; c′=0.0288 at n=15).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -125,7 +126,8 @@ lavalamp/
 │   ├── p3d_sde_selection_companion.md
 │   ├── os_identity_security_scoping_companion.md
 │   ├── audit_2026-05-04.md
-│   └── ll020_strategy_2_benchmarked_companion.md
+│   ├── ll020_strategy_2_benchmarked_companion.md
+│   └── ll021_high_res_companion.md
 └── src/
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
@@ -139,6 +141,7 @@ lavalamp/
             ├── p3_nyq_adversary_rate.jl
             ├── p3d_sde_selection.jl
             ├── ll020_strategy_2_detection_power.jl
+            ├── p_r2c_structured_adversary_high_res.jl
             └── results/*.txt                    ← committed benchmark outputs
 
 # Future language tracks (per dashboard priority stack):

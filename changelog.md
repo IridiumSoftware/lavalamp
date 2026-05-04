@@ -5,6 +5,117 @@ messages match entry summaries.
 
 ---
 
+## 0.0.28 — 2026-05-04 — LL-021 high-resolution refresh (c′=0.0288 at n=15)
+
+Higher-resolution refresh of the P-R2c structured-adversary
+benchmark, promised in `docs/ll021_benchmarked_companion.md`
+§2.5 / §4.4 as a follow-up to tighten the n=5 sampling-variance
+caveat that was the binding limitation on the 0.0.18 fit.
+
+**Net result.** The n=5 fit is *confirmed* at higher statistical
+confidence: c′ shifts from 0.02777 to 0.0288 (3.8 %, well within
+sampling-variance bounds). The binding constraint migrates from
+MIXED ε_A=1.0 (transition-region, P≈0.6 at n=5) to NARROW
+ε_A=4.0 (FPR-floor regime, P≈0.07 at n=15). Negative-margin
+points reduce from 3 of 12 (n=5) to 1 of 12 (n=15); the
+remaining one is FPR-floor and Wilson-95%-CI-consistent.
+
+LL-021 status unchanged at `:benchmarked`. The refresh is a
+*refinement of the constants*, not a status promotion or
+demotion — but the n=5 caveat documented in 0.0.18 §2.5 closes.
+
+### Added
+
+- **`src/julia/benchmark/p_r2c_structured_adversary_high_res.jl`**
+  — copy of `p_r2c_structured_adversary.jl` with
+  `N_TRIALS_PER_POINT=15` (was 5) and a separate result-file
+  path. Same RNG-seed convention extended deterministically to
+  trial 15; trials 1-5 reproduce the original by construction;
+  trials 6-15 are new evidence.
+- **`src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt`**
+  — committed n=15 surface. Wall-clock timing excluded from
+  the result file (printed to stdout) so the determinism
+  check succeeds byte-identically per CLAUDE.md
+  §Benchmarking discipline.
+- **`docs/ll021_high_res_companion.md`** — companion. §1.2
+  documents the determinism check (PASS after stripping
+  wall_s from result file). §2.1-§2.6 report the n=15
+  surface, sample-frequency comparison vs n=5, refit, Wilson
+  CI tightening, and bound-margin verification at all 12
+  points. §3.2 explains why c′ shifts only 3.8 % despite two
+  large per-point sample-frequency moves. §4 documents the
+  spec-impact (footer addition; status unchanged). §5
+  captures four lessons including "confirmation is a
+  positive result" and the regime migration of the binding
+  constraint.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.27 → 0.0.28. LL-021
+  gains a "High-resolution refresh (2026-05-04, n=5 → n=15)"
+  footer documenting the refined c′=0.0288, the binding-
+  constraint migration, the 11/12 pointwise hold, and the
+  Wilson-CI tightening. Status unchanged. Counts unchanged
+  (22 / 0 / 0 / 2 / 0 / 4 / 15 / 1).
+- **`artifact_registry.md`** — version 0.0.27 → 0.0.28.
+  LL-021 row's Test/Proof column extended to cite the high-
+  res benchmark + result + companion. Cross-audit A1-A6
+  self-check refreshed for 0.0.28.
+- **`dashboard.md`** — version 0.0.27 → 0.0.28. Status
+  summary updated. P3 follow-ups list adds 0.0.28 entry;
+  P-R2c high-res refresh removed from remaining-unblocked.
+  Recent companion docs prepended with the new companion.
+
+### Empirical summary
+
+```
+direction    ε_A    P_n5    P_n15
+---------    ---    -----   -----
+NARROW       0.50   0.20    0.27
+NARROW       1.00   0.00    0.00
+NARROW       2.00   0.20    0.07
+NARROW       4.00   0.00    0.07  ← newly inclusive (binding at n=15)
+MIXED        0.50   0.00    0.33  ← n=5 missed the transition
+MIXED        1.00   0.60    0.87  ← n=5 binding; under-counted
+MIXED        2.00   1.00    1.00
+MIXED        4.00   1.00    1.00
+BROAD        0.50   0.60    0.60  ← unchanged sample frequency
+BROAD        1.00   1.00    1.00
+BROAD        2.00   1.00    1.00
+BROAD        4.00   1.00    1.00
+```
+
+| Quantity | n=5 (0.0.18) | n=15 (this) | shift |
+|---|---|---|---|
+| K | 1 | 1 | unchanged |
+| c′ | 0.02777 | 0.0288 | +3.8 % |
+| Binding point | MIXED ε_A=1.0 (P=0.6) | NARROW ε_A=4.0 (P=0.07) | regime shift |
+| Negative-margin points | 3 of 12 | 1 of 12 | better |
+| All Wilson CIs cover bound | yes | yes | maintained |
+| Wilson CI width at 0/n | 0.434 | 0.218 | 0.50× tighter |
+
+### Why
+
+1. **Promised follow-up.** The 0.0.18 companion explicitly
+   deferred the n=15 refresh as "follow-up benchmark, not a
+   fundamental result" — landing it now closes that loop.
+2. **Tighter Lean grounding.** Round-2 §1D.v priority 1 (Lean
+   theorem on linear-coupling worst-case bound) takes c′ as
+   a numerical constant. Refining c′ to 0.0288 at n=15
+   confidence makes the eventual Lean theorem statement
+   anchor on stronger empirical witness.
+3. **Discipline rule applied.** The first determinism check
+   on this benchmark failed on wall-clock-timing only
+   (numerical results identical). Stripping wall_s from the
+   result file made the check pass byte-identically — a
+   small refinement to the result-file convention that
+   matches the §Benchmarking discipline rule established in
+   0.0.27. The original `p_r2c_structured_adversary.jl`
+   n=5 result file predates this convention and retains its
+   wall_s column for historical continuity.
+
+---
+
 ## 0.0.27 — 2026-05-04 — LL-020 Strategy 2 :benchmarked-tier (entry stays :argued)
 
 Closes Strategy 2 of LL-020 (ε-DP envelope perturbation) to
