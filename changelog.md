@@ -5,6 +5,122 @@ messages match entry summaries.
 
 ---
 
+## 0.0.26 — 2026-05-03 — P-OS OS-level scoping pass (LL-022 added :argued)
+
+Adds the OS-level identity-security scoping pass — a P2-style
+architectural design pass on the one architectural seam the
+project had gestured at repeatedly without ever consolidating:
+the **LavaLamp ↔ OS trust boundary**. Prior entries (LL-011 TPM
+in registration, LL-012 cold-start window's "out of scope"
+footnote, LL-015 A3 kernel-level OOS, LL-016 TPM-signed sensor
+reads, LL-020 TPM-sealed calibration) each gestured at OS-stack
+dependencies without articulating them as a unified scope. This
+pass consolidates them.
+
+New entry **LL-022** (OS-trust-stack-dependency, Boundary tier,
+manual evidence, `:argued`) pins the *upward* dependencies that
+LavaLamp's claims rest on. **Required:** (a) hardware root of
+trust (TPM 2.0 / Secure Enclave / TrustZone) for LL-011 protocol
+B+D, LL-016 strategy 1, LL-020 strategy 1; (b) OS sensor APIs at
+LL-005-compliant bandwidths; (c) host TRNG (`getrandom(2)` /
+`SecRandomCopyBytes` / `BCryptGenRandom`) for LL-007 chaos-guard
+reseed — the only required mechanism with no graceful fallback;
+(d) user/kernel process isolation for LL-018 A2-margin assumption.
+**Recommended (defense-in-depth):** Secure Boot / measured boot
+(LL-012 cold-start composes parallel chain-of-custody); IMA /
+kernel-lockdown / mandatory access control (raises A3 capability
+cost without claiming defence — LL-015 unchanged); eBPF-based
+sensor authentication on Linux (LL-016 strategy 1.5, between
+hardware attestation and pure software cross-validation).
+
+LL-015 (downward boundary, A3 OOS) + LL-022 (upward boundary,
+trust-stack) together close the trust-stack scoping question.
+Per the asymmetry-trap watch in `dashboard.md`, this is the
+load-bearing place where "claim shrinks under reading" was most
+likely to bite — articulating the upward dependencies positively
+prevents the failure mode where a reader projects an
+unconditional bound onto a system whose claims are OS-parametric.
+
+LL-023 (early-boot-integrity-inherited) was considered as a
+separate entry per the plan's optional-second-entry decision
+point. **Decision: fold into LL-022 §2.3.1** (recommended-list
+position). Rationale: not load-bearing-distinct from the
+OS-trust-stack umbrella; mirrors how LL-015 covers all A3-class
+concerns in a single entry.
+
+### Added
+
+- **`docs/os_identity_security_scoping_companion.md`** —
+  companion. §1 computational basis (inputs, no code, no build).
+  §2 results (six subsections — trust stack, required, recommended,
+  out-of-scope, per-entry mapping, theorem-shape implications).
+  §3 verification framing (manual → `:argued`; promotion paths
+  documented). §4 spec impact. §5 five lessons (boundary entries
+  close pairs not singletons; required-vs-recommended is
+  load-bearing; the host TRNG is the only no-fallback dependency;
+  scattered dependencies cluster into one entry; scoping
+  artefacts are cheap and prevent claim drift).
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.25 → 0.0.26. New entry
+  LL-022 in a new "Surfaced by P-OS OS-level scoping pass
+  (0.0.26)" section. Five in-place amendments:
+  - LL-011 — appends OS-dependency sub-bullet citing LL-022
+    §2.2.1.
+  - LL-012 — replaces the "Early-boot integrity… out of scope"
+    footnote with a cross-reference to LL-022 §2.3.1 (recommended,
+    not required) + LL-015 (broader OS-level boundary).
+  - LL-015 — appends OS-stack pairing note (LL-015 downward +
+    LL-022 upward = trust-stack scoping closure).
+  - LL-016 — annotates strategy 1 with "depends on LL-022 §2.2.1";
+    adds strategy 1.5 (eBPF on Linux) per LL-022 §2.3.3.
+  - LL-020 — annotates strategy 1 (TPM-sealed) with "depends on
+    LL-022 §2.2.1"; explicit no-LL-022-dependency note for
+    strategies 2 and 3.
+  Counts: total 21 → 22; `:argued` 14 → 15.
+- **`artifact_registry.md`** — version 0.0.25 → 0.0.26. New
+  "Surfaced by P-OS OS-level scoping pass (0.0.26)" section
+  with LL-022 row. Counts updated. Cross-audit A1-A6 self-check
+  refreshed for 0.0.26.
+- **`dashboard.md`** — version 0.0.25 → 0.0.26. Status summary
+  rewritten to capture P-OS landing. Spec-status counts updated.
+  P-OS added to priority stack as a closed item between P-R2
+  and P-R3. Recent companion docs list prepended with the new
+  companion.
+- **`README.md`** — status block counts corrected (pre-existing
+  drift: README showed `:tested` 3 / `:benchmarked` 3 since
+  0.0.25 instead of the spec's 2 / 4) and updated to 0.0.26
+  (22 total, `:argued` 15).
+
+Test suite: 117/117 still passes (~52s); the P-OS pass is
+design-only and adds no code or tests.
+
+### Why
+
+1. **Asymmetry-trap defence.** Five spec entries had gestured at
+   OS-stack dependencies; none had named them. A reader scanning
+   any one entry could miss that the same OS-trust-stack
+   assumption was load-bearing across the spec. The
+   asymmetry-trap watch in `dashboard.md` flagged exactly this
+   "claim shrinks under reading" failure mode. LL-022's cost
+   (one design-pass session, no code) is small relative to the
+   risk it mitigates.
+2. **Independent of the round-3 trigger.** This pass does not
+   surface content that would inform LL-021 worst-case bounds
+   or the C-conjugate-inheritance argument; it could land in
+   parallel without round-3 gating. Used the slack while
+   waiting for the closure_forces_structure paper update.
+3. **Pre-Lean discipline.** §2.6 pins the theorem-statement
+   shape for any future Lean proof of an LL claim that depends
+   on an LL-022 mechanism: `forall (os : OSAssumptions)
+   (proof_os : LL022.satisfies os), <LL_property>`. This makes
+   the OS dependency explicit in the theorem statement rather
+   than implicit in surrounding text — the asymmetry-trap
+   defence at the formal level.
+
+---
+
 ## 0.0.25 — 2026-05-03 — P3d SDE-selection benchmark (LL-003 :benchmarked)
 
 Closes LL-003 from `:tested` to `:benchmarked` via a

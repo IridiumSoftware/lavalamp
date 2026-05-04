@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.25 (P3d SDE-selection benchmark; LL-003 :benchmarked, 2026-05-03)
+Version: 0.0.26 (P-OS OS-level scoping pass; LL-022 added :argued, 2026-05-03)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -88,43 +88,56 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 + docs/ll020_strategy_2_epsilon_dp_companion.md (Strategy 2 example-tested) | src/julia/src/Audit.jl (Strategy 2 only) | :argued |
 | LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | benchmarked | src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md | src/julia/src/Audit.jl | :benchmarked |
 
+## Surfaced by P-OS OS-level scoping pass (0.0.26)
+
+| LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
+|---|---|---|---|---|---|---|
+| LL-022 | OS-trust-stack-dependency | Boundary | manual | docs/os_identity_security_scoping_companion.md §2 | — | :argued |
+
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 21
+- Total: 22
 - `:proved`: 0
 - `:tested`: 2
 - `:verified`: 0
 - `:benchmarked`: 4
-- `:argued`: 14
+- `:argued`: 15
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.25)
+## Cross-audit A1–A6 self-check (post-0.0.26)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (21 of 21).
+  here. ✓ (22 of 22).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
+  LL-022 registry key (`OS-trust-stack-dependency`) matches
+  spec key.
 - **A3 — Evidence exists.** Nine entries cite
   `docs/architecture_design_companion.md`; four entries
   (LL-003, LL-004, LL-006, LL-007) cite `src/julia/test/runtests.jl`
   as their test file with source files in `src/julia/src/`.
   LL-006 additionally cites
   `src/julia/benchmark/results/p3b_detection_lorenz96.txt` as
-  supporting empirical-data evidence. All cited paths exist
-  in `git ls-files` after this commit.
+  supporting empirical-data evidence. LL-022 cites
+  `docs/os_identity_security_scoping_companion.md`. All cited
+  paths exist in `git ls-files` after this commit.
 - **A4 — Status honesty.** All `:argued` entries carry `manual`;
-  all four `:tested` entries carry `example-tested`; all
-  `:open` entries carry `none`. ✓. No entry has a status its
-  evidence type cannot support.
-- **A5 — Stale counts.** Counts above match
-  `LAVALAMP_SPEC.md` 0.0.25 and `dashboard.md` 0.0.25.
+  all `:tested` entries carry `example-tested`; all
+  `:benchmarked` entries carry `benchmarked`; all `:open`
+  entries carry `none`. ✓. LL-022 is `:argued` with `manual`
+  evidence — the strongest status its evidence type supports.
+  No entry has a status its evidence type cannot support.
+- **A5 — Stale counts.** Counts above (22 / 0 / 0 / 2 / 0 / 4 /
+  15 / 1) match `LAVALAMP_SPEC.md` 0.0.26 final-section counts
+  and `dashboard.md` 0.0.26 spec-status section.
 - **A6 — Test sync.** LL-003, LL-004, LL-006, LL-007 are
   exercised by `src/julia/test/runtests.jl`, runnable via
-  `Pkg.test()` from `src/julia/`; 82/82 assertions pass in
-  ~47s wall clock — *faster* than 0.0.9's 47/78s thanks to
-  the chaos-guard tests using cheap Wolf-method λ₁ estimation.
-  CI integration remains a follow-up.
+  `Pkg.test()` from `src/julia/`. The 0.0.26 P-OS scoping
+  pass adds no new code and no new tests (design-only pass);
+  the existing suite remains the authoritative test sync. LL-022
+  is design-pass `:argued` and has no test/proof file beyond
+  the companion.
 
 ## Test-coverage notes
 

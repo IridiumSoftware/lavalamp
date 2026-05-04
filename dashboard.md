@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-03 (0.0.25 — P3d SDE-selection; LL-003 :benchmarked).
+Last updated: 2026-05-03 (0.0.26 — P-OS OS-level scoping pass; LL-022 added :argued).
 
 ## Status summary
 
@@ -19,9 +19,19 @@ worst-case-adversary-bound — analytic derivation +
 structured-adversary benchmark showing dramatic asymmetry);
 LL-020 `:argued` in 0.0.16 (P-R2b calibration
 confidentiality — three-strategy design with TPM-sealed
-default). Six entries `:tested`; ten `:argued`; five `:open`
-(LL-001/002 await Lean; LL-009/010/015 corpus-boundary).
-Test suite passes 94/94 in ~50s via `Pkg.test()`.
+default). The 0.0.17–0.0.19 :benchmarked cohort closed
+LL-006 / LL-019 / LL-021 to empirically-validated bounds;
+0.0.23–0.0.25 added LL-020 Strategy 2 ε-DP envelope, the
+P3-Nyq negative-result benchmark, and the P3d SDE-selection
+benchmark (LL-003 → :benchmarked). 0.0.26 closed the
+**P-OS OS-level scoping pass**, adding LL-022
+(OS-trust-stack-dependency, Boundary, `:argued`) — the
+positive enumeration of OS / firmware / hardware-root
+mechanisms LavaLamp's claims depend on, paired with LL-015
+(downward boundary, A3 OOS) to close the trust-stack
+scoping question. Two `:tested`; four `:benchmarked`;
+fifteen `:argued`; one `:open` (LL-015 by design). Test
+suite passes 117/117 in ~52s via `Pkg.test()`.
 
 **Workflow.** P-R2 trio complete; previously-deferred P3
 follow-ups (P3d / P3-bound / P3-Nyq) are unblocked. Round-3
@@ -225,6 +235,23 @@ P-R2 — **Round-2 architectural responses.** ◐ Promoted from
     upgrade (K, c constant fitting) and Lean theorem
     (round-2 §1D.v priority 1) are P5/P6 followups.
 
+P-OS — **OS-level identity-security scoping pass.** ✓
+  Landed in 0.0.26 (`docs/os_identity_security_scoping_companion.md`).
+  Single companion design pass parallel in shape to P2.
+  Closes the LavaLamp ↔ OS trust boundary that prior entries
+  (LL-011, LL-012, LL-015, LL-016, LL-020) had gestured at
+  without consolidating. New entry LL-022
+  (OS-trust-stack-dependency, Boundary, `:argued`) pins the
+  *upward* dependencies: required mechanisms (TPM/Secure-
+  Enclave, OS sensor APIs at LL-005 bandwidths, host TRNG,
+  user/kernel isolation) and recommended defense-in-depth
+  (Secure Boot / measured boot, IMA / kernel-lockdown, eBPF-
+  based sensor authentication). LL-015 (downward, A3 OOS) +
+  LL-022 (upward, trust-stack) close the trust-stack scoping
+  question. Five in-place amendments (LL-011, LL-012, LL-015,
+  LL-016, LL-020) cross-reference LL-022. Independent of the
+  closure_forces_structure paper update; landed in parallel.
+
 P-R3 — **Synthesis-team round 3.** Trigger: *after the
   `closure_forces_structure` physics-paper update lands*
   (Aaron 2026-05-02). Parallel physics-paper work may
@@ -271,20 +298,21 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 21 (no change in 0.0.25)
+- Total spec entries: 22 (was 21; +LL-022 from 0.0.26 P-OS pass)
 - `:proved`: 0
 - `:tested`: 2 (LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 14 (LL-001, LL-002, LL-005, LL-008, LL-009,
+- `:argued`: 15 (LL-001, LL-002, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020)
+  LL-018, LL-020, LL-022)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
-Nine entries closed at the design-pass level via manual
-evidence; four entries (LL-003, LL-004, LL-006, LL-007) closed
-to `:tested` via the P3 prototype. None machine-verified yet —
+Ten entries closed at the design-pass level via manual evidence
+(now including LL-022 from the 0.0.26 P-OS scoping pass); four
+entries (LL-003, LL-004, LL-006, LL-007) closed to `:tested` /
+`:benchmarked` via the P3 prototype. None machine-verified yet —
 Lean (P5/P6) targets LL-006, LL-008, LL-018 plus the round-2
 priorities (linear-coupling worst-case bound, side-channel
 indistinguishability, calibration ε-DP). P-R2 follow-ups are
@@ -341,6 +369,24 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/os_identity_security_scoping_companion.md`** (0.0.26) —
+  P-OS OS-level identity-security scoping pass. §2.1 lays out the
+  trust stack (LavaLamp / OS userspace / kernel / bootloader /
+  firmware / TPM) with each layer's role formally defined as
+  in-scope / depended-upon / out-of-scope. §2.2 enumerates four
+  required OS mechanisms (TPM/Secure-Enclave, OS sensor APIs at
+  LL-005 bandwidths, host TRNG, user/kernel isolation) with
+  graceful-fallback paths for three of the four; the host TRNG is
+  the only no-fallback case. §2.3 enumerates three recommended
+  defense-in-depth mechanisms (Secure Boot / measured boot, IMA /
+  kernel-lockdown, eBPF-based sensor authentication on Linux).
+  §2.4 articulates the LL-015 boundary against the trust stack.
+  §2.5 maps the dependency to five existing entries (LL-011,
+  LL-012, LL-015, LL-016, LL-020). §2.6 pins the Lean / Haskell
+  theorem-shape implication: future formal proofs of LavaLamp
+  claims must be parametric in OSAssumptions, not unconditional.
+  New entry LL-022 closes to `:argued`; five existing entries
+  amended in place.
 - `docs/concept_origin_companion.md` — provenance graph (codetaur
   visual seed, Aaron concept derived from Possibilistic Security,
   Brian ORSIΩ-vocabulary engagement, patent-offer-to-codetaur).

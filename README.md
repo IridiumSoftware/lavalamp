@@ -52,25 +52,27 @@ layer would want to use) returns.
 Prototype-stage. The Julia prototype core (`src/julia/`)
 implements the SDE substrate (Lorenz-96), sensor-coupling layer,
 Lyapunov-spectrum residue audit, chaos-guard, and side-channel
-hardening. CI runs `Pkg.test()` on every push (94 assertions
-pass in ~50s).
+hardening. CI runs `Pkg.test()` on every push (117 assertions
+pass in ~52s).
 
-**Spec ledger:** 21 entries with the current breakdown:
+**Spec ledger:** 22 entries with the current breakdown:
 
 | status | count | entries |
 |---|---:|---|
 | `:proved` | 0 | — |
 | `:verified` | 0 | — |
-| `:tested` | 3 | LL-003 baseline, LL-004 sensor coupling, LL-007 chaos-guard |
-| `:benchmarked` | 3 | LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
-| `:argued` | 14 | (P2 design + round-2 closures + closure-pass arguments) |
+| `:tested` | 2 | LL-004 sensor coupling, LL-007 chaos-guard |
+| `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
+| `:argued` | 15 | (P2 design + round-2 closures + closure-pass arguments + P-OS OS-trust-stack scoping) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 **Trajectory:** 0.0.1 (concept-stage scaffold) → 0.0.3
 (attack-surface enum) → 0.0.5 (P2 design pass) → 0.0.6 - 0.0.10
 (P3 prototype core) → 0.0.11 (CI) → 0.0.12 (synthesis-team round
 2) → 0.0.14 - 0.0.16 (P-R2 trio) → 0.0.17 - 0.0.19 (round-2
-:benchmarked cohort) → 0.0.20 (closure pass).
+:benchmarked cohort) → 0.0.20 (closure pass) → 0.0.23 - 0.0.25
+(LL-020 ε-DP envelope, P3-Nyq negative result, P3d
+SDE-selection) → 0.0.26 (P-OS OS-level scoping pass).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -114,17 +116,24 @@ lavalamp/
 │   ├── p3_bound_companion.md
 │   ├── ll021_benchmarked_companion.md
 │   ├── ll019_benchmarked_companion.md
-│   └── spec_closure_pass_companion.md
+│   ├── spec_closure_pass_companion.md
+│   ├── audit_2026-05-03.md
+│   ├── ll020_strategy_2_epsilon_dp_companion.md
+│   ├── p3_nyq_companion.md
+│   ├── p3d_sde_selection_companion.md
+│   └── os_identity_security_scoping_companion.md
 └── src/
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
         ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard}.jl
-        ├── test/runtests.jl                     ← 94 assertions, run via Pkg.test()
+        ├── test/runtests.jl                     ← 117 assertions, run via Pkg.test()
         └── benchmark/
             ├── p3b_detection_probability.jl
             ├── p_r2c_structured_adversary.jl
             ├── p3_bound_high_res.jl
             ├── ll019_timing_distribution.jl
+            ├── p3_nyq_adversary_rate.jl
+            ├── p3d_sde_selection.jl
             └── results/*.txt                    ← committed benchmark outputs
 
 # Future language tracks (per dashboard priority stack):

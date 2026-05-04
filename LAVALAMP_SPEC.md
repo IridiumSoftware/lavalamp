@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.25 (P3d SDE-selection benchmark; LL-003 :benchmarked, 2026-05-03)
+Version: 0.0.26 (P-OS OS-level scoping pass; LL-022 added :argued, 2026-05-03)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -436,6 +436,13 @@ LL-ID, not the Key.
   observers via TPM-sealed storage, ε-DP perturbation of
   any published statistics, or multi-party threshold scheme.
   Both LL-011 and LL-020 are required for production.
+- **OS-dependency (2026-05-03, P-OS):** The default protocol
+  B+D (TPM/Secure-Enclave attestation + device-derived
+  secret mixing) requires a hardware root of trust per
+  LL-022 §2.2.1. Deployments without TPM / Secure-Enclave
+  fall back to multi-party registration (variant A) per
+  LL-022 §2.2.1's stated graceful-fallback path. See
+  `docs/os_identity_security_scoping_companion.md`.
 
 ### LL-012 — cold-start-window
 - Key: behavior of just-booted device before trajectory has converged
@@ -448,11 +455,19 @@ LL-ID, not the Key.
   WARMUP). Default: single-envelope registration (steady state
   only), unauthenticated during warmup; dual-envelope (cold-start
   + steady-state) reserved for high-availability deployments.
-  Early-boot integrity (Secure Boot, measured boot, cold-boot RAM)
-  is OS-level concern explicitly out of scope.
+  Early-boot integrity (Secure Boot, measured boot, cold-boot
+  RAM hardening) is *out of LavaLamp's implementation scope* but
+  is articulated as a *recommended* (not required) OS-level
+  dependency per LL-022 §2.3.1; the broader OS-level boundary
+  is covered by LL-015. WARMUP-state authentication remains the
+  load-bearing line during cold start when measured boot is
+  unavailable; deployments with measured boot compose a second
+  parallel chain of custody (the boot path attests to a known-
+  good measurement before the SDE engine starts).
 - Evidence type: manual
 - Status: :argued
-- Source: docs/architecture_design_companion.md §2.5.2, §3.8.
+- Source: docs/architecture_design_companion.md §2.5.2, §3.8;
+  docs/os_identity_security_scoping_companion.md §2.3.1.
 
 ### LL-013 — cross-config-transition-handling
 - Key: distinguishing legitimate config change from adversarial spoofing
@@ -525,6 +540,14 @@ LL-ID, not the Key.
   simulation). Documenting the boundary prevents drift toward
   overclaiming; consumers of the spec must understand which
   adversary capabilities LavaLamp covers.
+- **OS-stack pairing (2026-05-03, P-OS):** LL-015 is the
+  *downward* OS-stack boundary (what LavaLamp does not defend
+  against); LL-022 is the *upward* boundary (what LavaLamp
+  depends on). The two together close the trust-stack scoping
+  question. LL-015 stays `:open` (a non-defence declaration has
+  no positive evidence to provide); LL-022 is `:argued` (it has
+  positive design argument backing). See
+  `docs/os_identity_security_scoping_companion.md` §2.1.
 
 ### LL-016 — sensor-authenticity-requirement
 - Key: sensor reads used in the security primitive require independent authenticity check
@@ -538,20 +561,27 @@ LL-ID, not the Key.
   reports plug-events without attaching; a charge controller
   spoofs AC-adapter status). Authenticity strategies in
   decreasing strength: (1) hardware attestation (TPM / Secure
-  Enclave-signed reads); (2) multi-sensor cross-validation
-  (correlated readings sanity-checked — thermal + battery
-  discharge rate; AC + measured current draw; mic + accelerometer);
-  (3) anomaly-based flagging (sensor reads outside plausible joint
+  Enclave-signed reads — depends on LL-022 §2.2.1); (1.5)
+  eBPF-based kernel-side sensor-read cross-validation on Linux
+  (depends on kernel eBPF support; weaker than TPM-signed reads
+  but stronger than pure software cross-validation; defeats A2
+  but not A3); (2) multi-sensor cross-validation (correlated
+  readings sanity-checked — thermal + battery discharge rate;
+  AC + measured current draw; mic + accelerometer); (3)
+  anomaly-based flagging (sensor reads outside plausible joint
   envelopes excluded from U(s) participation); (4) accepted
   residual risk with explicit deployment-context guidance.
 - Evidence type: manual
 - Status: :argued
 - Source: docs/architecture_design_companion.md §2.4, §3.7;
-  docs/attack_surface_enumeration.md §3 V-006.
+  docs/attack_surface_enumeration.md §3 V-006;
+  docs/os_identity_security_scoping_companion.md §2.3.3
+  (strategy 1.5 derivation).
 - Notes: Default strategy for the prototype is (2) + (3); (1)
-  added when deployment supports it; (4) as fallback with
-  documented deployment context. Largest residual risk in the
-  architecture.
+  added when deployment supports it; (1.5) added on Linux
+  deployments where TPM is unavailable but eBPF is supported;
+  (4) as fallback with documented deployment context. Largest
+  residual risk in the architecture.
 
 ### LL-017 — verification-no-oracle
 - Key: verification protocol must not expose accept/reject feedback usable for threshold probing
@@ -678,12 +708,15 @@ LL-ID, not the Key.
   registered envelope and per-exponent σ be sealed against
   observers via three layered strategies (P-R2b design):
   (1) TPM-sealed storage on the verifier — primary default
-  for hardware-rooted deployments; (2) ε-differentially-
-  private perturbation of any published envelope statistics
-  — universal fallback when hardware support is absent or
-  publication is required; (3) Shamir-style multi-party
-  threshold scheme on envelope reconstruction — primary
-  default for federated / multi-trust-root deployments.
+  for hardware-rooted deployments (depends on LL-022 §2.2.1);
+  (2) ε-differentially-private perturbation of any published
+  envelope statistics — universal fallback when hardware
+  support is absent or publication is required (no LL-022
+  dependency; cryptographic-library-coupled); (3) Shamir-
+  style multi-party threshold scheme on envelope
+  reconstruction — primary default for federated /
+  multi-trust-root deployments (no LL-022 dependency;
+  cryptographic-library-coupled).
 - Evidence type: manual
 - Status: :argued
 - Source: docs/p_r2b_calibration_confidentiality_companion.md
@@ -772,16 +805,77 @@ LL-ID, not the Key.
 
 ---
 
+## Surfaced by P-OS OS-level scoping pass (0.0.26)
+
+### LL-022 — OS-trust-stack-dependency
+- Key: positive enumeration of OS / firmware / hardware-root mechanisms LavaLamp's claims depend on
+- Logic tier: Boundary
+- Description: Formal statement of what LavaLamp's security
+  claims *depend on* from the OS / firmware / hardware-root
+  layers, and what is *recommended* as defense-in-depth.
+  **Required (load-bearing for spec claims):** (a) hardware
+  root of trust — TPM 2.0 / Secure Enclave / TrustZone API
+  exposing attestation, sealing, and device-bound identity-
+  key primitives (LL-011 default protocol B+D, LL-016
+  strategy 1, LL-020 strategy 1); (b) OS sensor APIs at
+  LL-005-compliant bandwidths (sysfs / IOKit / similar; per-
+  platform syscalls; LL-004 / LL-005); (c) host TRNG —
+  `getrandom(2)` / `SecRandomCopyBytes` / `BCryptGenRandom`
+  for LL-007 chaos-guard reseed (the only required mechanism
+  with no graceful fallback); (d) user/kernel process
+  isolation (LL-018 A2-margin assumption — without it, A2
+  collapses to A3 and LL-015 applies).
+  **Recommended (defense-in-depth, not load-bearing):**
+  (e) Secure Boot / measured boot / cold-boot RAM hardening
+  for LL-012 cold-start integrity (composes a parallel chain-
+  of-custody to WARMUP-state authentication); (f) IMA /
+  kernel-lockdown / mandatory access control to raise A3
+  capability cost without claiming defence (LL-015 unchanged);
+  (g) eBPF-based sensor authentication on Linux as LL-016
+  strategy 1.5 between hardware attestation and pure software
+  cross-validation. LL-022 is the *upward* OS-stack boundary;
+  LL-015 is the *downward* OS-stack boundary; the two together
+  close the trust-stack scoping question.
+- Evidence type: manual
+- Status: :argued
+- Source: docs/os_identity_security_scoping_companion.md §2.
+- Notes: Parallel boundary entry to LL-009 / LL-010 / LL-015.
+  LL-022 is `:argued` (positive dependency claim with manual
+  argument backing); LL-015 stays `:open` (non-defence
+  declaration with no positive evidence to provide). Three of
+  the four required mechanisms have graceful fallbacks (TPM
+  → multi-party registration; sensor APIs → reduced channel
+  set; user/kernel isolation → A2 collapses to A3 and LL-015
+  applies). The host TRNG (c) is the no-fallback case —
+  embedded deployments must verify TRNG availability before
+  anything else and treat its absence as a deployment blocker.
+  :tested upgrade would require deployment-spec tooling that
+  checks each required mechanism's presence; deferred to P7.
+  :proved is structurally infeasible in the prototype scope —
+  LL-022 is a meta-claim about other LL claims and depends on
+  Lean proofs of those first (P5/P6 work). LL-022 stays
+  `:argued` permanently in the prototype's scope.
+- **Theorem-shape implication:** Any future Lean theorem about
+  an LL claim that depends on an LL-022 mechanism must be
+  stated parametrically — `forall (os : OSAssumptions)
+  (proof_os : LL022.satisfies os), <LL_property>` — rather
+  than unconditionally. The asymmetry-trap defence is making
+  the OS dependency explicit in the theorem statement, not
+  implicit in surrounding text. See
+  `docs/os_identity_security_scoping_companion.md` §2.6.
+
+---
+
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 21
+- Total: 22
 - `:proved`: 0
 - `:tested`: 2 (LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 14 (LL-001, LL-002, LL-005, LL-008, LL-009,
+- `:argued`: 15 (LL-001, LL-002, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020)
+  LL-018, LL-020, LL-022)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -790,6 +884,8 @@ empirically-validated :benchmarked entries (LL-003 SDE
 choice via comparative bench, LL-006 detection bound,
 LL-019 timing-indistinguishability, LL-021 worst-case
 bound); two :tested entries (LL-004 sensor coupling, LL-007
-chaos-guard); fourteen :argued at design level; only LL-015
-remains :open as the honest scoping declaration that A3
-(kernel-level) adversaries are out of scope.**
+chaos-guard); fifteen :argued at design level (now including
+LL-022 OS-trust-stack-dependency from the 0.0.26 P-OS
+scoping pass); only LL-015 remains :open as the honest
+scoping declaration that A3 (kernel-level) adversaries are
+out of scope.**
