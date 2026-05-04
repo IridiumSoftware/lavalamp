@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.34 (PharOS scoping pass; LL-023 added :argued — upward trust-stack scoping, 2026-05-04)
+Version: 0.0.35 (full A0–A6 cross-audit pre-round-3; CLAUDE.md drift fixed; PASS, 2026-05-04)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

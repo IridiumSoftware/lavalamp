@@ -27,7 +27,7 @@ lava-lamp animation). The visual is decorative and can be driven by
 any RNG; the security is the substance under the hood. Same shape
 as Lazarus.
 
-**Status (2026-05-03).** Prototype-stage. P1 attack-surface
+**Status (2026-05-04).** Prototype-stage. P1 attack-surface
 enumeration landed in 0.0.3; P2 architectural design pass in
 0.0.5; P3 Julia prototype core (Lorenz-96 baseline + sensor
 coupling + residue audit + chaos-guard + side-channel hardening)
@@ -37,22 +37,43 @@ vectors and three new spec entries; the P-R2 design-response
 trio (0.0.14 / 0.0.15 / 0.0.16) closed all three. The :benchmarked
 cohort (0.0.17 / 0.0.18 / 0.0.19) fitted concrete bound constants
 to LL-006 / LL-021 / LL-019. The closure pass (0.0.20) elevated
-LL-001 / LL-002 / LL-009 / LL-010 from `:open` to `:argued`.
+LL-001 / LL-002 / LL-009 / LL-010 from `:open` to `:argued`. The
+0.0.23–0.0.25 work added LL-020 Strategy 2 ε-DP envelope, the
+P3-Nyq negative result, and the P3d SDE-selection benchmark
+(LL-003 promoted to `:benchmarked`). The 0.0.26–0.0.34 session
+arc landed seven scoping / refresh / scaling passes: 0.0.26
+P-OS scoping (LL-022 added); 0.0.27 LL-020 Strategy 2 fix +
+:benchmarked-tier; 0.0.28 LL-021 high-res confirmation; 0.0.29
+LL-019 high-res regime-boundary finding; 0.0.30 LL-003 N-scaling
+(linear extensive-chaos confirmed); 0.0.31 LL-006 per-SDE
+detection-power; 0.0.32 LL-005 part-(a) parameter-validation;
+0.0.33 LL-002 :tested via decoupled visual layer; 0.0.34 P-PharOS
+scoping pass (LL-023 added — upward trust-stack pair with
+LL-022).
 
-**Spec ledger now (21 entries, post-0.0.20):**
+**Spec ledger now (23 entries, post-0.0.34):**
 
-- `:tested` × 3 (LL-003 baseline; LL-004 sensor coupling; LL-007
-  chaos-guard)
-- `:benchmarked` × 3 (LL-006 detection bound; LL-019 timing-
-  indistinguishability; LL-021 worst-case adversary bound)
-- `:argued` × 14 (P2 design + round-2 closures + closure-pass
-  arguments)
+- `:tested` × 3 (LL-002 visual ↔ security decoupling; LL-004
+  sensor coupling; LL-007 chaos-guard)
+- `:benchmarked` × 4 (LL-003 SDE choice; LL-006 detection bound;
+  LL-019 timing-indistinguishability; LL-021 worst-case
+  adversary bound)
+- `:argued` × 15 (P2 design + round-2 closures + closure-pass
+  arguments + P-OS downward trust-stack scoping + P-PharOS
+  upward trust-stack scoping)
 - `:open` × 1 (LL-015 A3-OOS scoping declaration; permanent by
   design)
 - `:proved` × 0; `:verified` × 0
 
-Round 3 (next synthesis-team review) is gated on the
-`closure_forces_structure` physics-paper update.
+Test suite passes 184/184 in ~51 s via `Pkg.test()` (LL-002
+visual decoupling testset + LL-005 part-(a) Nyquist-compliance
+testset added since 0.0.20).
+
+All round-3-trigger memory queue items closed except the LL-005
+adversary-side sub-claim (open per the 0.0.24 P3-Nyq negative
+finding; round-3 architectural input). Round 3 (next synthesis-
+team review) is gated on the `closure_forces_structure` physics-
+paper update.
 
 **Owner:** Aaron Green.
 

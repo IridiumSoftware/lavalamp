@@ -87,7 +87,9 @@ item now closed) → 0.0.33 (LL-002 :tested via decoupled
 visual layer + decoupling-assertion testset) → 0.0.34
 (P-PharOS scoping pass; LL-023 added :argued — upward trust-
 stack scoping paired with LL-022 to close the trust-stack
-scoping question on both ends).
+scoping question on both ends) → 0.0.35 (full A0–A6 cross-
+audit pre-round-3; CLAUDE.md drift fixed; PASS across all
+six checks).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update.
@@ -144,7 +146,8 @@ lavalamp/
 │   ├── p3e_n_scaling_companion.md
 │   ├── p3f_per_sde_detection_power_companion.md
 │   ├── ll005_part_a_companion.md
-│   └── pharos_scoping_companion.md
+│   ├── pharos_scoping_companion.md
+│   └── audit_2026-05-04_full.md
 ├── visual/                                     ← decoupled visual layer (LL-002)
 │   ├── index.html                              ← canvas entry point
 │   ├── lavalamp.js                             ← Math.random() bubble simulator

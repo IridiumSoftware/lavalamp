@@ -5,6 +5,92 @@ messages match entry summaries.
 
 ---
 
+## 0.0.35 — 2026-05-04 — Full A0–A6 cross-audit pre-round-3 (PASS post-fix)
+
+Full A0–A6 cross-audit triggered by the seven-version session
+arc 0.0.26 → 0.0.34. Per CLAUDE.md §Cross-audit protocol: "Run
+when integrating substantive new work or preparing a release."
+The prototype is now in a parallel-safe paused state pending
+upstream (`closure_forces_structure` paper update + engine
+updates); a fresh audit pre-round-3 confirms the spec / registry
+/ dashboard / README / CLAUDE.md are all in sync.
+
+**Result.** PASS across all six checks post-fix. One drift item
+found and fixed: CLAUDE.md §Status section was frozen at
+0.0.20 / 21 entries — 14 versions stale. Refreshed to 0.0.34 /
+23 entries with correct trajectory and ledger.
+
+| Check | Result |
+|---|---|
+| A0 self-audit | PASS (post-fix) |
+| A1 coverage | PASS (23 spec = 23 registry) |
+| A2 logic & status parity | PASS |
+| A3 evidence exists | PASS (22 src + 17 docs + 4 visual files all present) |
+| A4 status honesty | PASS (incl. conjunctive-claim discipline for LL-005, LL-020) |
+| A5 stale counts | PASS (post-fix; all 5 sources show 23/0/3/0/4/15/1) |
+| A6 test sync | PASS (CI runs Pkg.test() per commit; 184/184) |
+
+Per the CLAUDE.md cross-audit protocol's "Findings are fixed
+immediately or added to the priority stack": the CLAUDE.md
+drift was fixed in this commit (immediate fix); no items
+deferred to the priority stack.
+
+### Added
+
+- **`docs/audit_2026-05-04_full.md`** — full audit findings
+  document (~9 KB). §1 A0 (CLAUDE.md drift identified +
+  fixed). §2 A1 coverage. §3 A2 key match (registry uses
+  spaced-form compressions of spec title-slugs; all
+  unambiguous). §4 A3 evidence file existence (22 src + 17
+  docs + 4 visual files all verified). §5 A4 status honesty
+  (incl. conjunctive-claim discipline applied to LL-005 +
+  LL-020). §6 A5 count parity table across 5 sources. §7
+  A6 test sync (CI workflow + 184/184 suite). §8 summary
+  table. §9 round-3 readiness checklist (7 architectural
+  inputs accumulated; prototype side ready when the paper
+  lands). Filename `audit_2026-05-04_full.md` distinguishes
+  from the same-date `audit_2026-05-04.md` LL-020 diagnostic.
+
+### Changed
+
+- **`CLAUDE.md`** — §Status section refreshed. Date 2026-05-03
+  → 2026-05-04. Trajectory description extended through the
+  0.0.21 - 0.0.34 work (one-line summaries per substantive
+  pass). Spec ledger counts corrected to 23 / 0 / 3 / 0 / 4 /
+  15 / 1 with correct memberships. Test suite note added
+  (184/184 in ~51 s). Note about all round-3-trigger queue
+  items closed (modulo LL-005 part-(a) adversary-side
+  sub-claim).
+- **`LAVALAMP_SPEC.md`** — version 0.0.34 → 0.0.35 (audit
+  bump; no spec content changes).
+- **`artifact_registry.md`** — version 0.0.34 → 0.0.35 (audit
+  bump).
+- **`dashboard.md`** — version 0.0.34 → 0.0.35 (audit bump).
+  Recent companion docs prepended with the audit findings
+  document.
+- **`changelog.md`** — 0.0.35 entry (this).
+
+No spec content changes; no code changes; no test changes.
+Counts unchanged at 23 / 0 / 3 / 0 / 4 / 15 / 1.
+
+### Why
+
+1. **Pre-round-3 hygiene.** Per CLAUDE.md, cross-audits are
+   run "when integrating substantive new work or preparing a
+   release." The seven-version session arc 0.0.26 → 0.0.34
+   is substantive; round-3 readiness benefits from a fresh
+   audit confirming clean state.
+2. **Caught real drift.** CLAUDE.md staleness would have
+   propagated into round-3 brief composition (the brief
+   typically reads CLAUDE.md to ground its discipline
+   description). Fixing now removes a future-session hazard.
+3. **Round-3 readiness documented.** §9 of the audit
+   findings articulates the seven architectural inputs
+   accumulated since the last round-2 review; round-3's
+   brief composition draws from this list.
+
+---
+
 ## 0.0.34 — 2026-05-04 — PharOS scoping pass (LL-023 added :argued — upward trust-stack scoping)
 
 Lands the PharOS scoping pass as **parallel-safe upward

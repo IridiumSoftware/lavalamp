@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.34 (PharOS scoping pass; LL-023 added :argued — upward trust-stack scoping, 2026-05-04)
+Version: 0.0.35 (full A0–A6 cross-audit pre-round-3; CLAUDE.md drift fixed; PASS, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions

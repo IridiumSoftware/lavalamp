@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.34 — PharOS scoping pass; LL-023 added :argued — upward trust-stack scoping).
+Last updated: 2026-05-04 (0.0.35 — full A0–A6 cross-audit pre-round-3; CLAUDE.md drift fixed; PASS).
 
 ## Status summary
 
@@ -553,6 +553,16 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/audit_2026-05-04_full.md`** (0.0.35) — Full A0–A6
+  cross-audit pre-round-3. Triggered by the seven-version
+  session arc 0.0.26 → 0.0.34. Result: **PASS across all six
+  checks** post-fix; one drift item found and fixed (CLAUDE.md
+  §Status section was 14 versions stale, frozen at 0.0.20 /
+  21 entries; refreshed to 0.0.34 / 23 entries). §9 documents
+  round-3 readiness — the prototype side is ready for round-3
+  brief composition when the `closure_forces_structure` paper
+  update lands. Distinguished from `audit_2026-05-04.md` (the
+  same-date LL-020 negative-result diagnostic from 0.0.26.5).
 - **`docs/pharos_scoping_companion.md`** (0.0.34) — PharOS
   scoping pass. §1 inputs from existing LL-011/013/014/017/022
   + 0.0.26 P-OS companion + portfolio reference. §2.1
