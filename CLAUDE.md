@@ -289,6 +289,49 @@ gradient that makes the tier worthwhile.
 - **Test before committing.** A commit must compile and pass its
   component's tests.
 
+## Benchmarking discipline
+
+Benchmarks differ from unit tests in scope: tests cover
+function-level invariants (formulas, types, argument
+validation), benchmarks cover system-level invariants
+(genuine-device acceptance, adversary detection, end-to-end
+correctness across the verifier ↔ envelope pipeline). A function
+that passes unit tests but fails benchmarks is still broken; the
+benchmark is part of the test surface, not a separate
+performance-tracking activity.
+
+Discipline rules:
+
+- **Determinism check on first run.** Brittle-precision
+  benchmarks (per-component σ-scale effects, sub-percentage-point
+  detection-probability shifts, fitted bound constants) must
+  include a determinism check the first time they run: execute
+  twice and `diff` the result file. If non-identical, host-state
+  contamination is in play (sleep / suspend / thermal throttle /
+  scheduler jitter / clock skew); diagnose before treating any
+  pathological result as an implementation finding. The 2026-05-04
+  diagnostic on `differentially_private_envelope`
+  (`docs/audit_2026-05-04.md`) is the worked example: determinism
+  PASS cleanly attributed the result to an implementation bug
+  rather than host-state, which the benchmark could then close.
+- **Negative results are first-class artefacts.** A benchmark
+  that exposes a bug, surfaces an architectural gap, or refuses
+  to close a spec entry is producing legitimate evidence — same
+  shape as a refused proof in Lean. Commit the result file with
+  the negative finding preserved; document in a companion or
+  diagnostic note; do not silently retry until the result looks
+  good. P3-Nyq (LL-005, 0.0.24) and the LL-020 Strategy 2
+  diagnostic (2026-05-04) are the precedents.
+- **Host-OS invariants.** The prototype currently assumes
+  user-space process isolation, deterministic FP arithmetic
+  under the project's pinned Julia / DiffEq / DynamicalSystems
+  versions, and a non-adversarial scheduler / thermal regime.
+  Sleep, suspend, hibernate, thermal throttling, governor
+  changes, and clock skew are *not* yet covered by formal
+  invariance claims. LL-022 §2.2 (added 0.0.26) names the
+  required mechanisms; rigorous invariance bounds across host-
+  state events are open work — round-3 input.
+
 ## Companion doc standard
 
 Every substantive session produces a companion doc in `docs/`. The
