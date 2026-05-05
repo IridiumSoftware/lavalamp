@@ -102,7 +102,11 @@ LL-022 + LL-023 + LL-024 closes scoping on all three ends) →
 0.0.39 (round-3 brief skeleton at
 docs/synthesis_team_round3_brief.md; pre-trigger prep
 substantively complete on LavaLamp side; paper-side blanks
-fill in ~30-60 min when round-3 triggers).
+fill in ~30-60 min when round-3 triggers) → 0.0.40 (round-3
+brief Q7 + A7 added; EMF / A7 / LL-025 gap surfaced
+post-skeleton 2026-05-05; Triadic Watchmen miss physical-
+emanation layer; round-3 to weigh whether LL-025 is
+load-bearing).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update. Brief
