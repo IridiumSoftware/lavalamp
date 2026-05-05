@@ -98,10 +98,17 @@ buildable starting point) → 0.0.37 (Lean 4 CI workflow at
 .github/workflows/lean.yml; lake build on every push) →
 0.0.38 (P-RS real-sensor scoping pass + RealSensors.jl
 scaffold; LL-024 added :argued; deployment-stack triple
-LL-022 + LL-023 + LL-024 closes scoping on all three ends).
+LL-022 + LL-023 + LL-024 closes scoping on all three ends) →
+0.0.39 (round-3 brief skeleton at
+docs/synthesis_team_round3_brief.md; pre-trigger prep
+substantively complete on LavaLamp side; paper-side blanks
+fill in ~30-60 min when round-3 triggers).
 
 **Round 3** (next synthesis-team review) is gated on the
-`closure_forces_structure` physics-paper update.
+`closure_forces_structure` physics-paper update. Brief
+skeleton at `docs/synthesis_team_round3_brief.md` is
+substantively complete on the LavaLamp side; paper-specific
+blanks fill in when the upstream lands.
 
 See:
 - `LAVALAMP_SPEC.md` — authoritative claim ledger
@@ -158,7 +165,8 @@ lavalamp/
 │   ├── ll005_part_a_companion.md
 │   ├── pharos_scoping_companion.md
 │   ├── audit_2026-05-04_full.md
-│   └── p_real_sensor_scoping_companion.md
+│   ├── p_real_sensor_scoping_companion.md
+│   └── synthesis_team_round3_brief.md
 ├── visual/                                     ← decoupled visual layer (LL-002)
 │   ├── index.html                              ← canvas entry point
 │   ├── lavalamp.js                             ← Math.random() bubble simulator

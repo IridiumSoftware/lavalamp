@@ -5,6 +5,112 @@ messages match entry summaries.
 
 ---
 
+## 0.0.39 — 2026-05-04 — Round-3 brief skeleton (pre-trigger preparation)
+
+Lands `docs/synthesis_team_round3_brief.md` as **parallel-safe
+pre-trigger preparation** for the imminent round-3 synthesis-
+team review. The brief skeleton is substantively complete on
+the LavaLamp side; paper-specific and engine-specific blanks
+(marked `[FILL: ...]`) get filled when the
+`closure_forces_structure` paper update lands and round-3
+actually triggers.
+
+**Net result.** Round-3 trigger response time drops from
+"several hours of brief composition" to "fill paper-side
+blanks (~30-60 min) and forward." The brief mirrors the
+round-2 brief's shape (`docs/synthesis_team_round2_brief.md`)
+with content drawn from the nine accumulated architectural
+inputs documented in `docs/audit_2026-05-04_full.md` §9.
+
+No spec entry changes; counts unchanged at 24 / 0 / 3 / 0 /
+4 / 16 / 1. Test suite 202/202 unchanged.
+
+### Added
+
+- **`docs/synthesis_team_round3_brief.md`** (~14 KB).
+  - **§1 What changed since round 2.** Two work modes:
+    empirical refinement of round-2 :benchmarked cohort
+    (0.0.23-0.0.32; LL-020 fix; LL-021/LL-019 high-res;
+    LL-003 N-scaling; LL-006 per-SDE; LL-005 part-(a)) +
+    parallel-safe scaffolding (0.0.26 P-OS; 0.0.33 visual
+    layer; 0.0.34 P-PharOS; 0.0.35 cross-audit; 0.0.36 Lean
+    scaffold; 0.0.37 Lean CI; 0.0.38 P-RS). Paper / engine
+    paragraphs marked `[FILL: ...]`.
+  - **§2 Reading list (9 items).** LavaLamp companions cited
+    (audit + deployment-stack triple + :benchmarked cohort
+    + empirical refinements + diagnostic notes). Paper +
+    engine entries marked `[FILL: ...]`.
+  - **§3 Synthesis-seat brief (Q1-Q6).** Drawn from the nine
+    architectural inputs: Q1 paper revisions to C-conjugate
+    inheritance; Q2 deployment-stack triple match to paper
+    closure-of-three framing; Q3 LL-019 host-isolation regime-
+    boundary as new spec entry vs LL-022 sub-claim; Q4 LL-005
+    adversary-side mechanism choice (LL-016 sensor authenticity
+    vs FFT/PSD audit vs trajectory-checkpoint); Q5 first Lean
+    theorem priority + Mathlib-or-not call; Q6 N-scaling
+    deployment target per Triad Deployment.
+  - **§4 Edge-witness brief (A1-A6).** A1 LL-019 host-isolation
+    real or methodological; A2 LL-024 cross-validation
+    sufficiency against coordinated V-006; A3 deployment-stack
+    triple non-conformance attack; A4 linear-coupling
+    linearisability post-LL-021; A5 large-N attractor topology
+    attack vectors; A6 paper-revisions blank.
+  - **§5 Response format.** Mirrors round-2 (six-point
+    evaluation; verdicts; net new vectors; Lean suggestions;
+    paper-update integration). Word cap raised 2000 → 2500
+    (broader surface).
+  - **§6 Followups.** Round-3 companion (post-dialogue);
+    spec impact discipline; decision point; Phase 1 real-
+    sensor implementation gating; first Lean theorem
+    implementation gating.
+  - **Internal note** on skeleton-tier status: substantively
+    complete; paper-specific blanks remain.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.38 → 0.0.39 (skeleton
+  bump; no entry changes).
+- **`artifact_registry.md`** — version 0.0.38 → 0.0.39
+  (skeleton bump; no row changes — brief skeleton is
+  pre-trigger prep, not spec evidence).
+- **`dashboard.md`** — version 0.0.38 → 0.0.39. Recent
+  companion docs prepended with the brief skeleton
+  description.
+- **`README.md`** — version trajectory extended.
+
+### Why
+
+1. **Round-3 trigger imminent.** Per the user note 2026-05-04:
+   "physics paper is genuinely advanced and the current status
+   is synced to origin." The trigger window is narrowing;
+   pre-trigger work that survives the round-3-blocked content
+   gate is the highest-leverage parallel-safe option in the
+   current window.
+2. **No round-3 commitment.** The skeleton's LavaLamp-side
+   content is paper-independent (drawn from the audit §9
+   architectural inputs that are LavaLamp-internal). The
+   `[FILL: ...]` blanks isolate the paper-dependent content
+   from the rest, so the skeleton doesn't pre-commit to
+   anything round-3-blocked.
+3. **Round-3 response time minimised.** When the paper update
+   lands, the round-3 brief composition reduces from
+   "several hours of fresh writing" to "30-60 min of blank-
+   filling." The skeleton is a force multiplier on the
+   round-3 trigger event.
+4. **The §3 Q1-Q6 + §4 A1-A6 framing already captures the
+   nine accumulated architectural inputs.** Each Q/A maps to
+   one or two of the inputs from the audit §9 list; round-3
+   reviewers see the LavaLamp side's questions clearly,
+   regardless of what the paper update revises.
+
+### Counts
+
+- Total: 24 (unchanged)
+- All status counts unchanged.
+- Test suite: 202/202 (unchanged).
+
+---
+
 ## 0.0.38 — 2026-05-04 — P-RS real-sensor scoping pass (LL-024 added :argued; Linux-first roadmap)
 
 Lands the P-RS real-sensor scoping pass + scaffold module as

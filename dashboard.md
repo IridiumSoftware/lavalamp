@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.38 — P-RS real-sensor scoping pass; LL-024 added :argued; Linux-first roadmap).
+Last updated: 2026-05-04 (0.0.39 — round-3 brief skeleton landed at docs/synthesis_team_round3_brief.md; pre-trigger prep).
 
 ## Status summary
 
@@ -586,6 +586,23 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/synthesis_team_round3_brief.md`** (0.0.39) — round-3
+  brief skeleton landed pre-trigger. Substantively complete on
+  the LavaLamp side: §1 What changed (0.0.20 → 0.0.38 work-set
+  in two modes — empirical refinement + parallel-safe
+  scaffolding); §2 Reading list (LavaLamp companions cited;
+  paper / engine entries marked **`[FILL: ...]`**); §3
+  synthesis-seat Q1-Q6 (drawn from the nine accumulated
+  architectural inputs in audit_2026-05-04_full.md §9; Q1 has
+  paper-specific blank); §4 edge-witness A1-A6 (A6 is paper-
+  specific blank); §5 response format (2500-word cap; verdicts
+  + Lean priorities + paper-update integration ask); §6
+  followups. When the closure_forces_structure paper update
+  lands and round-3 triggers, the `[FILL: ...]` blanks fill in
+  ~30-60 min, then the brief forwards to Gemini + Grok.
+  Reduces round-3 trigger response time from "several hours of
+  composition" to "fill blanks + forward." No spec entry
+  changes; counts unchanged at 24/0/3/0/4/16/1.
 - **`docs/p_real_sensor_scoping_companion.md`** + **`src/julia/src/RealSensors.jl`**
   (0.0.38) — P-RS real-sensor scoping pass + scaffold module.
   §1 inputs (LL-004 / LL-005 / LL-016 / LL-022). §2.1 per-

@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.38 (P-RS real-sensor scoping pass; LL-024 added :argued; Linux-first roadmap, 2026-05-04)
+Version: 0.0.39 (round-3 brief skeleton landed at docs/synthesis_team_round3_brief.md; pre-trigger prep, 2026-05-04)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
