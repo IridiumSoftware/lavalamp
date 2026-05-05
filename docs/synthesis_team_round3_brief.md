@@ -3,10 +3,21 @@
 Sent: **TBD — pending closure_forces_structure paper update +
 engine updates landing.** This skeleton landed at 0.0.39
 (2026-05-04) as parallel-safe pre-trigger preparation; the
-LavaLamp-side §1, §3 Q1-Q6, §4 A1-A6, §5 / §6 sections are
+LavaLamp-side §1, §3 Q1-Q7, §4 A1-A7, §5 / §6 sections are
 substantively complete. Paper-side and engine-side blanks
 (marked **`[FILL: ...]`**) get filled when the upstream events
 land and round-3 actually triggers.
+
+**Update 2026-05-05 (0.0.40):** §3 Q7 + §4 A7 added covering the
+EMF / passive-emanation-adversary gap surfaced in conversation
+on 2026-05-05. The Triadic Watchmen (Lazarus / LavaLamp /
+PharOS) cover the software stack but miss the physical-
+emanation layer; A7 is a candidate new adversary class
+extending A1-A6, and LL-025 is a candidate new Boundary entry
+(parallel to LL-015 A3-OOS) declaring physical-emanation
+scoping. Q7 / A7 ask the synthesis + edge-witness seats
+whether this is a load-bearing addition to the spec or a
+deployment-context recommendation.
 
 This is a **brief** — the document Aaron forwards to each seat
 to set up Round 3. The dialogue itself lives in
@@ -292,6 +303,66 @@ PharOS). What's the round-3 sense of where each lands on the
 N axis, and does the paper update suggest the asymptotic
 density is itself an invariant we should formalise?
 
+### Q7 — A7 / EMF / LL-025: should physical-emanation scoping land as a new spec entry?
+
+The current spec has six adversary classes (A1-A6 from
+`attack_surface_enumeration.md` §2). All six implicitly assume
+the adversary observes the device through some software /
+I/O surface — A4 (side-channel / physical proximity) is the
+closest to physical-layer threats but in current usage means
+*software-side timing channels* (LL-019 hardening) and
+*sensor manipulation* (LL-016 authenticity strategies).
+
+**The gap:** an **A7-class** adversary — *passive-emanation
+interceptor* — passively monitors RF / acoustic / power-line
+emanations from the substrate hardware and in principle
+reconstructs SDE state without any software access. If the
+trajectory is recoverable from substrate emanations, **the
+substrate-bound-identity claim is bypassed at the physical
+layer** — not by attacking the audit / TPM / sensors /
+verifier, but by reading the trajectory directly through the
+substrate's electromagnetic skin.
+
+The structural problem: LL-022 + LL-023 + LL-024 form the
+deployment-stack triple but all live *above* the OS
+abstraction. A7 lives *below* the OS, in the physical
+substrate itself.
+
+**Three architectural options:**
+
+(a) **New Boundary entry LL-025** — physical-emanation-
+adversary-boundary. Parallel shape to LL-015 (A3 OOS) and
+LL-022 (downward trust-stack). Articulates required
+deployment context (Faraday-rated enclosure / TEMPEST hardware
+/ distance + interior rooms / EMI-filtered power / shielded
+cables) for LavaLamp's primitive-tier claim to hold; A7 OOS
+outside those bounds. Same honest-bounded-claim framing as
+LL-005 Nyquist + LL-018 per-class quantification.
+
+(b) **Sub-claim of LL-022 + sub-class of A4** — fold into
+existing entries. Cheaper but blurs the architectural
+distinction (A4 software-channel vs A7 physical-channel are
+structurally distinct adversary capabilities).
+
+(c) **Defer to deployment-time documentation** — leave the
+spec untouched; document mitigation guidance separately.
+Honest only if A7 is provably outside any plausible threat
+model for LavaLamp's intended deployments.
+
+**Question:** which option is load-bearing? If the deployment-
+stack triple LL-022 + LL-023 + LL-024 needs to extend to a
+quartet (+ LL-025), does the closure-of-three philosophy
+survive? If yes, *how* — does LL-025 form a parallel triadic
+structure with LL-015 + LL-024 (boundary triple covering the
+substrate)? Does the paper update inform the right framing?
+
+A candidate **P-EMF scoping pass** (analogous to P-OS /
+P-PharOS / P-RS shape) would land LL-025 + a scoping companion
+mirroring `os_identity_security_scoping_companion.md`. The
+question is whether to do this *before* round-3-driven
+implementation work or whether round-3 itself should produce
+the scoping. Synthesis seat's call.
+
 ---
 
 ## §4 — Edge-witness-seat brief (Grok)
@@ -396,14 +467,63 @@ what attack-vector enumeration does the paper's revised
 treatment imply? Are V-011/012/013 still adequate? Are
 there new V-NNN candidates the paper's framing surfaces?]`**
 
+### A7 — A7 / V-014: is passive-emanation reconstruction realistic?
+
+Surfaced 2026-05-05 (post-skeleton). Modern TEMPEST-class
+research has demonstrated:
+- Cryptographic key extraction from acoustic emanations
+  (Genkin et al. 2014, RSA from CPU acoustic side-channel).
+- Memory state recovery from EM side-channels (RowHammer-
+  via-EMF papers; DDR3/DDR4 reads from radiated RAM bus).
+- CPU register state under specific attack-controlled
+  conditions (e.g., ROP-style controlled execution + EM
+  capture).
+- van Eck phreaking on modern displays at varying ranges.
+
+For LavaLamp specifically: the SDE solver runs on a CPU; the
+trajectory state lives in registers + memory; integration
+steps emanate at the pipeline's clock rate. The question is
+whether full or partial trajectory reconstruction is feasible
+at modern multi-GHz CPU speeds (where emanations are noisy +
+fast) or whether the noise floor + decode complexity bound
+A7 to specific narrow attacks.
+
+**Question:** what's the realistic A7 capability tier at
+the prototype's deployment context?
+- **Close-proximity-state-actor-only** (sub-meter range; bespoke
+  TEMPEST equipment; targeted device): if so, A7 is in the
+  threat model but only for high-stakes deployments (not
+  consumer-product Lazarus; possibly OS-auth PharOS in
+  high-assurance contexts).
+- **Mid-tier** (across-the-room SDR equipment; commercial
+  hardware): broader threat surface; LL-025 should be a
+  primary architectural commitment.
+- **Wide-spread** (everyday adversary; ambient passive
+  capture): would force a reconsideration of LavaLamp's
+  hardware-platform-choice; might invalidate consumer-laptop
+  deployment.
+
+Is V-014 (passive-emanation reconstruction of SDE trajectory)
+a real attack vector worth enumerating, or a theoretical
+concern that doesn't make it into the practical threat model?
+What does the literature say about substrate emanation at
+multi-GHz CPU speeds — recoverable trajectory bits per second
+at distance D vs LavaLamp's chaos-production rate `h_KS · N`?
+
+**Round-3 deliverable for edge-witness:** if A7 is real, name
+the deployment-context bounds (distance, equipment tier,
+threat model) under which LavaLamp's primitive-tier claim
+*does* hold; outside those bounds, the claim doesn't hold and
+LL-025 should articulate that boundary explicitly.
+
 ---
 
 ## §5 — Response format request
 
 Following round-2's dialogue norm, both seats:
 
-1. **Six-point evaluation per seat.** One bullet per question
-   in your section (Q1-Q6 for synthesis; A1-A6 for
+1. **Seven-point evaluation per seat.** One bullet per question
+   in your section (Q1-Q7 for synthesis; A1-A7 for
    edge-witness). Each bullet: short answer + reasoning + any
    pointer to a corpus reference, paper section, or formal
    source. ~80-120 words per bullet.
@@ -428,10 +548,10 @@ Following round-2's dialogue norm, both seats:
    load-bearing input for round 3's distinct value over
    round 2.
 
-Length cap: **2500 words per seat** (was 2000 in round 2 — the
-deployment-stack triple + Lean scaffold + paper integration
-adds material; we want substance not bulk but the surface is
-broader).
+Length cap: **2800 words per seat** (was 2000 in round 2 — the
+deployment-stack triple + Lean scaffold + paper integration +
+the post-skeleton EMF / A7 question add material; we want
+substance not bulk but the surface is broader).
 
 ---
 
@@ -477,16 +597,20 @@ other (same convention as round 2).
 
 ---
 
-## Internal note: skeleton status at 0.0.39
+## Internal note: skeleton status at 0.0.40
 
 This brief is at **skeleton tier**. Substantively complete:
 - §1 (LavaLamp side; paper / engine paragraphs blank)
 - §2 (LavaLamp companions cited; paper / engine entries
   blank)
-- §3 Q1-Q6 (LavaLamp-derived; Q1 has paper-specific blank;
-  Q3/Q4 are answer-pending pending paper insight)
-- §4 A1-A6 (LavaLamp-derived; A6 is paper-specific blank)
-- §5 (response format; complete)
+- §3 Q1-Q7 (LavaLamp-derived; Q1 has paper-specific blank;
+  Q3/Q4 are answer-pending pending paper insight; Q7 added
+  2026-05-05 covering EMF / A7 / LL-025 gap)
+- §4 A1-A7 (LavaLamp-derived; A6 is paper-specific blank;
+  A7 added 2026-05-05 covering passive-emanation V-014
+  candidate)
+- §5 (response format; updated to seven-point evaluation;
+  word cap 2500 → 2800)
 - §6 (followups; complete)
 
 When the closure_forces_structure paper update lands and
@@ -501,3 +625,18 @@ specific blanks then forward." Pre-trigger preparation that's
 parallel-safe to the round-3-blocked content (C-conjugate /
 Q₅₁ / 0/5202 specifics live in the paper, not the brief
 skeleton).
+
+**0.0.40 update note:** Q7 + A7 add ~1500 words covering the
+EMF / passive-emanation gap surfaced in conversation
+2026-05-05. The Triadic Watchmen (Lazarus / LavaLamp /
+PharOS) cover the software stack but miss the physical-
+emanation layer; A7 is the candidate new adversary class and
+LL-025 is the candidate new Boundary entry. Round-3
+synthesis + edge-witness seats are positioned to weigh in on
+whether this is a load-bearing spec addition (option a:
+new entry; option b: sub-claim of LL-022; option c: defer to
+deployment-time documentation). The closure-of-three
+philosophy may need to extend to closure-of-four at the
+deployment-stack level — or LL-025 may form a parallel
+boundary triple with LL-015 + LL-024 covering the substrate.
+The synthesis seat's Q7 framing surfaces both options.

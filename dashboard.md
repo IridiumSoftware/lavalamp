@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-04 (0.0.39 — round-3 brief skeleton landed at docs/synthesis_team_round3_brief.md; pre-trigger prep).
+Last updated: 2026-05-05 (0.0.40 — round-3 brief Q7 + A7 added; EMF / A7 / LL-025 gap surfaced post-skeleton).
 
 ## Status summary
 
@@ -586,6 +586,27 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/synthesis_team_round3_brief.md` Q7 + A7 update**
+  (0.0.40, 2026-05-05) — round-3 brief gains a synthesis-seat
+  Q7 + edge-witness-seat A7 covering the **EMF /
+  passive-emanation-adversary gap** surfaced in conversation
+  2026-05-05. The Triadic Watchmen (Lazarus / LavaLamp /
+  PharOS) cover the software stack but miss the physical-
+  emanation layer; A7 is the candidate new adversary class
+  (passive emanation interceptor; structurally distinct from
+  A4 software-channel) and LL-025 is the candidate new
+  Boundary entry (parallel to LL-015 A3-OOS framing).
+  Synthesis seat's Q7 weighs three architectural options
+  (new entry / sub-claim of LL-022 / deployment-time
+  documentation only) and asks whether the deployment-stack
+  triple should extend to a quartet or form a parallel
+  boundary triple with LL-015 + LL-024. Edge-witness seat's
+  A7 asks whether passive-emanation reconstruction is
+  realistic at modern multi-GHz CPU speeds and what
+  capability tier (close-proximity-state-actor /
+  mid-tier-SDR / wide-spread) bounds A7. Word cap raised
+  2500 → 2800. No spec changes; counts unchanged at
+  24/0/3/0/4/16/1.
 - **`docs/synthesis_team_round3_brief.md`** (0.0.39) — round-3
   brief skeleton landed pre-trigger. Substantively complete on
   the LavaLamp side: §1 What changed (0.0.20 → 0.0.38 work-set

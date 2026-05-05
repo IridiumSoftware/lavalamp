@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.39 (round-3 brief skeleton landed at docs/synthesis_team_round3_brief.md; pre-trigger prep, 2026-05-04)
+Version: 0.0.40 (round-3 brief Q7 + A7 added — EMF / A7 / LL-025 gap surfaced post-skeleton, 2026-05-05)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions

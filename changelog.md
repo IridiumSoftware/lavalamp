@@ -5,6 +5,113 @@ messages match entry summaries.
 
 ---
 
+## 0.0.40 — 2026-05-05 — Round-3 brief Q7 + A7 (EMF / A7 / LL-025 gap surfaced post-skeleton)
+
+Adds Q7 (synthesis seat) + A7 (edge-witness seat) to the
+round-3 brief skeleton landed in 0.0.39, covering the
+**EMF / passive-emanation-adversary gap** surfaced in
+conversation 2026-05-05. Aaron's observation: *"the triadic
+watchmen totally miss that concept."*
+
+The gap, articulated:
+
+- The Triadic Watchmen (Lazarus / LavaLamp / PharOS) cover
+  the software stack — Lazarus is the existing backend with
+  utilitarian UI; LavaLamp is the substrate-bound primitive;
+  PharOS is the OS-level consumer.
+- All three live above the OS abstraction layer.
+- LL-022 covers OS-level dependencies (TPM, sensor APIs,
+  TRNG, isolation); LL-023 covers consumer-API surfaces;
+  LL-024 covers real-sensor instantiation strategy.
+- **None of them touch the physical substrate's
+  electromagnetic emanations.** A passive-emanation
+  adversary (call it A7) in physical proximity could in
+  principle reconstruct the SDE trajectory directly from CPU
+  / memory bus / USB / HDMI radiated emissions, bypassing the
+  entire residue audit / TPM / sensor authenticity / verifier
+  stack at the physical layer.
+
+Q7 (synthesis seat) lays out three architectural options:
+(a) new Boundary entry **LL-025** —
+physical-emanation-adversary-boundary, parallel to LL-015
+A3-OOS, articulating required deployment context (Faraday /
+TEMPEST / distance / EMI-filtered power / shielded cables)
+for LavaLamp's primitive-tier claim to hold; A7 OOS outside
+those bounds;
+(b) sub-claim of LL-022 + sub-class of A4 — fold into
+existing entries;
+(c) defer to deployment-time documentation — leave spec
+untouched.
+
+Q7 also asks whether the deployment-stack triple LL-022 +
+LL-023 + LL-024 needs to extend to a quartet (+ LL-025), and
+whether the closure-of-three philosophy survives — or whether
+LL-025 forms a parallel boundary triple with LL-015 + LL-024
+covering the substrate at the physical layer.
+
+A7 (edge-witness seat) asks whether passive-emanation
+reconstruction is realistic at modern multi-GHz CPU speeds
+and what capability tier (close-proximity-state-actor /
+mid-tier-SDR / wide-spread) bounds A7. Real research has
+demonstrated cryptographic key extraction from acoustic
+emanations (Genkin et al. 2014), memory state recovery from
+EM (RowHammer-via-EMF), and CPU register state under specific
+conditions. The question is whether full or partial
+trajectory reconstruction is feasible at LavaLamp's
+deployment scales.
+
+**Round-3 deliverable:** synthesis + edge-witness seats
+weigh in on whether A7 is a load-bearing addition to the
+spec; if yes, what's the right LL-NNN structure; if no,
+what's the deployment-context recommendation.
+
+### Added
+
+- **`docs/synthesis_team_round3_brief.md`** — Q7 (synthesis
+  seat) + A7 (edge-witness seat). Top-of-doc 2026-05-05
+  update note documenting the addition. §5 word cap raised
+  2500 → 2800. §5 "six-point evaluation" → "seven-point
+  evaluation". Internal note at bottom updated to 0.0.40
+  status (Q1-Q7 / A1-A7).
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.39 → 0.0.40 (brief
+  update bump; no entry changes).
+- **`artifact_registry.md`** — version 0.0.39 → 0.0.40 (brief
+  update bump; no row changes).
+- **`dashboard.md`** — version 0.0.39 → 0.0.40. Recent
+  companion docs prepended with the Q7+A7 update note.
+- **`README.md`** — version trajectory extended.
+
+### Why
+
+1. **Real architectural gap.** The Triad Deployments
+   collectively cover the software identity stack but the
+   physical-emanation layer is genuinely outside the current
+   spec. An A7-class adversary doesn't need root, doesn't
+   need to defeat the residue audit, doesn't need to spoof
+   sensors — they just listen to the substrate. This is
+   structurally distinct from A4 (software side-channels)
+   and warrants explicit treatment.
+2. **Round-3 is the right venue.** Pre-committing to a
+   specific LL-025 design before round-3 risks the
+   synthesis + edge-witness seats arriving at a different
+   architecture. Surfacing the question in the brief lets
+   round-3 produce the resolution.
+3. **No spec changes pre-trigger.** The brief update is a
+   question, not a commitment. Counts unchanged; LL-024
+   stays as the most-recent spec entry; LL-025 lands (or
+   doesn't) as a round-3 deliverable.
+
+### Counts
+
+- Total: 24 (unchanged)
+- All status counts unchanged.
+- Test suite: 202/202 (unchanged).
+
+---
+
 ## 0.0.39 — 2026-05-04 — Round-3 brief skeleton (pre-trigger preparation)
 
 Lands `docs/synthesis_team_round3_brief.md` as **parallel-safe
