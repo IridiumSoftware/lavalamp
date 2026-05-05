@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.40 (round-3 brief Q7 + A7 added — EMF / A7 / LL-025 gap surfaced post-skeleton, 2026-05-05)
+Version: 0.0.41 (threat-landscape companion landed; cockroach/catapult/castle framing for Triad Deployments, 2026-05-05)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -648,6 +648,16 @@ LL-ID, not the Key.
   no positive evidence to provide); LL-022 is `:argued` (it has
   positive design argument backing). See
   `docs/os_identity_security_scoping_companion.md` §2.1.
+- **Threat-landscape framing (2026-05-05, 0.0.41):** A3
+  (kernel-level adversary) is a *catapult-class* threat in
+  the cockroach/catapult/castle taxonomy of
+  `docs/threat_landscape_companion.md` §2. State-level actors
+  who can deploy A3-class capabilities (NSA TAO etc.) are
+  rare-and-lethal; LavaLamp's substrate-bound identity claim
+  is bounded against this tier by design. Round-3 may
+  surface additional A-classes (A7 passive-emanation per
+  brief Q7 + companion §2.3) requiring parallel OOS or
+  bounded-claim entries.
 
 ### LL-016 — sensor-authenticity-requirement
 - Key: sensor reads used in the security primitive require independent authenticity check
@@ -740,6 +750,16 @@ LL-ID, not the Key.
   capability level is assumed. The bound is parametric on this;
   it is not a single number. Lean theorem shape (parametric in
   δ_A and T) pinned in §2.2 of the design companion; P6 work.
+- **Threat-landscape framing (2026-05-05, 0.0.41):** A1-A6 are
+  the spec's currently-enumerated adversary classes, but the
+  threat-landscape companion (`docs/threat_landscape_companion.md`)
+  surfaces the broader cockroach/catapult/castle taxonomy:
+  cockroach-class threats (small-scale, persistent — A2/A4/A6
+  cluster here) vs catapult-class (large-scale, resourced —
+  A1/A3/A5 partially; A7 passive-emanation candidate). LL-018
+  quantifies per-class margins for A1-A6; if round-3 adds A7
+  (LL-025 candidate), LL-018 should extend to A1-A7. See
+  threat-landscape companion §2.3-§2.4.
 
 ---
 
@@ -1054,6 +1074,17 @@ LL-ID, not the Key.
   incomplete; together they are the asymmetry-trap defence at
   the trust-stack boundary. See
   `docs/pharos_scoping_companion.md` §2.5.
+- **Threat-landscape framing (2026-05-05, 0.0.41):** LL-022's
+  required + recommended OS mechanisms are the *castle walls'
+  structural requirements* in the cockroach/catapult/castle
+  taxonomy of `docs/threat_landscape_companion.md` §2.5. The
+  companion surfaces additional load-bearing assumptions
+  (§4.3) that LL-022 implicitly makes but doesn't articulate:
+  software dependency-graph integrity; cryptographic-primitive
+  correctness; substrate stability over deployment lifetime;
+  quantum-threat-horizon proximity. Round-3 may surface
+  whether any of these deserve explicit Boundary entries
+  paralleling LL-022's shape (companion §6 questions 2-5).
 
 ### LL-023 — consumer-API-surface
 - Key: stable API surface LavaLamp exposes to OS-deployment consumers

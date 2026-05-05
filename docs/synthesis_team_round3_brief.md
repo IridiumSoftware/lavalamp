@@ -137,6 +137,17 @@ The minimum set for a round-3 review:
    checklist. Nine accumulated architectural inputs articulated
    explicitly; the reading list of LavaLamp-side companions
    per architectural input lives here.
+3a. **`docs/threat_landscape_companion.md`** (0.0.41) —
+   meta-architectural framing of the threat landscape the
+   Triad Deployments occupy. Cockroach/catapult/castle/immune-
+   system taxonomy; §2 maps threat classes; §3 maps where the
+   Triad Deployments fit; §4 articulates load-bearing
+   assumptions (8 named); §5 defense-in-depth complements
+   across hardware/software/operational/strategic tiers; §6
+   round-3 questions surfaced (LL-025 candidate plus six
+   others). Required reading for the synthesis seat —
+   reframes the entire Q1-Q7 / A1-A7 discussion in honest
+   threat-tier terms.
 4. **The deployment-stack triple companions:**
    - `docs/os_identity_security_scoping_companion.md` (LL-022;
      downward trust-stack).

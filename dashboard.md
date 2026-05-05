@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-05 (0.0.40 — round-3 brief Q7 + A7 added; EMF / A7 / LL-025 gap surfaced post-skeleton).
+Last updated: 2026-05-05 (0.0.41 — threat-landscape companion landed; cockroach/catapult/castle framing for Triad Deployments).
 
 ## Status summary
 
@@ -586,6 +586,35 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/threat_landscape_companion.md`** (0.0.41) — meta-
+  architectural threat-landscape framing for the Triad
+  Deployments. Surfaced 2026-05-05 in conversation: *"lavalamp
+  is important but we need to frame the context IN WHICH it
+  is important."* Aaron's cockroach/catapult/castle/immune-
+  system metaphor as the load-bearing frame: cockroach-class
+  threats (small-scale, persistent — phishing, composability
+  seams, drift, slow-drift threshold gaming) vs catapult-class
+  (large-scale, resourced — TEMPEST, supply-chain interdiction,
+  cryptographic primitive failure, Q-Day) vs the rare-and-lethal
+  combination at state-actor tier. Castle/membrane/immune-
+  system architecture as defense; the immune-system metaphor
+  maps directly onto Possibilistic Security's autopoietic-
+  closure principle. §3 maps Triad Deployments onto the
+  metaphor (LavaLamp = identity foundation; PharOS = membrane
+  checkpoint; Lazarus = inner sanctum). §4 honestly catalogs
+  in-scope vs OOS threat classes + 8 load-bearing assumptions.
+  §5 complementary defenses across hardware/software/
+  operational/strategic tiers. §6 surfaces 7 round-3
+  questions beyond Q7/A7 (supply-chain integrity boundary;
+  substrate-stability boundary; composability-seam discipline;
+  quantum-threat horizon framing; closure-of-N at multiple
+  scales). §7 captures five lessons including "the corpus's
+  defensive principle is structurally faithful" and "state-
+  level threats require structural responses, not just better
+  defenses." Cross-references added to LL-015, LL-018, LL-022
+  footers. No new spec entries (companion is meta-architectural;
+  round-3 may surface LL-025+ from the §6 questions). Counts
+  unchanged at 24/0/3/0/4/16/1.
 - **`docs/synthesis_team_round3_brief.md` Q7 + A7 update**
   (0.0.40, 2026-05-05) — round-3 brief gains a synthesis-seat
   Q7 + edge-witness-seat A7 covering the **EMF /

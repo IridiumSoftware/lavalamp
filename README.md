@@ -106,7 +106,10 @@ fill in ~30-60 min when round-3 triggers) → 0.0.40 (round-3
 brief Q7 + A7 added; EMF / A7 / LL-025 gap surfaced
 post-skeleton 2026-05-05; Triadic Watchmen miss physical-
 emanation layer; round-3 to weigh whether LL-025 is
-load-bearing).
+load-bearing) → 0.0.41 (threat-landscape companion;
+cockroach/catapult/castle/immune-system framing for the
+Triad Deployments; meta-architectural context surfaced via
+the same 2026-05-05 conversation).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update. Brief
@@ -170,7 +173,8 @@ lavalamp/
 │   ├── pharos_scoping_companion.md
 │   ├── audit_2026-05-04_full.md
 │   ├── p_real_sensor_scoping_companion.md
-│   └── synthesis_team_round3_brief.md
+│   ├── synthesis_team_round3_brief.md
+│   └── threat_landscape_companion.md
 ├── visual/                                     ← decoupled visual layer (LL-002)
 │   ├── index.html                              ← canvas entry point
 │   ├── lavalamp.js                             ← Math.random() bubble simulator

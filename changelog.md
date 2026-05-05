@@ -5,6 +5,133 @@ messages match entry summaries.
 
 ---
 
+## 0.0.41 — 2026-05-05 — Threat-landscape companion (cockroach/catapult/castle framing)
+
+Lands `docs/threat_landscape_companion.md` as the
+**meta-architectural framing for the Triad Deployments —
+the context within which Lazarus / LavaLamp / PharOS exist
+as defenders.** Surfaced 2026-05-05 in conversation: *"lavalamp
+is important but we need to frame the context IN WHICH it is
+important... the triadic watchmen totally miss [EMF]."*
+
+The companion uses Aaron's cockroach/catapult/castle/immune-
+system metaphor as the load-bearing frame:
+
+- **Cockroach-class threats** — small-scale, persistent,
+  opportunistic. Phishing, composability seams, slow-drift
+  threshold gaming, long-term substrate drift, standard
+  malware. Cannot afford catapult-tier capability; lives in
+  the gaps and seams.
+- **Catapult-class threats** — large-scale, resourced,
+  barrier-breaking. TEMPEST/passive-emanation (A7), supply-
+  chain interdiction, cryptographic primitive failure,
+  Q-Day. State-level capability tier; rare lower.
+- **Combined catapult+cockroach** — the rare-and-lethal
+  intersection. State-level actors (NSA TAO, MSS, GRU) who
+  can deploy catapults AND maintain cockroach-tier
+  persistence. Ruin-class-risk threat tier per
+  `feedback_cordon_sanitaire.md`.
+- **Castle/membrane/immune system** — the defensive
+  architecture. Identity is constituted by the immune
+  system's ongoing activity, not by a static credential.
+  Maps directly onto Possibilistic Security's autopoietic-
+  closure principle. Defeat conditions: scale domination
+  or virus/cancer injection (the C-conjugate adversary
+  problem).
+
+§3 maps the Triad Deployments onto the metaphor:
+- LavaLamp = identity foundation (what makes the castle yours)
+- PharOS = membrane checkpoint at the OS layer
+- Lazarus = inner sanctum / substantive backend
+
+§4 honestly catalogs:
+- Within scope: A1-A6 software-stack adversaries (mostly
+  cockroach-class; catapult-class A4/A5 partially)
+- Out of scope at primitive tier: A7 passive-emanation,
+  active substrate manipulation, software supply-chain,
+  social/governance/legal compulsion, cryptographic primitive
+  failure, operational/user error, composability seams,
+  long-term substrate drift, quantum threat horizon
+- 8 load-bearing assumptions named explicitly (§4.3)
+
+§5 complementary defenses across four tiers (hardware /
+software / operational / strategic — including the
+cordon-sanitaire discipline for ruin-class-risk).
+
+§6 surfaces 7 round-3 questions beyond the existing Q7/A7:
+- Supply-chain integrity boundary entry?
+- Substrate-stability boundary entry?
+- Composability-seam discipline at the spec level?
+- Quantum-threat horizon framing?
+- Closure-of-N at multiple scales (does the corpus's
+  closure-of-three philosophy generalise)?
+
+§7 captures five lessons including "the corpus's defensive
+principle is structurally faithful" (the metaphor maps onto
+autopoietic-closure rather than borrowing from elsewhere)
+and "state-level threats require structural responses, not
+just better defenses."
+
+**No new spec entries.** The companion is meta-architectural;
+round-3 may surface LL-025+ from the §6 questions. Counts
+unchanged.
+
+### Added
+
+- **`docs/threat_landscape_companion.md`** (~25 KB).
+  Substantive design companion mirroring the P-OS / P-PharOS
+  / P-RS scoping-pass shapes but at the meta-architectural
+  layer — frames the threat landscape that the existing
+  LL-IDs collectively occupy.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.40 → 0.0.41. LL-015,
+  LL-018, LL-022 each gain a "Threat-landscape framing
+  (2026-05-05, 0.0.41)" footer cross-referencing the
+  companion. No status changes; counts unchanged.
+- **`docs/synthesis_team_round3_brief.md`** — §2 reading list
+  gains a new entry (3a) pointing to the threat-landscape
+  companion as required reading for the synthesis seat.
+- **`artifact_registry.md`** — version 0.0.40 → 0.0.41
+  (companion bump; no row changes).
+- **`dashboard.md`** — version 0.0.40 → 0.0.41. Recent
+  companion docs prepended with substantive description.
+- **`README.md`** — version trajectory extended.
+
+### Why
+
+1. **The framing was load-bearing and missing.** The session
+   arc 0.0.20 → 0.0.40 was substantively bottom-up — specific
+   entries refined, scoping passes landed, test discipline
+   tightened. Aaron's 2026-05-05 observation surfaced that
+   the *context* (what threat landscape the work occupies)
+   was implicit; without it, the spec's individual entries
+   sit in a context that exists only in the architects' heads.
+2. **The metaphor is corpus-honest.** Cockroach/catapult/
+   castle/immune-system maps directly onto Possibilistic
+   Security's autopoietic-closure principle and the C-conjugate
+   adversary structure from Closure v5. This isn't a marketing
+   layer pasted onto technical work — it's the same principle
+   in a register accessible to non-technical readers.
+3. **Round-3 readiness improved.** The synthesis-team seats
+   now have a top-down framing to engage with, not just the
+   LL-ID-by-LL-ID detail. The brief's Q1-Q7 / A1-A7 questions
+   are sharper when reviewed against the threat-landscape
+   context.
+4. **Honest threat-tier discipline.** §4 explicitly lists
+   what the Triad Deployments *don't* defend against. This
+   matches the spec's existing bounded-claim discipline
+   (LL-005, LL-008, LL-018) at the threat-landscape level.
+
+### Counts
+
+- Total: 24 (unchanged)
+- All status counts unchanged.
+- Test suite: 202/202 (unchanged).
+
+---
+
 ## 0.0.40 — 2026-05-05 — Round-3 brief Q7 + A7 (EMF / A7 / LL-025 gap surfaced post-skeleton)
 
 Adds Q7 (synthesis seat) + A7 (edge-witness seat) to the

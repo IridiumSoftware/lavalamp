@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.40 (round-3 brief Q7 + A7 added — EMF / A7 / LL-025 gap surfaced post-skeleton, 2026-05-05)
+Version: 0.0.41 (threat-landscape companion landed; cockroach/catapult/castle framing for Triad Deployments, 2026-05-05)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
