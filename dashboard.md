@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-05 (0.0.41 — threat-landscape companion landed; cockroach/catapult/castle framing for Triad Deployments).
+Last updated: 2026-05-05 (0.0.42 — threat-landscape companion §2.6/§2.7 added; metabolic-value / predator-prey ecology axis; LL-008 cost-asymmetry footer).
 
 ## Status summary
 
@@ -586,6 +586,35 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/threat_landscape_companion.md` §2.6/§2.7 + §6Q8 +
+  §7.6 update** (0.0.42, 2026-05-05) — adds the **metabolic-
+  value / predator-prey ecology axis** to the threat-landscape
+  framing. Aaron 2026-05-05 (post-§2.5): *"the metabolic value
+  of the target. If the defense is such that it is not worth
+  the risk for the attacker (not enough value) they will go
+  find something else. This is how we achieve symbiosis in
+  the ecosystem. Lions and Gorillas... Hyenas and Lions..."*
+  §2.6 articulates the predator-prey ecology axis (orthogonal
+  to scale and to defense-architecture) — most attackers
+  don't bother because cost > benefit; symbiosis is the
+  default; gut-microbiome / immune-incorporation extends the
+  metaphor to "most non-self isn't attacked." §2.7 reframes
+  LavaLamp's security claim as *cost-asymmetry* — "attacking
+  this device costs more than the result is worth, relative
+  to easier targets" — with translations across the four
+  threat tiers (cockroach trivially repelled / catapult must
+  not be cheapest target / state-level needs structural
+  disconnection / symbiotic is the default for most). New §6
+  Q8 surfaces three architectural options for spec-level
+  cost-asymmetry articulation: (a) explicit boundary entry,
+  (b) LL-008 footer (taken in this commit), (c) deployment-
+  context only. §7.6 lesson: "symbiosis is the equilibrium
+  goal, not victory" — defense-in-depth = cost amplification,
+  not perimeter strengthening; the corpus's autopoietic-
+  closure principle expressed at predator-prey level. LL-008
+  footer cross-references §2.7 — the resolution-bounded-
+  security claim IS a cost-asymmetry claim formalised. No new
+  spec entries; counts unchanged at 24/0/3/0/4/16/1.
 - **`docs/threat_landscape_companion.md`** (0.0.41) — meta-
   architectural threat-landscape framing for the Triad
   Deployments. Surfaced 2026-05-05 in conversation: *"lavalamp

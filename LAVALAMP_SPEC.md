@@ -1,6 +1,6 @@
 # LAVALAMP_SPEC.md — LavaLamp
 
-Version: 0.0.41 (threat-landscape companion landed; cockroach/catapult/castle framing for Triad Deployments, 2026-05-05)
+Version: 0.0.42 (threat-landscape companion §2.6/§2.7 added — metabolic-value / predator-prey ecology axis; LL-008 cost-asymmetry footer, 2026-05-05)
 Authoritative reference for every named claim LavaLamp makes.
 
 ## Conventions
@@ -444,10 +444,23 @@ LL-ID, not the Key.
   theorem inheritance. Computational unclonability via measurement-
   symmetry breaking. Honest tier framing per CLAUDE.md. Lean
   theorem shape pinned in §2.2 of the design companion; P6 work.
-
----
-
-## Boundary constraints — open
+- **Cost-asymmetry framing (2026-05-05, 0.0.42):** The
+  resolution-bounded-security claim is fundamentally a
+  *cost-asymmetry* claim — the adversary's measurement
+  resolution is bounded by their *cost budget*, and the
+  device's chaos-production rate exceeds plausible adversary
+  resolution at typical adversary cost levels. The
+  threat-landscape companion §2.7 makes this explicit:
+  LavaLamp's claim is "attacking this device costs more than
+  the result is worth, relative to easier targets" — the
+  metabolic-value / predator-prey-ecology framing of
+  resolution-bounded security. Combined with detection-
+  postured-not-prevention-postured framing (per
+  `qkd_pqc_complementarity_companion.md`), this gives the
+  honest end-to-end claim: we raise the attacker's cost; we
+  don't promise no attacks; we detect the rare ones who pay
+  the cost anyway. See
+  `docs/threat_landscape_companion.md` §2.7.
 
 ### LL-009 — no-complex-numbers
 - Key: security-critical math stays real-valued

@@ -109,7 +109,11 @@ emanation layer; round-3 to weigh whether LL-025 is
 load-bearing) → 0.0.41 (threat-landscape companion;
 cockroach/catapult/castle/immune-system framing for the
 Triad Deployments; meta-architectural context surfaced via
-the same 2026-05-05 conversation).
+the same 2026-05-05 conversation) → 0.0.42 (threat-landscape
+companion §2.6/§2.7 added — metabolic-value / predator-prey
+ecology axis; LavaLamp's claim reframed explicitly as
+cost-asymmetry; symbiosis-as-equilibrium-not-victory; LL-008
+gains cost-asymmetry footer).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update. Brief

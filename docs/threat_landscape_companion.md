@@ -1,7 +1,8 @@
 # Threat-Landscape Companion — The Context In Which the Triad Deployments Matter
 
-Version: 0.0.41 (threat-landscape framing companion;
-cockroach/catapult/castle metaphor; pre-round-3, 2026-05-05)
+Version: 0.0.42 (threat-landscape framing companion;
+cockroach/catapult/castle metaphor + metabolic-value /
+predator-prey ecology axis; pre-round-3, 2026-05-05)
 
 Permanent record of the meta-architectural threat-landscape
 pass — the framing that grounds why Lazarus / LavaLamp /
@@ -365,6 +366,170 @@ The Triad Deployments are *the substrate-tier immune system*.
 They don't claim to defeat all attackers; they claim to make
 state-level attacks expensive AND detectable.
 
+### §2.6 — Metabolic value and the predator-prey ecology
+
+The cockroach/catapult/castle metaphor describes *how* the
+defender works (active immune system, multi-scale, identity-
+coherent). It doesn't yet describe *why most attackers don't
+bother in the first place* — the **metabolic-value /
+predator-prey ecology** axis.
+
+Aaron 2026-05-05:
+
+> The "metabolic value" of the target. If the defense is such
+> that it is not worth the risk for the attacker (not enough
+> value) they will go find something else. This is how we
+> achieve symbiosis in the ecosystem. Lions and Gorillas...
+> Hyenas and Lions... there are spats sure but they find their
+> easy food to eat.
+
+This is a different axis than scale (cockroach vs catapult)
+or defense (castle/membrane/immune). It's the *attacker's
+cost-benefit calculation*. Every adversary has finite
+resources — time, money, attention, computational budget,
+operational risk-of-getting-caught. They prioritize targets
+by *expected value / expected cost*. They don't attack
+targets where the math doesn't favor it.
+
+**The defender doesn't need to be invincible.** The defender
+needs to be either:
+- **More expensive than nearby alternatives** (cost-asymmetry
+  in the defender's favor), OR
+- **Less valuable than nearby alternatives** (target-asymmetry
+  in the defender's favor — be a less attractive prize).
+
+Either positions the target outside the attacker's
+cost-justified zone, and the attacker finds easier food
+elsewhere.
+
+**Examples from biological ecology:**
+
+- **Lions vs Gorillas.** Spats happen; mostly mutual respect.
+  Gorillas are too costly to attack for marginal protein
+  return; lions are too dangerous to attack for marginal
+  territorial advantage. Both are large-bodied, well-defended;
+  predation cost > predation benefit. Equilibrium: peaceful
+  coexistence.
+- **Hyenas vs Lions.** Spats over kills. Each occasionally
+  steals from the other, but full conflict is rare; the cost
+  of escalation exceeds the value of the disputed kill.
+  Each species hunts its own ranges; they share an ecology
+  without merging into one.
+- **Wolves vs Bears.** Boundary conflicts at scarce resources
+  (winter kills; salmon runs); mutual avoidance otherwise.
+
+The bacterial-immune-system parallel goes further:
+
+- **Most non-self bacteria aren't attacked.** The gut
+  microbiome is mostly mutualistic; the immune system
+  *digests and incorporates* what's useful (Aaron's earlier
+  metaphor — `watching, waiting, digesting, incorporating`).
+  Adversarial response is reserved for pathogens that
+  threaten the metabolic budget.
+- **Symbiosis is the default; adversarial response is the
+  exception.** The immune system *isn't* trying to kill
+  everything outside the self-boundary. It's trying to
+  maintain *metabolic balance* — incorporating what's
+  useful, denying what's harmful, mostly leaving everything
+  else alone.
+
+This is corpus-deep. The closure-of-self is *not* defined by
+killing all non-self; it's defined by maintaining the
+*metabolic conditions* under which the system persists. An
+identity-coherent system thrives in an ecology where most of
+the "non-self" is symbiotic, not adversarial.
+
+### §2.7 — Asymmetric cost as the security claim — symbiosis as equilibrium
+
+The metabolic-value framing reframes what LavaLamp's security
+claim *is*. The honest claim is **not** "we defeat all
+attackers." It's:
+
+> **Attacking *this* device costs more than the result is
+> worth, relative to easier targets.**
+
+This is *exactly* what LL-008 (resolution-bounded security
+claim) says formally. The resolution-bound is fundamentally
+about adversary measurement *cost* exceeding *value*: the
+adversary's measurement resolution is bounded by their
+budget; the device's chaos-production rate exceeds plausible
+adversary resolution at typical adversary cost levels.
+
+LL-008 already captures the cost-asymmetry implicitly. The
+metabolic-value framing makes it *explicit* — and connects
+it to the rest of the corpus:
+
+- **Possibilistic Security** is about raising the cost of
+  unsanctioned alternatives. Same shape: make the closure
+  cheaper to honor than to break.
+- **Cordon sanitaire under ruin-class risk** is structural
+  cost-multiplication: the access cost is made prohibitive
+  by structural disconnection rather than by stronger
+  defense at the perimeter.
+- **Asymmetry-trap watch** is the discipline of matching
+  the *claim* to the *cost-asymmetry*. Don't claim
+  invincibility; claim "expensive to defeat" with bounds.
+- **Detection-postured rather than prevention-postured**
+  (per `qkd_pqc_complementarity_companion.md`) — accept
+  that some attacks are economically justified for state
+  actors; ensure they are *expensive AND detectable*, not
+  *impossible*.
+
+**Translation across the threat tiers:**
+
+| Threat tier | Cost-asymmetry strategy |
+|---|---|
+| Cockroach | Modest defense exceeds their tiny budget; they go elsewhere. Trivial to position outside their cost-justified zone. |
+| Catapult | Some attacks ARE economically justified for state actors. Defender's job: be more expensive than the *cheapest catapult target*. Don't be the lowest-hanging fruit at this tier. |
+| State-level (catapult + cockroach combined) | Structural disconnection (cordon sanitaire) is the answer — make access prohibitive. Or: don't be the highest-value target in the room. |
+| Symbiotic / non-adversarial | Most actors live here. Mutualistic-or-neutral relationships; no defense needed beyond standard hygiene. |
+
+Most of the ecosystem — by population — is in the symbiotic
+tier. The Triad Deployments aren't trying to defend against
+*everyone*; they're trying to defend against the small
+fraction of actors who *do* attempt attack, and they only
+need to defend at the cost level required to make those
+specific actors find easier food.
+
+**Symbiosis is the equilibrium goal, not victory.** The
+defender's true job is to position the target so the
+attacker's cost-benefit math says "go elsewhere," then to
+*detect and respond* to the rare actors who attack anyway.
+The autopoietic-closure principle expressed at the predator-
+prey level: the closure isn't "kill all enemies"; it's
+"maintain metabolic conditions under which most actors don't
+bother and we detect the rare ones who do."
+
+**Practical implications for the Triad Deployments:**
+
+- **High-value targets need *more* defense.** The attacker's
+  cost budget grows with target value. A LavaLamp-protected
+  device holding low-stakes content can rely on modest
+  defense; a device holding state secrets needs more.
+- **Low-value targets need *less* defense.** Cockroach-tier
+  budgets alone won't justify attacks on uninteresting
+  targets. The Triad Deployments are sufficient for most
+  consumer use without additional layering.
+- **Defender attractiveness matters as much as defenses.**
+  Operational discipline — *don't draw attention; don't be
+  the most valuable target in the room* — compounds
+  defensive value at zero marginal cost.
+- **Defense-in-depth = cost amplification, not perimeter
+  strengthening.** Adding layers raises the attacker's total
+  cost, even if no single layer is invincible. This is why
+  LL-022 + LL-023 + LL-024 + (potentially) LL-025 form a
+  multi-layer commitment rather than a single load-bearing
+  defense.
+
+The honest framing for the Triad Deployments: they raise the
+attacker's cost across multiple axes (substrate-binding,
+sensor authenticity, threshold calibration, side-channel
+hardening). Each axis individually is bounded; together they
+shift the cost-benefit math toward "find easier food
+elsewhere" for the vast majority of would-be attackers, and
+toward "expensive AND detectable" for the rare state-level
+actors.
+
 ---
 
 ## §3 — Where the Triad Deployments fit
@@ -632,6 +797,29 @@ ones already in `synthesis_team_round3_brief.md`:
    Does the corpus's closure-of-three philosophy generalise
    to multiple scales / resolutions, or does each scale need
    its own closure analysis?
+8. **Should the spec articulate adversary-cost / target-value
+   calculus explicitly?** §2.6-§2.7 (added 2026-05-05) reframe
+   LavaLamp's security claim as *cost-asymmetry* — attacking
+   this device must cost more than the result is worth
+   relative to easier targets. LL-008 (resolution-bounded
+   security) implicitly captures this — adversary measurement
+   resolution is bounded by their cost budget — but the spec
+   doesn't *call out* cost-asymmetry as the load-bearing
+   security claim. Three architectural options:
+   (a) Add an explicit Cost-Asymmetry Boundary entry
+   articulating that LavaLamp's claim is "attacking this
+   device costs more than the result is worth relative to
+   easier targets" — formal version of the cordon-sanitaire /
+   Taleb-asymmetry / metabolic-value discipline.
+   (b) Augment LL-008 with a footer making the cost-
+   asymmetry framing explicit; tie it to the threat-landscape
+   companion §2.7.
+   (c) Treat cost-asymmetry as deployment-context guidance —
+   leave the spec at the resolution-bound level and document
+   the cost calculus only in companion docs.
+   The synthesis seat's call. Option (b) is probably the
+   minimum honest framing; (a) makes the discipline
+   architecturally visible; (c) defers to deployment.
 
 These are all candidates for round-3 discussion. The brief's
 Q7 covers (1); other questions may be added as the brief is
@@ -721,3 +909,44 @@ LavaLamp-specific. It applies to:
 A version of this companion adapted for those projects would
 be a small reuse; the substrate is the same metaphor + the
 same corpus principles.
+
+### §7.6 — Symbiosis is the equilibrium goal, not victory
+
+The bottom-up empirical work (0.0.20 → 0.0.40) and the
+cockroach/catapult/castle framing (§2.1-§2.5) both
+implicitly assumed "better defense = more secure." The
+metabolic-value framing (§2.6-§2.7, added 2026-05-05)
+reframes: defense's *real* job is to position the target
+outside the attacker's cost-justified zone. Most attackers
+don't try because the math doesn't favor it — they find
+their easy food elsewhere.
+
+**The Triad Deployments don't need to be invincible against
+state-level actors.** They need to make the state-level attack
+*expensive AND detectable*. Combined with detection-postured-
+not-prevention-postured framing (per the QKD/PQC
+complementarity companion), this is honest: we raise the
+cost; we don't promise no attacks.
+
+The corpus's autopoietic-closure principle expressed at the
+predator-prey level: **the closure isn't "we kill all
+enemies"; it's "we maintain the metabolic conditions under
+which most enemies don't bother and we detect the rare ones
+who do."** This is what living systems actually do.
+
+Practical defensive implication: defense-in-depth is **cost
+amplification**, not perimeter strengthening. Each layer of
+the Triad Deployments + complementary defenses (§5) raises
+the attacker's total cost. No single layer needs to be
+invincible — the *sum* needs to exceed the attacker's
+budget for *this target*.
+
+This also reframes the asymmetry-trap watch in
+`dashboard.md`: the asymmetry-trap is when the defender
+*claims invincibility* but the underlying mechanism is
+cost-asymmetry. The honest claim is the cost-asymmetry one;
+the trap is overclaiming. LL-008's resolution-bounded
+security framing is *already* the honest claim; making the
+cost-asymmetry framing explicit (§6 question 8 above)
+reinforces the honest discipline at the threat-landscape
+level.

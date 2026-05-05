@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.41 (threat-landscape companion landed; cockroach/catapult/castle framing for Triad Deployments, 2026-05-05)
+Version: 0.0.42 (threat-landscape companion §2.6/§2.7 added — metabolic-value / predator-prey ecology axis; LL-008 cost-asymmetry footer, 2026-05-05)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

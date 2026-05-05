@@ -5,6 +5,125 @@ messages match entry summaries.
 
 ---
 
+## 0.0.42 — 2026-05-05 — Threat-landscape companion §2.6/§2.7 (metabolic-value / predator-prey ecology axis)
+
+Adds the **metabolic-value / predator-prey ecology axis** to
+the threat-landscape companion landed in 0.0.41. Aaron 2026-05-05
+(post-§2.5): *"the metabolic value of the target. If the defense
+is such that it is not worth the risk for the attacker (not
+enough value) they will go find something else. This is how we
+achieve symbiosis in the ecosystem. Lions and Gorillas...
+Hyenas and Lions... there are spats sure but they find their
+easy food to eat."*
+
+This is a third axis orthogonal to (a) scale (cockroach vs
+catapult) and (b) defensive architecture (castle/membrane/
+immune system). The new axis is the *attacker's cost-benefit
+calculation* — most attackers don't bother because the math
+doesn't favor it; symbiosis is the default; adversarial
+response is the exception even at the bacterial-immune-
+system level (the immune system *digests and incorporates*
+most non-self; only attacks pathogens that threaten the
+metabolic budget).
+
+§2.7 reframes LavaLamp's security claim explicitly as
+**cost-asymmetry** — "attacking this device costs more than
+the result is worth, relative to easier targets." This is
+*exactly* what LL-008 (resolution-bounded security) says
+implicitly; the threat-landscape framing makes it explicit
+and connects to the rest of the corpus (Possibilistic
+Security raising costs of unsanctioned alternatives;
+cordon-sanitaire structural cost-multiplication; asymmetry-
+trap watch as cost-vs-claim discipline; detection-postured
+QKD/PQC framing).
+
+Translations across the threat tiers:
+- Cockroach: modest defense exceeds tiny budget; trivially
+  repelled.
+- Catapult: some attacks ARE economically justified for
+  state actors; defender's job is to *not be the cheapest
+  catapult target*.
+- State-level: structural disconnection (cordon sanitaire)
+  is the answer; or don't be the highest-value target in
+  the room.
+- Symbiotic: default for most actors; mutualistic-or-neutral.
+
+Counts unchanged at 24 / 0 / 3 / 0 / 4 / 16 / 1. Test suite
+202/202 unchanged.
+
+### Added
+
+- **`docs/threat_landscape_companion.md`**:
+  - §2.6 — Metabolic value and the predator-prey ecology
+    (~700 words). Lions/Gorillas; Hyenas/Lions; Wolves/Bears
+    examples + bacterial-immune-system parallel (gut
+    microbiome; symbiosis as default; adversarial response
+    as exception).
+  - §2.7 — Asymmetric cost as the security claim — symbiosis
+    as equilibrium (~900 words). Reframes LavaLamp's claim
+    as cost-asymmetry; translations across threat tiers;
+    practical implications for the Triad Deployments
+    (high-value targets need more; low-value need less;
+    defender attractiveness matters; defense-in-depth =
+    cost amplification).
+  - §6 Q8 — Should the spec articulate adversary-cost /
+    target-value calculus explicitly? Three options: (a)
+    explicit Cost-Asymmetry Boundary entry, (b) LL-008
+    footer (taken in this commit as minimum honest framing),
+    (c) deployment-context-only.
+  - §7.6 lesson — Symbiosis is the equilibrium goal, not
+    victory. The corpus's autopoietic-closure principle at
+    predator-prey level: maintain metabolic conditions
+    under which most enemies don't bother + detect the rare
+    ones who do.
+
+### Changed
+
+- **`LAVALAMP_SPEC.md`** — version 0.0.41 → 0.0.42. LL-008
+  gains a "Cost-asymmetry framing (2026-05-05, 0.0.42)"
+  footer cross-referencing the new §2.7. The
+  resolution-bounded-security claim IS a cost-asymmetry claim
+  formalised; the footer makes this explicit. No status
+  changes.
+- **`docs/threat_landscape_companion.md`** — version stamp
+  bumped to 0.0.42 with §2.6/§2.7 inclusion noted in the
+  cross-ref'ing internal description.
+- **`artifact_registry.md`** — version 0.0.41 → 0.0.42
+  (companion-update bump; no row changes).
+- **`dashboard.md`** — version 0.0.41 → 0.0.42. Recent
+  companion docs prepended with substantive description of
+  the §2.6/§2.7 update.
+- **`README.md`** — version trajectory extended.
+
+### Why
+
+1. **The metaphor was incomplete.** The cockroach/catapult/
+   castle/immune framing described *how the defender works*
+   but not *why most attackers don't bother*. The metabolic-
+   value axis fills that gap.
+2. **It's corpus-deep.** Predator-prey symbiosis maps
+   directly onto Possibilistic Security's cost-asymmetry
+   discipline + the autopoietic-closure principle expressed
+   at the ecological level. Same shape; different register.
+3. **It reframes the security claim honestly.** LavaLamp's
+   claim isn't "we beat all attackers" — it's "attacking
+   this device is more expensive than the result is worth."
+   This is what LL-008 already says; making it explicit is
+   honest framing discipline.
+4. **It changes the practical conclusion about defense-in-
+   depth.** Defense layers aren't about perimeter
+   strengthening; they're about *cost amplification*. No
+   single layer needs to be invincible — the sum needs to
+   exceed the attacker's budget.
+
+### Counts
+
+- Total: 24 (unchanged)
+- All status counts unchanged.
+- Test suite: 202/202 (unchanged).
+
+---
+
 ## 0.0.41 — 2026-05-05 — Threat-landscape companion (cockroach/catapult/castle framing)
 
 Lands `docs/threat_landscape_companion.md` as the
