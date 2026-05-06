@@ -5,6 +5,117 @@ messages match entry summaries.
 
 ---
 
+## 0.0.49 — 2026-05-06 — LL-021 squared-effective-magnitude composition foothold (`LL021_eff_squared_bound`)
+
+Lands a corollary lemma in
+`src/lean4/LavaLamp/Theorems.lean` that sets up the
+round-3 §1D.v priority-4 LL-006 detection-bound theorem —
+the algebraic step that bridges LL-021 (worst-case bound on
+`ε_eff = ε_A · proj`) and LL-006 (detection-probability
+bound shape `P(detect) ≥ 1 - K · exp(-c · T · ε_eff²)`).
+
+**The lemma.**
+
+```lean
+theorem LL021_eff_squared_bound
+    {ε_A : ℝ} {proj : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_nn : 0 ≤ proj)
+    (h_proj_le_one : proj ≤ 1) :
+    (ε_A * proj) ^ 2 ≤ ε_A ^ 2 :=
+  pow_le_pow_left₀
+    (mul_nonneg h_ε h_proj_nn)
+    (LL021_worst_case_bound h_ε h_proj_le_one)
+    2
+```
+
+Term-mode proof; one-line discharge against Mathlib's
+`pow_le_pow_left₀` (the GroupWithZero-form monotone-pow
+lemma; the unsubscripted `pow_le_pow_left` from older
+Mathlib versions was renamed during the v4.x reorganisation
+and the `₀` form is what `ℝ` hits in v4.29.1).
+
+**Why it matters — composition with LL-006.**
+`LL021_worst_case_bound` gives `ε_A * proj ≤ ε_A` (worst-case
+projection cannot increase magnitude). LL-006's
+detection-probability bound shape is
+`P(detect) ≥ 1 - K · exp(-c · T · ε_eff²)`. To compose them,
+we need `ε_eff² ≤ ε_A²` — and since `t ↦ exp(-c · T · t)` is
+decreasing in `t` for `c · T > 0`, this monotonicity flips
+to `exp(-c · T · ε_eff²) ≥ exp(-c · T · ε_A²)`, so
+`1 - K · exp(-c · T · ε_eff²) ≤ 1 - K · exp(-c · T · ε_A²)`,
+meaning **the worst-case detection probability is lower than
+the isotropic detection probability** — which is exactly the
+structural asymmetry claim LL-021 is making against LL-006.
+
+This lemma encodes the squared-magnitude step. When LL-006
+lands as a Lean theorem (round-3 §1D.v priority 4), it will
+import this corollary and chain it through Mathlib's
+`Real.exp_le_exp` and `mul_le_mul_of_nonneg_left` to derive
+the composed bound.
+
+**Hypothesis-set difference vs `LL021_worst_case_bound`.**
+The worst-case bound itself does *not* need `0 ≤ proj` (the
+bound `ε_A * proj ≤ ε_A` holds for negative `proj` too); we
+explicitly dropped that hypothesis at L2 (0.0.48). The
+squared-bound corollary *does* need `0 ≤ proj` because the
+monotone-squaring step `0 ≤ a ≤ b → a² ≤ b²` requires the
+lower bound to be non-negative. Without `0 ≤ ε_A * proj`
+(which mul_nonneg gives us from `0 ≤ ε_A` and `0 ≤ proj`),
+`pow_le_pow_left₀` does not apply. The hypothesis is
+reintroduced in the signature; downstream call sites already
+have it from the geometric construction `proj = |û · m_unit|
+≥ 0`.
+
+**Build verification.**
+
+```
+$ cd src/lean4 && lake build
+✔ [765/767] Built LavaLamp.Theorems (755ms)
+✔ [766/767] Built LavaLamp (719ms)
+Build completed successfully (767 jobs).
+```
+
+767 jobs green, **zero warnings**.
+
+**Counts.** Unchanged at 27/1/3/0/4/18/1. The corollary is
+additional `lean-proved` content supporting the existing
+LL-021 `:proved` entry, not a new entry. Future LL-006
+detection-bound theorem (which uses this corollary) will be
+the next status flip — `:benchmarked` → `:proved` for
+LL-006 — but that's a separate version pass.
+
+**A naming detail (recorded for future Mathlib bumps).** In
+v4.29.1, the lemma `pow_le_pow_left` was a "not found" error;
+the working name is `pow_le_pow_left₀`. The unsubscripted
+form was renamed during Mathlib's v4.x algebraic-hierarchy
+reorganisation. If a future Mathlib bump renames again, the
+`pow_le_pow_left₀` reference here is the place to look.
+
+**Files touched this version:**
+
+- `src/lean4/LavaLamp/Theorems.lean` — `LL021_eff_squared_bound`
+  added below `LL021_worst_case_bound`; doc-comment expanded
+  to document the LL-006 composition role and the hypothesis-
+  set difference vs the worst-case bound; `scaffold_tier`
+  string bumped from "0.0.48 proved" to "0.0.49 squared bound
+  landed".
+- `LAVALAMP_SPEC.md` — LL-021 entry gains a new "Squared-
+  effective-magnitude composition foothold (0.0.49)" footer
+  documenting the corollary and its LL-006 composition role.
+  Counts section unchanged.
+- `artifact_registry.md` — version line bump; LL-021 row's
+  Test/Proof column gets the corollary mention; A1-A6
+  self-check refreshed for 0.0.49 (counts unchanged).
+- `dashboard.md` — last-updated stamp; Recent companion docs
+  section gets new top entry.
+- `changelog.md` — this entry.
+- `README.md` — trajectory entry for 0.0.49.
+- `src/lean4/README.md` — first-priority row in the theorem-
+  plan table updated to mention the corollary.
+
+---
+
 ## 0.0.48 — 2026-05-06 — Synthesis-team round 3 Lean L2 (LL-021 worst-case bound proved; first-ever LavaLamp `:proved` entry)
 
 Lands Lean L2 — the `sorry` body in

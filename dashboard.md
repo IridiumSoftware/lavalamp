@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.48 — synthesis-team round 3 Lean L2; LL-021 worst-case bound proved by `mul_le_of_le_one_right` over Mathlib v4.29.1; `lake build` clean with zero `sorry` warnings; LL-021 evidence-type `benchmarked` → `lean-proved` and status `:benchmarked` → `:proved` — first-ever LavaLamp `:proved` entry; counts 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1).
+Last updated: 2026-05-06 (0.0.49 — LL-021 squared-effective-magnitude composition foothold landed; `LL021_eff_squared_bound : (ε_A · proj)² ≤ ε_A²` via `pow_le_pow_left₀`; `lake build` clean with 767 jobs and zero warnings; sets up the round-3 §1D.v priority-4 LL-006 detection-bound theorem; counts unchanged at 27/1/3/0/4/18/1 — corollary is additional `lean-proved` content for the existing LL-021 `:proved` entry).
 
 ## Status summary
 
@@ -590,6 +590,40 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **LL-021 squared-effective-magnitude composition foothold**
+  (0.0.49, 2026-05-06) — A corollary lemma
+  `LL021_eff_squared_bound : 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 →
+  (ε_A · proj)² ≤ ε_A²` lands in
+  `src/lean4/LavaLamp/Theorems.lean` next to the worst-case
+  bound. **Proof:** `pow_le_pow_left₀ (mul_nonneg h_ε
+  h_proj_nn) (LL021_worst_case_bound h_ε h_proj_le_one) 2` —
+  one term-mode line; `pow_le_pow_left₀` is Mathlib v4.29.1's
+  GroupWithZero-form monotone-pow lemma (the unsubscripted
+  `pow_le_pow_left` from older Mathlib versions was renamed
+  during the v4.x reorganisation; the `₀` form is what `ℝ`
+  hits). **Why it matters:** this is the algebraic step that
+  connects LL-021 to LL-006. The detection-probability bound
+  `P(detect) ≥ 1 - K · exp(-c · T · ε_eff²)` from LL-006
+  inherits squared-magnitude monotonicity from this lemma —
+  `ε_eff² ≤ ε_A²` and `t ↦ exp(-c·T·t)` decreasing together
+  imply `exp(-c·T·ε_eff²) ≥ exp(-c·T·ε_A²)`, so the
+  worst-case detection probability is *lower* than the
+  isotropic-ε_A detection probability (which is exactly the
+  asymmetry claim LL-021 is making). Unlike
+  `LL021_worst_case_bound`, this lemma genuinely uses
+  `0 ≤ proj` — reintroduced in the signature here because
+  without it the squared product could equal the unsquared
+  product without the monotone-squaring step working.
+  **Build:** `lake build` clean — 767 jobs, zero warnings.
+  **Status discipline:** counts unchanged at 27/1/3/0/4/18/1.
+  The corollary is additional `lean-proved` content
+  supporting the existing LL-021 `:proved` entry, not a new
+  entry. **Sets up:** round-3 §1D.v priority-4 LL-006
+  detection-bound theorem (when LL-006 lands as a Lean
+  theorem in a future version, it will use this corollary as
+  a composition step; LL-006 evidence-type
+  `benchmarked` → `lean-proved` and status `:benchmarked` →
+  `:proved` at that point).
 - **Round-3 Lean L2 — LL-021 worst-case bound `:proved`**
   (0.0.48, 2026-05-06) — The L1 `sorry` body in
   `LavaLamp.LL021_worst_case_bound` is replaced by a real

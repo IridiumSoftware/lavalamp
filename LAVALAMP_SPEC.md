@@ -1111,6 +1111,28 @@ LL-ID, not the Key.
   content (`K=1, c′=0.0288, T=60` at N=20) is preserved as
   the operational deployment-fit detail; the Lean theorem
   captures the bound *shape* and is the `:proved` content.
+- **Squared-effective-magnitude composition foothold (2026-05-06,
+  0.0.49):** A corollary lemma `LL021_eff_squared_bound :
+  0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 → (ε_A · proj)² ≤ ε_A²`
+  lands in `src/lean4/LavaLamp/Theorems.lean` alongside the
+  worst-case bound, proved by `pow_le_pow_left₀` over the
+  worst-case bound and `mul_nonneg`. This is the algebraic
+  step that connects LL-021 to LL-006: the detection-
+  probability bound shape `P(detect) ≥ 1 - K · exp(-c · T ·
+  ε_eff²)` from LL-006 inherits the squared-magnitude
+  monotonicity from this lemma — `ε_eff² ≤ ε_A²` and `t ↦
+  exp(-c · T · t)` decreasing in `t` together imply
+  `exp(-c · T · ε_eff²) ≥ exp(-c · T · ε_A²)`, so the
+  worst-case detection probability is *lower* than the
+  isotropic-ε_A detection probability (the structural claim
+  LL-021 is making about asymmetry). Unlike the worst-case
+  bound itself, this lemma genuinely uses `0 ≤ proj` —
+  reintroduced in the signature here even though
+  `LL021_worst_case_bound` does not need it. Status unchanged
+  at `:proved` (LL-021 was already promoted at 0.0.48; this
+  is additional `lean-proved` content supporting the same
+  entry, not a new entry). Sets the composition foothold for
+  the round-3 §1D.v priority-4 LL-006 detection-bound theorem.
 
 ---
 

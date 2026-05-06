@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.48 (synthesis-team round 3 Lean L2; LL-021 worst-case bound proved by `mul_le_of_le_one_right` over Mathlib v4.29.1; `lake build` clean with zero `sorry` warnings; LL-021 evidence-type promotes `benchmarked` → `lean-proved` and status `:benchmarked` → `:proved` — first-ever LavaLamp `:proved` entry; counts 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1; 2026-05-06)
+Version: 0.0.49 (LL-021 squared-effective-magnitude composition foothold landed; `LL021_eff_squared_bound : 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 → (ε_A · proj)² ≤ ε_A²` proved by `pow_le_pow_left₀` over the worst-case bound; `lake build` clean (767 jobs, zero warnings); supports the round-3 §1D.v priority-4 LL-006 detection-bound theorem via the squared-magnitude monotonicity step; counts unchanged at 27/1/3/0/4/18/1 — corollary is additional `lean-proved` content for the existing LL-021 `:proved` entry, not a new entry; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -86,7 +86,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-019 | side-channel hardening (reseed timing + audit-on-verify) | Core | benchmarked | src/julia/test/runtests.jl + src/julia/benchmark/results/ll019_timing_distribution.txt + docs/ll019_benchmarked_companion.md + src/julia/benchmark/ll019_timing_distribution_high_res.jl + src/julia/benchmark/results/ll019_timing_distribution_high_res.txt + docs/ll019_high_res_companion.md (regime-boundary at α=0.01/n=2000) | src/julia/src/Audit.jl | :benchmarked |
 | LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 + docs/ll020_strategy_2_epsilon_dp_companion.md (Strategy 2 example-tested) + docs/ll020_strategy_2_benchmarked_companion.md (Strategy 2 :benchmarked-tier; variance-convolution σ refinement) + src/julia/benchmark/results/ll020_strategy_2_detection_power_lorenz96.txt + docs/audit_2026-05-04.md | src/julia/src/Audit.jl (Strategy 2 only) | :argued |
-| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | lean-proved | src/lean4/LavaLamp/Theorems.lean (0.0.48 L2 — `LL021_worst_case_bound` proved by `mul_le_of_le_one_right`; `lake build` clean with zero sorry warnings) + src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md + src/julia/benchmark/p_r2c_structured_adversary_high_res.jl + src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt + docs/ll021_high_res_companion.md (empirical fit-constant content K=1, c′=0.0288, T=60 at N=20 preserved as operational deployment-fit detail) | src/julia/src/Audit.jl | :proved |
+| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | lean-proved | src/lean4/LavaLamp/Theorems.lean (0.0.48 L2 — `LL021_worst_case_bound` proved by `mul_le_of_le_one_right`; 0.0.49 — companion lemma `LL021_eff_squared_bound` for `(ε_A · proj)² ≤ ε_A²` via `pow_le_pow_left₀`, composition foothold for LL-006 detection-bound; `lake build` clean with zero warnings) + src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md + src/julia/benchmark/p_r2c_structured_adversary_high_res.jl + src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt + docs/ll021_high_res_companion.md (empirical fit-constant content K=1, c′=0.0288, T=60 at N=20 preserved as operational deployment-fit detail) | src/julia/src/Audit.jl | :proved |
 
 ## Surfaced by P-OS OS-level scoping pass (0.0.26)
 
@@ -126,7 +126,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 18
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.48)
+## Cross-audit A1–A6 self-check (post-0.0.49)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (27 of 27).
@@ -163,14 +163,17 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   rule (`:proved` requires `lean-proved`, `type-checked`, or
   `algebraic`) is satisfied.
 - **A5 — Stale counts.** Counts above (27 / 1 / 3 / 0 / 4 /
-  18 / 1) match `LAVALAMP_SPEC.md` 0.0.48 final-section counts
-  and `dashboard.md` 0.0.48 spec-status section. **Counts
-  shifted at 0.0.48** — LL-021 evidence-type `benchmarked` →
-  `lean-proved` and status `:benchmarked` → `:proved` after
-  L2 replaced the L1 sorry-stub with a real proof.
-  Differential vs 0.0.47: `:proved` 0 → 1; `:benchmarked`
-  5 → 4; total + others unchanged. LL-021 is the first-ever
-  LavaLamp `:proved` entry.
+  18 / 1) match `LAVALAMP_SPEC.md` 0.0.49 final-section counts
+  and `dashboard.md` 0.0.49 spec-status section. **Counts
+  unchanged from 0.0.48** — the 0.0.49 corollary
+  (`LL021_eff_squared_bound`) is additional `lean-proved`
+  content supporting the existing LL-021 `:proved` entry, not
+  a new entry; entry-level status and evidence type are
+  unchanged. The composition foothold sets up the round-3
+  §1D.v priority-4 LL-006 detection-bound theorem (future
+  version pass) which would, when proved, promote LL-006
+  evidence-type `benchmarked` → `lean-proved` and status
+  `:benchmarked` → `:proved`.
 - **A6 — Test sync.** LL-002, LL-003, LL-004, LL-005 (part-
   (a) only), LL-006, LL-007 are exercised by
   `src/julia/test/runtests.jl`, runnable via `Pkg.test()`

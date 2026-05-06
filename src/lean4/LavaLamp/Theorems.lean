@@ -108,10 +108,51 @@ theorem LL021_worst_case_bound
     ε_A * proj ≤ ε_A :=
   mul_le_of_le_one_right h_ε h_proj_le_one
 
+/-- LL-021 squared-effective-magnitude bound — composition foothold
+    for LL-006 detection-probability bound (round-3 §1D.v priority 4).
+
+    Given `0 ≤ ε_A`, `0 ≤ proj`, and `proj ≤ 1`, the squared
+    effective magnitude `(ε_A · proj)² = ε_eff²` is bounded by
+    `ε_A²`. This is the algebraic step that connects LL-021's
+    worst-case-direction bound to LL-006's detection-probability
+    bound shape `P(detect) ≥ 1 - K · exp(-c · T · ε_eff²)`:
+    monotonicity of `t ↦ exp(-c · T · t)` (decreasing in `t` for
+    `c · T > 0`) means `ε_eff² ≤ ε_A²` implies
+    `exp(-c · T · ε_eff²) ≥ exp(-c · T · ε_A²)`, so the
+    detection-probability bound at the worst-case direction is
+    *lower* than at the isotropic ε_A — which is exactly LL-021's
+    structural claim ("the bound shape is right; the worst-case
+    direction makes detection harder, not easier").
+
+    Unlike `LL021_worst_case_bound`, this lemma genuinely needs
+    `0 ≤ proj` — without it, `ε_A * proj` could be negative, and
+    while the *square* is still non-negative, we'd lose the
+    monotone-squaring step `0 ≤ a ≤ b → a² ≤ b²` that
+    `pow_le_pow_left` provides directly. Future call sites
+    (e.g. `LL006_detection_bound_worst_case`) will pass the
+    geometric `proj = |û · m_unit| ≥ 0` hypothesis here.
+
+    Proof: `pow_le_pow_left₀` over `0 ≤ ε_A * proj` (from
+    `mul_nonneg`) and `ε_A * proj ≤ ε_A` (from
+    `LL021_worst_case_bound`). The `₀` subscript distinguishes
+    the `GroupWithZero` variant of the monotone-pow lemma in
+    Mathlib v4.29.1; the unsubscripted `pow_le_pow_left` is
+    the ordered-monoid form which `ℝ` does not directly hit. -/
+theorem LL021_eff_squared_bound
+    {ε_A : ℝ} {proj : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_nn : 0 ≤ proj)
+    (h_proj_le_one : proj ≤ 1) :
+    (ε_A * proj) ^ 2 ≤ ε_A ^ 2 :=
+  pow_le_pow_left₀
+    (mul_nonneg h_ε h_proj_nn)
+    (LL021_worst_case_bound h_ε h_proj_le_one)
+    2
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.48 — LL-021 worst-case bound proved (lean-proved; promotes :benchmarked → :proved)"
+  "0.0.49 — LL-021 squared-effective-magnitude bound landed (composition foothold for LL-006)"
 
 end LavaLamp

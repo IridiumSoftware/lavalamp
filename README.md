@@ -160,7 +160,16 @@ jobs green with **zero warnings**; LL-021 evidence-type
 `benchmarked` → `lean-proved` and status `:benchmarked` →
 `:proved` — **first-ever LavaLamp `:proved` entry**; counts
 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1; closes Aaron's round-3
-§1D.v Decision 1 path end-to-end).
+§1D.v Decision 1 path end-to-end) → 0.0.49 (LL-021 squared-
+effective-magnitude composition foothold; corollary lemma
+`LL021_eff_squared_bound : 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 →
+(ε_A · proj)² ≤ ε_A²` proved by `pow_le_pow_left₀` over the
+worst-case bound; sets up the round-3 §1D.v priority-4 LL-006
+detection-bound theorem composition step (squared-magnitude
+monotonicity into LL-006's `exp(-c·T·ε_eff²)` shape); `lake
+build` clean with 767 jobs and zero warnings; counts
+unchanged — corollary is additional `lean-proved` content
+supporting the existing LL-021 `:proved` entry).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new

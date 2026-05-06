@@ -72,7 +72,7 @@ companion + the 0.0.34 P-PharOS companion. See
 
 | Priority | LL-IDs | Statement shape | Round-3 dependencies |
 |---|---|---|---|
-| 1 | LL-021 | **PROVED 0.0.48.** Bound shape `0 ≤ ε_A → proj ≤ 1 → ε_A · proj ≤ ε_A` — `mul_le_of_le_one_right h_ε h_proj_le_one` over Mathlib's `Mathlib.Data.Real.Basic`. The fit-constant content (`K=1, c=0.0288, T=60`) stays `:benchmarked` per LL-021 spec entry; the Lean theorem captures the algebraic shape that the empirical fit is a fit *to*. | Mathlib Real (used) |
+| 1 | LL-021 | **PROVED 0.0.48** (worst-case bound: `0 ≤ ε_A → proj ≤ 1 → ε_A · proj ≤ ε_A` — `mul_le_of_le_one_right`). **Composition foothold 0.0.49** (`LL021_eff_squared_bound : (ε_A · proj)² ≤ ε_A²` — `pow_le_pow_left₀` over the worst-case bound). The fit-constant content (`K=1, c=0.0288, T=60`) stays `:benchmarked`; Lean captures the bound shape and the squared-magnitude monotonicity that LL-006 will compose with. | Mathlib Real (used) |
 | 2 | LL-019 | Constant-time wrapper produces equal timing distributions across accept/reject inputs (operationally; statistical at the LL-019 :benchmarked tier) | Mathlib Probability + LL-029 host-isolation theorem (per the 0.0.29 regime-boundary finding) |
 | 3 | LL-020 | `(ε, δ)`-DP guarantee on the variance-convolution Strategy 2 `differentially_private_envelope` per Dwork-Roth Gaussian mechanism | Mathlib Probability |
 | 4 | LL-006 / LL-008 / LL-018 | `P_detect ≥ 1 - K·exp(-c·T·δ_A²)` isotropic, with the per-class A1..A6 quantification | Mathlib Real + the SDE / Lyapunov-spectrum primitives |
@@ -182,8 +182,12 @@ theorems 3-6 per the table above.
 - `LavaLamp.lean` — root module; imports `LavaLamp.Theorems`;
   smoke `def hello` confirms the package builds.
 - `LavaLamp/Theorems.lean` — first theorem `LL021_worst_case_bound`
-  (**proved at 0.0.48** by `mul_le_of_le_one_right`); comment
-  blocks describe priorities 2-6.
+  (**proved at 0.0.48** by `mul_le_of_le_one_right`) + the
+  squared-magnitude composition foothold
+  `LL021_eff_squared_bound` (**proved at 0.0.49** by
+  `pow_le_pow_left₀` over the worst-case bound; sets up the
+  LL-006 priority-4 composition); comment blocks describe
+  priorities 2-6.
 - `README.md` (this file) — discipline + theorem plan +
   package-management notes.
 
