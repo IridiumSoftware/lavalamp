@@ -1,17 +1,34 @@
-# Synthesis-Team Round 3 Brief — LavaLamp (Synthesis Seat / Gemini)
+# Synthesis-Team Round 3 Brief — LavaLamp (Edge-Witness Seat / ChatGPT)
 
 **Forwarded:** 2026-05-06.
 
-This is your seat's payload — synthesis seat — corresponding to
-§1 + §2 + §3 + §5 of the full brief at
-`docs/synthesis_team_round3_brief.md`. Edge-witness seat (Grok)
-receives a parallel payload with §4 substituted for §3.
+This is your seat's payload — edge-witness seat — corresponding
+to §1 + §2 + §4 + §5 of the full brief at
+`docs/synthesis_team_round3_brief.md`. Synthesis seat (Grok)
+receives a parallel payload with §3 substituted for §4.
 
-You synthesised round 2's architecture and accepted the P-R2
-trio + the round-2 :benchmarked cohort. Round 3 question:
-**given the empirical and architectural work landed since round
-2, do the load-bearing claims still cohere — and what does the
-paper update revise that should reshape LavaLamp's spec?**
+**New entrant — welcome.** This is round 3 and you're joining
+mid-protocol. Grok held the edge-witness seat in rounds 1 and
+2 (produced attack vectors V-001 through V-013 across the two
+rounds, including round 2's V-011 Reseed Oracle, V-012
+Calibration Spectrum Leakage, V-013 Structured α-Direction
+Attack); for round 3 Grok rotates to synthesis and you take
+edge-witness as a fresh perspective. The round-2 companion
+(`synthesis_team_round2_companion.md` — see §2 reading list
+item 2) gives the round-2 dialogue arc and is the primary
+context for what the edge-witness seat has been doing on
+this project.
+
+The edge-witness role: stress-test the architecture, surface
+attack vectors the project's existing V-IDs don't capture, name
+failure modes the project might be papering over. You're paid
+in adversarial creativity, not synthesis — orthogonal lens to
+Grok's synthesis verdict.
+
+Round 3 question: **given the empirical refinement work since
+round 2 and the deployment-stack triple, what new attack
+vectors emerge from the broader architecture, and does the
+paper update reveal vectors the prototype hadn't enumerated?**
 
 ---
 
@@ -248,7 +265,7 @@ The minimum set for a round-3 review:
    surfaced (LL-025 candidate plus seven others including the
    cost-asymmetry-as-explicit-claim framing); §7 lessons
    including symbiosis-as-equilibrium-not-victory. Reframes
-   the entire Q1-Q7 discussion in honest threat-tier terms.
+   the entire A1-A7 stress-test in honest threat-tier terms.
 4. **The deployment-stack triple companions:**
    `os_identity_security_scoping_companion.md` (LL-022;
    downward trust-stack); `pharos_scoping_companion.md`
@@ -281,221 +298,192 @@ The minimum set for a round-3 review:
 
 ---
 
-## §3 — Synthesis-seat brief
+## §4 — Edge-witness-seat brief
 
-Six specific synthesis questions, drawn from the nine
-accumulated architectural inputs (per
-`audit_2026-05-04_full.md` §9):
+Seven specific stress-test questions:
 
-### Q1 — Does the paper update revise the C-conjugate inheritance?
+### A1 — LL-019 host-isolation: real-world adversary or methodological artifact?
 
-`docs/qkd_pqc_complementarity_companion.md` §2.5 grounds
-LavaLamp's adversary model on the C-conjugate adversary
-structure inherited from Closure v5's cross-sector autopoiesis
-0/5202 result. The prototype realises this as: genuine system
-has α; adversary has α + ε·û; spectrum gap δ_A > 0 by ∂λ/∂α
-non-degeneracy. LL-021 (worst-case bound) sharpens the
-claim by parameterising on direction projection.
+The 0.0.29 high-res refresh found verdict instability at
+α=0.01/n=2000 — KS_stat fluctuates ~0.04 across runs from
+system jitter. **Operationally**, the channel is
+microscopic (median/mean differences ~10 μs on 100 ms padded
+ops; ratio 1e-4); an adversary extracting information needs
+extraordinary sample sizes.
 
-**Question (revised post-paper-read):** the paper at v1.0
-2026-04-01 articulates the C-closure as a *fully-derived
-structural operation* (§10.5 Definition C-closure: `Q_C =
-Q ∪ C(Q)`), with the conjugate sector being charge-
-conjugated and zero-overlap with the original. LavaLamp's
-"C-conjugate adversary" claim transfers this structural
-disjointness to the security setting: an adversary that
-co-occurs structurally with the genuine system lives in the
-conjugate sector and is autopoietically disjoint per §11.13's
-self-reproducing-fixed-point theorem.
+**Question:** is the host-isolation regime-boundary a real
+adversary-exploitable channel that the prototype's
+deployment must mitigate (e.g., on shared cloud VMs where
+jitter is adversary-influenced), or a methodological artifact
+of the dev-host measurement environment? If the former, what
+deployment-config rules close the gap? If the latter, the
+spec's :benchmarked-at-0.0.19-regime framing is honest.
 
-**Is the structural-transfer argument load-bearing or
-aesthetic?** Specifically:
+### A2 — LL-024 real-sensor authenticity: hairdryer attack realistic?
 
-(a) The paper's §10.5 C-closure is defined for *charge-
-conjugate* sectors of a hypergraph spectral triple. LavaLamp's
-adversary is in *coupling-strength α-space*, not a charge-
-conjugate sector in the paper's formal sense. Is the
-"C-conjugate" terminology in `qkd_pqc_complementarity_companion.md`
-§2.5 a structural inheritance or a vocabulary borrow? If the
-former, what's the precise functor / construction that maps
-α-space adversaries to the paper's `C(Q)` sector? If the
-latter, what's the right corpus-faithful framing for
-LavaLamp's structural-mimic adversary?
+LL-024 §2.4 commits to LL-016 strategy 2 (multi-sensor
+cross-validation) as the prototype-tier default — thermal +
+battery discharge rate; AC + measured current; mic +
+accelerometer. V-006 (sensor manipulation) lists the hairdryer
+attack on thermal as the canonical example.
 
-(b) The paper's §11.13 quote *"the daughter IS the parent"*
-is the strongest possible autopoiesis statement: `Q_102` is
-its own fixed point. LavaLamp's substrate-bound identity
-(LL-001) claims the SDE trajectory is the device's identity.
-Is this the *same* claim transposed (the trajectory IS the
-device — substrate identity = ongoing autopoietic activity)?
-Or a weaker analog (the trajectory tags the device, but the
-device persists across trajectory restarts)? The chaos-guard
-reseed flow (LL-007) deliberately restarts the trajectory
-when λ̂_1 < τ_λ — does this break the "daughter IS the
-parent" claim or instantiate it (re-establishing self-
-reproduction at each chaos-guard re-cohering event)?
+**Question:** is the cross-validation pattern *actually*
+sufficient against a determined V-006 adversary, or are there
+sensor combinations where coordinated manipulation defeats
+the cross-check? Specifically: a charge controller + heater
+pair could spoof both AC and thermal coherently. What's the
+attack-vector enumeration looking like in the post-LL-024
+landscape?
 
-(c) The 0/5202 result is empirical evidence at threshold
-0.999; per §13.6's numerical-threshold remark, that
-threshold's spurious-merge rate is ~12% on Haar-random ICs.
-Is the 0/5202 result robust under the tighter threshold
-1 − 10⁻¹² that gives 200/200 canonical-vertex-count seeds?
-LL-006's residue audit operates on Lyapunov spectra, not on
-hypergraph fidelities — what's the analog of "tighter
-numerical threshold" in LavaLamp's spectrum-residue setting?
+### A3 — Deployment-stack triple: hidden non-conformance attack?
 
-The synthesis seat's call: which of (a)/(b)/(c) is the
-load-bearing inheritance, which is aesthetic vocabulary, and
-which is empirical-evidence-at-prototype's-threshold? The
-honest framing for round-3 should distinguish.
+LL-022 + LL-023 + LL-024 close scoping on three ends. PharOS
+conforms to LL-023; LavaLamp conforms to LL-022; the
+real-sensor module conforms to LL-024. **But:** what about a
+*partial-conformance* PharOS? An adversary controlling
+PharOS's internals could conform to LL-023's API surface
+while violating LL-022's required mechanisms (e.g., bypass
+the host TRNG by reusing cached randomness).
 
-### Q2 — Does the deployment-stack triple (LL-022 + LL-023 + LL-024) match the paper's closure-of-three framing?
+**Question:** does the deployment-stack triple commit
+LavaLamp to *checking* consumer conformance at runtime, or
+is conformance a deployment-time configuration trust? If
+the latter, what attack vectors does that open up?
 
-Three Boundary/Operational entries close the deployment-stack
-scoping on three ends: LL-022 downward (OS dependencies),
-LL-023 upward (consumer-API), LL-024 operational instantiation
-(real-sensor strategy). Aaron framed this as the closure-of-
-three at the deployment-stack level — corpus-honest mirror of
-the paper's three-element relational closures.
+### A4 — Linear-coupling adversary: still linearisable post-LL-021?
 
-**Question:** is the deployment-stack triple's structure
-faithful to the paper's closure semantics, or does it
-under-claim / over-claim something at the spec level? If the
-paper's three-element-closure formal definition would suggest
-a fourth or different LL-ID grouping, name it.
+Round 2 §1C-A6 raised linearisability — if the *coupling* to
+sensors is linear (`U = α·s·⟨b,x⟩`), an adversary builds a
+linear model and matches α via least-squares. LL-021's
+worst-case bound at 0.0.18/0.0.28 sharpens the claim
+parametrically (`ε_eff = ε_A · proj(û onto m_unit)`).
 
-### Q3 — LL-019 host-isolation regime-boundary: spec entry or sub-claim of LL-022?
+**Question:** does the LL-021 sharpening *actually* close
+A6, or does it just rebound the worst-case at the same
+linear-model attack? The 0.0.31 per-SDE benchmark showed
+the bound shape is universal across SDE candidates (Lorenz-
+96 / Lorenz-63 / Rössler) — does the bound preserve under
+linear-model adversary, or does the per-SDE c′ collapse for
+some SDE that's "easier to linearise"?
 
-The 0.0.29 LL-019 high-res refresh exposed a methodological
-boundary: at α=0.01/n=2000 the timing-distribution KS test
-loses statistical robustness on the prototype's dev host —
-verdict flips across runs from system jitter alone. LL-019
-stays :benchmarked at the 0.0.19 α=0.05/n=400 regime;
-operational-significance is unaffected (median/mean differences
-~10 μs on 100 ms padded operations).
+### A5 — N-scaling: large-N attractor shape changes attack surface?
 
-**Question:** should "host-isolation threshold for timing-
-based decorrelation guarantees" be a new spec entry or a
-sub-claim of LL-022 §Host-OS invariants? The CLAUDE.md
-§Benchmarking discipline note (verdict-level determinism)
-covers the methodology; what the spec needs is the
-*operational* claim. (Note: LL-025 is now reserved for the
-A7 EMF candidate per Q7 below; if a host-isolation entry is
-warranted, it would be LL-025+ or LL-026.)
+The 0.0.30 N-scaling benchmark validated linear extensive-
+chaos `h_KS ≈ s·N` at F=8 across N ∈ {20, 40, 80, 160}.
+Compute scales O(N³). At N=160 the per-spectrum cost is 25 s.
 
-### Q4 — LL-005 adversary-side: which mechanism wins?
+**Question:** does the *attractor topology* change at large
+N in ways that open new attack vectors? Specifically: at
+N=160 the attractor has ~52 positive Lyapunov exponents and
+~108 KY dimensions. Are there attack vectors that exploit
+this high-dimensional structure (e.g., perturbations along
+the most-stable directions that reduce the spectrum gap)?
+The 0.0.18/0.0.28 LL-021 work was at N=20; does the
+worst-case bound generalise to N=160?
 
-LL-005's two implicit sub-claims: (1) parameter compliance —
-addressed at 0.0.32 via the nyquist_compliant predicate;
-(2) adversary detection — answered NEGATIVE at 0.0.24
-(P3-Nyq) because zero-mean noise has invariant time-averaged
-statistics under sub-sampling. Sub-claim (2) requires a new
-mechanism: LL-016 sensor authenticity (already :argued;
-multi-sensor cross-validation, hardware attestation) or a
-not-yet-implemented audit (FFT/PSD on trajectory; trajectory-
-checkpoint comparison).
+### A6 — Paper revisions: net new attack vectors?
 
-**Question:** which mechanism is round-3's recommended
-adversary-side for LL-005? The trajectory-checkpoint approach
-treats LavaLamp's identity as Q₁₀₂-tier (per the QKD/PQC
-companion §2.6); the FFT/PSD approach is a separate algorithmic
-addition. Are they substitutes or complements, and does the
-paper update inform the choice?
+The closure_forces_structure paper at v1.0 2026-04-01 is
+canonical and settled; LavaLamp inherits from a published
+corpus. **What attack vectors does the paper's framing imply
+that V-001..V-013 don't capture?**
 
-### Q5 — Lean theorem priorities: which theorem first?
+Three candidate V-NNN entries the paper surfaces (numbered to
+avoid collision with §A7's V-014 EMF candidate):
 
-The Lean 4 scaffold (0.0.36) + CI (0.0.37) provides
-buildable infrastructure. The `LavaLamp/Theorems.lean`
-placeholder articulates six priority statements: LL-021
-worst-case bound, LL-019 timing indistinguishability, LL-020
-calibration ε-DP, LL-006/008/018 isotropic detection bound,
-LL-022/023 parametric theorem-shapes. The Mathlib-or-not
-architectural decision is round-3-driven (option A: full
-Mathlib; option B: project-local minimal substitute; option C:
-hybrid).
+(a) **V-015 — Cross-sector autopoiesis spoofing.** The 0/5202
+empirical result (Closure v5 `catlab_spec.jl` Thm_Q51_autopoietic)
+shows cross-sector autopoiesis fails at threshold 0.999. **But
+the result is a *negative* — the adversary's autopoietic
+attempt fails; can the residue audit *detect* the failed
+attempt?** LavaLamp's chaos-guard responds to λ̂_1 collapsing
+(LL-007); does it respond to a *partial* autopoiesis attempt
+that produces some genuine-looking trajectory before
+diverging? This is the analog of V-005 (slow-drift threshold
+gaming) at the autopoietic-tier rather than the spectrum-tier.
 
-**Question:** which Lean priority ought to land first, and
-what's the right Mathlib decision? The triadic-coordination-
-engine project uses option B (project-local Category typeclass);
-LavaLamp's claims are probability/real-analysis-flavoured, which
-points option A more. But option A has multi-minute build
-times and ecosystem-version risk.
+(b) **V-016 — Numerical-threshold calibration gaming.** The
+paper's §13.6 remark says spurious merges occur 5%-12% at
+threshold 0.999; LL-014 (threshold calibration) sets per-
+exponent τ_i = 3·σ(λ̂_i | T) baseline. Can an adversary
+craft a trajectory that lies in the LavaLamp-equivalent of
+the "spurious merge" zone — within the audit threshold but
+not actually a genuine trajectory? The paper's tight
+threshold 1-10⁻¹² gives 200/200 canonical seeds; LL-014's
+analog (k=5 with n_trials=10) has 10% baseline FPR per the
+P3-bound benchmark. Is the FPR-to-spurious-merge mapping
+exact, and does the calibration discipline transfer?
 
-### Q6 — N-scaling deployment rule: what's the production target?
+(c) **V-017 — Three-layer logical-tier confusion attack.**
+The paper's §1.2 explicit warning: *"these are not
+interchangeable; conflating them produces category errors."*
+LavaLamp's spec entries cluster across the three layers:
+LL-001/006/008/018 are Possibilistic; LL-019/020/021 touch
+Probabilistic; LL-011/012/013/017 are Bridge-tier
+(deployment protocols). **Could an adversary deliberately
+exploit a category error in LavaLamp's spec — e.g., apply a
+Probabilistic-tier attack against a claim that's only
+defended at the Possibilistic tier?** Round-3 should weigh
+whether LL-018 (per-class quantification) needs explicit
+layer-tagging.
 
-The 0.0.30 LL-003 N-scaling benchmark established
-`s ≈ 0.255` per dimension at F=8 (asymptotic Lyapunov density;
-saturated by N≥80). Deployment-design rule: `N* ≈ Δh*/s` for
-target chaos-production margin Δh*. Compute scales as O(N³)
-per integration step; per-spectrum wall clock is 25 s at
-N=160.
+**Edge-witness call:** which of V-015/016/017 is real, which
+is theoretical, and which is already covered implicitly by
+existing LL-IDs? Are there V-NNN candidates beyond these
+three that the paper's structural priors imply? The
+deployment-stack triple LL-022/023/024 + the candidate
+LL-025 (A7 emanation per A7, V-014) cover four sub-domains;
+V-015/016/017 might cluster into a fifth (autopoiesis-tier
+attacks), warranting a fifth Boundary entry.
 
-**Question:** what's the production-target Δh* for the Triad
-Deployments? Lazarus / LavaLamp / PharOS imply different
-margin requirements (consumer-product Lazarus ≠ OS-auth
-PharOS). What's the round-3 sense of where each lands on the
-N axis, and does the paper update suggest the asymptotic
-density is itself an invariant we should formalise?
+### A7 — A7 / V-014: is passive-emanation reconstruction realistic?
 
-### Q7 — A7 / EMF / LL-025: should physical-emanation scoping land as a new spec entry?
+Surfaced 2026-05-05 (post-skeleton). Modern TEMPEST-class
+research has demonstrated:
+- Cryptographic key extraction from acoustic emanations
+  (Genkin et al. 2014, RSA from CPU acoustic side-channel).
+- Memory state recovery from EM side-channels (RowHammer-
+  via-EMF papers; DDR3/DDR4 reads from radiated RAM bus).
+- CPU register state under specific attack-controlled
+  conditions (e.g., ROP-style controlled execution + EM
+  capture).
+- van Eck phreaking on modern displays at varying ranges.
 
-The current spec has six adversary classes (A1-A6 from
-`attack_surface_enumeration.md` §2). All six implicitly assume
-the adversary observes the device through some software /
-I/O surface — A4 (side-channel / physical proximity) is the
-closest to physical-layer threats but in current usage means
-*software-side timing channels* (LL-019 hardening) and
-*sensor manipulation* (LL-016 authenticity strategies).
+For LavaLamp specifically: the SDE solver runs on a CPU; the
+trajectory state lives in registers + memory; integration
+steps emanate at the pipeline's clock rate. The question is
+whether full or partial trajectory reconstruction is feasible
+at modern multi-GHz CPU speeds (where emanations are noisy +
+fast) or whether the noise floor + decode complexity bound
+A7 to specific narrow attacks.
 
-**The gap:** an **A7-class** adversary — *passive-emanation
-interceptor* — passively monitors RF / acoustic / power-line
-emanations from the substrate hardware and in principle
-reconstructs SDE state without any software access. If the
-trajectory is recoverable from substrate emanations, **the
-substrate-bound-identity claim is bypassed at the physical
-layer** — not by attacking the audit / TPM / sensors /
-verifier, but by reading the trajectory directly through the
-substrate's electromagnetic skin.
+**Question:** what's the realistic A7 capability tier at
+the prototype's deployment context?
+- **Close-proximity-state-actor-only** (sub-meter range; bespoke
+  TEMPEST equipment; targeted device): if so, A7 is in the
+  threat model but only for high-stakes deployments (not
+  consumer-product Lazarus; possibly OS-auth PharOS in
+  high-assurance contexts).
+- **Mid-tier** (across-the-room SDR equipment; commercial
+  hardware): broader threat surface; LL-025 should be a
+  primary architectural commitment.
+- **Wide-spread** (everyday adversary; ambient passive
+  capture): would force a reconsideration of LavaLamp's
+  hardware-platform-choice; might invalidate consumer-laptop
+  deployment.
 
-The structural problem: LL-022 + LL-023 + LL-024 form the
-deployment-stack triple but all live *above* the OS
-abstraction. A7 lives *below* the OS, in the physical
-substrate itself.
+Is V-014 (passive-emanation reconstruction of SDE trajectory)
+a real attack vector worth enumerating, or a theoretical
+concern that doesn't make it into the practical threat model?
+What does the literature say about substrate emanation at
+multi-GHz CPU speeds — recoverable trajectory bits per second
+at distance D vs LavaLamp's chaos-production rate `h_KS · N`?
 
-**Three architectural options:**
-
-(a) **New Boundary entry LL-025** — physical-emanation-
-adversary-boundary. Parallel shape to LL-015 (A3 OOS) and
-LL-022 (downward trust-stack). Articulates required
-deployment context (Faraday-rated enclosure / TEMPEST hardware
-/ distance + interior rooms / EMI-filtered power / shielded
-cables) for LavaLamp's primitive-tier claim to hold; A7 OOS
-outside those bounds. Same honest-bounded-claim framing as
-LL-005 Nyquist + LL-018 per-class quantification.
-
-(b) **Sub-claim of LL-022 + sub-class of A4** — fold into
-existing entries. Cheaper but blurs the architectural
-distinction (A4 software-channel vs A7 physical-channel are
-structurally distinct adversary capabilities).
-
-(c) **Defer to deployment-time documentation** — leave the
-spec untouched; document mitigation guidance separately.
-Honest only if A7 is provably outside any plausible threat
-model for LavaLamp's intended deployments.
-
-**Question:** which option is load-bearing? If the deployment-
-stack triple LL-022 + LL-023 + LL-024 needs to extend to a
-quartet (+ LL-025), does the closure-of-three philosophy
-survive? If yes, *how* — does LL-025 form a parallel triadic
-structure with LL-015 + LL-024 (boundary triple covering the
-substrate)? Does the paper update inform the right framing?
-
-A candidate **P-EMF scoping pass** (analogous to P-OS /
-P-PharOS / P-RS shape) would land LL-025 + a scoping companion
-mirroring `os_identity_security_scoping_companion.md`. The
-question is whether to do this *before* round-3-driven
-implementation work or whether round-3 itself should produce
-the scoping. Synthesis seat's call.
+**Round-3 deliverable for edge-witness:** if A7 is real, name
+the deployment-context bounds (distance, equipment tier,
+threat model) under which LavaLamp's primitive-tier claim
+*does* hold; outside those bounds, the claim doesn't hold and
+LL-025 should articulate that boundary explicitly.
 
 ---
 
@@ -504,13 +492,11 @@ the scoping. Synthesis seat's call.
 Following round-2's dialogue norm:
 
 1. **Seven-point evaluation.** One bullet per question
-   (Q1-Q7). Each bullet: short answer + reasoning + any
+   (A1-A7). Each bullet: short answer + reasoning + any
    pointer to a corpus reference, paper section, or formal
    source. ~80-120 words per bullet.
-2. **Cumulative verdict.** `engage-and-formalise` /
-   `engage-and-formalise-after-fixes` /
-   `redirect-to-X` / `obstruct`. If `obstruct`, name the
-   structural barrier; if `redirect`, name where to.
+2. **Cumulative verdict.** `pass` / `pass-after-fixes` /
+   `fail` with named attack vector.
 3. **Net new attack vectors / blindspots.** If you surface
    anything that V-001..V-014 didn't cover, name it with a
    provisional V-NNN tag (we'll allocate the actual numbers
@@ -518,7 +504,7 @@ Following round-2's dialogue norm:
 4. **Lean / proof-track suggestions.** Round 3 has the Lean 4
    scaffold landed (0.0.36) + CI (0.0.37) — name the theorem
    statement that should land first, with the Mathlib-or-not
-   call (per Q5).
+   call.
 5. **Paper-update integration.** If the paper update implies
    spec changes (new LL-IDs; existing-entry refinements;
    evidence-type promotions), name them. The paper is the
