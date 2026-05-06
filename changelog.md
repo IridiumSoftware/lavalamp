@@ -949,55 +949,16 @@ post-edit.
 
 ---
 
-## 0.0.44 — 2026-05-05 — Round-3 brief engine-side blanks filled (TCE v0.2.2; brief forward-ready)
+## 0.0.44 — 2026-05-05 — Round-3 brief engine-side blanks filled (forward-ready)
 
-Fills the engine-side `[FILL: ...]` blanks in the round-3 brief.
-Engine status delivered via the parallel TCE Claude session
-(forwarded by Aaron 2026-05-05): TCE v0.2.2 landed
-2026-05-05; corpus-agnostic `Discovery.Triadic.findTriadicClosures`
-primitive extracted from previously closure-v5-specific
-implementation; two corpus clients (`closureV5Corpus` running
-end-to-end on v167+2 producing 240,745 candidates;
-`businessEntityCorpus` directed-graph cycles routing original
-smoke fixture through the engine); 8 QuickCheck invariant
-properties; 51 spec entries / ~96 assertions across 5 cabal
-test suites all green.
+Fills the engine-side `[FILL: ...]` blanks in the round-3
+forward-brief with project-private context (substance of the
+fill is redacted from the public record; the synthesis is
+captured in `synthesis_team_round3_companion.md`).
 
-**Tier 1 (forward-ready blanks): filled.**
-- §1 engine-side paragraph: TCE v0.2.2 status with
-  Discovery.Triadic primitive scope.
-- §2 reading-list item 8: concrete pointers — engine
-  `dashboard.md` (Discovery engine architecture v0.2.1
-  section), `ENGINE_SPEC.md` S-047..S-051, `docs/
-  discovery_refactor_companion.md` with v0.2.1 addendum,
-  `changelog.md` v0.2.0/0.2.1/0.2.2 entries. Plus deep-dive
-  source pointers (`Discovery/Triadic.hs` ~120 lines;
-  `SpecBridge.hs` adapter template).
-
-**Tier 2 (Discovery.Triadic-on-LavaLamp audit): not done.**
-The other Claude session was explicit and honest: running
-the engine on LavaLamp would require writing a
-`lavaLampCorpus :: <inputs> → DiscoveryCorpus n` adapter
-with domain-specific definitions for `dcRelated`,
-`dcTripleValid`, `dcScore`, `dcCollapsed`, plus a decision
-on what `n` should be (LL-NNN spec IDs? V-NNN candidates?
-sensor events? threat-vector primitives?). Future-session
-work. **§3 Q9 NOT added** — would commit to an audit
-artifact that doesn't exist; the question is well-formed
-but un-answerable until the adapter is written. The
-synthesis seat may surface this as a post-round-3 work
-item.
-
-**Tier 3 (which deployment next): deferred, not decided.**
-Aaron's session-close framing was *"moving the engine to
-triadic deployments to assist that project"* — singular but
-unnamed. Memory note records "ask on resume" instruction.
-Round-3 treats engine as available to all three deployments
-(Lazarus / LavaLamp / PharOS) without specific assignment;
-deployment selection is a post-round-3 architectural
-decision that doesn't gate LavaLamp Phase 1 work
-(sysfs/procfs FFI per LL-024 is conceptually orthogonal to
-the engine).
+Round-3 ready-state achieved: with both paper-side (0.0.43)
+and engine-side (0.0.44) blanks filled, the brief is forward-
+ready for synthesis-team review.
 
 **V-NNN tag collision rationalized.** The skeleton's §4 A7
 added V-014 (passive-emanation EMF) at 0.0.40; the §4 A6
@@ -1016,58 +977,33 @@ V-NNN allocation post-rationalization:
 - V-014..V-017: round-3 candidates (V-014 EMF; V-015..V-017
   paper-derived).
 
-**Brief is now substantively complete on both paper + engine
-sides; forward-ready.** Aaron forwards §1 + §2 + §3 to
-Gemini; §1 + §2 + §4 to Grok; both receive §5. §6 internal.
-
 Counts unchanged at 24 / 0 / 3 / 0 / 4 / 16 / 1. Test suite
 202/202 unchanged.
 
 ### Changed
 
-- **`docs/synthesis_team_round3_brief.md`** —
-  - §1 engine-side paragraph filled with TCE v0.2.2 status,
-    Discovery.Triadic primitive scope, deployment-next-
-    deferred note.
-  - §2 reading-list item 8 filled with concrete file paths +
-    section pointers.
-  - §4 A6 V-NNN renumbering: V-014→V-015, V-015→V-016,
-    V-016→V-017. §4 A7 V-014 unchanged.
-  - Top-of-doc 2026-05-05 (0.0.44) update note added.
-  - Internal note at bottom updated to reflect 0.0.44 status
-    + V-NNN allocation summary.
+- Round-3 forward-brief — engine-side §1 paragraph filled;
+  §2 reading-list item 8 filled; §4 A6 V-NNN renumbering
+  applied (V-014→V-015, V-015→V-016, V-016→V-017; §4 A7
+  V-014 unchanged); top-of-doc and internal-note updates.
 - **`LAVALAMP_SPEC.md`** — version 0.0.43 → 0.0.44.
 - **`artifact_registry.md`** — version 0.0.43 → 0.0.44.
-- **`dashboard.md`** — version 0.0.43 → 0.0.44. Recent
-  companion docs prepended with substantive description of
-  the engine-side fill + V-NNN rationalization.
+- **`dashboard.md`** — version 0.0.43 → 0.0.44; Recent
+  companion docs section refreshed with the V-NNN
+  rationalization note.
 - **`README.md`** — version trajectory extended.
 
 ### Why
 
 1. **Round-3 trigger now zero-friction.** With both paper-
-   side (0.0.43) and engine-side (0.0.44) blanks filled,
-   Aaron forwards the brief to the synthesis-team seats at
-   his discretion. No further pre-trigger work needed.
-2. **Honest framing on Tier 2.** The other Claude session
-   correctly noted that adding §3 Q9 prematurely would
-   commit to a Discovery.Triadic-on-LavaLamp audit that
-   doesn't exist. The right move is to keep the brief
-   honestly scoped at what's been done, not what could be
-   done.
-3. **V-NNN tag discipline.** Two V-014 candidates emerging
+   side and engine-side blanks filled, Aaron forwards the
+   brief to the synthesis-team seats at his discretion. No
+   further pre-trigger work needed.
+2. **V-NNN tag discipline.** Two V-014 candidates emerging
    from independent fills was a real collision; resolved by
-   first-come-first-served (EMF V-014 from 0.0.40 keeps the
-   tag) with paper-derived candidates renumbered. The
-   integration commit makes the V-NNN allocation
-   internally consistent.
-4. **Engine-side framing matches reality.** Engine is now a
-   generic primitive available to any Triad Deployment via
-   a corpus adapter. Round-3 reviewers see this honestly:
-   the engine is *ready for use* by any deployment, not
-   *applied to LavaLamp specifically*. Future architectural
-   decisions (which deployment, when) flow from round-3's
-   verdicts.
+   first-come-first-served with paper-derived candidates
+   renumbered. The integration commit makes the V-NNN
+   allocation internally consistent.
 
 ### Counts
 
@@ -1149,7 +1085,7 @@ Counts unchanged at 24 / 0 / 3 / 0 / 4 / 16 / 1. Test suite
 
 ### Changed
 
-- **`docs/synthesis_team_round3_brief.md`** — paper-side fill:
+- Round-3 forward-brief — paper-side fill:
   - §1 paper-side paragraph (~1500 words; three section
     clusters + three-layer logic + numerical-threshold remark).
   - §2 reading-list item 1 (file paths + section pointers).
@@ -1403,7 +1339,7 @@ unchanged.
   LL-018, LL-022 each gain a "Threat-landscape framing
   (2026-05-05, 0.0.41)" footer cross-referencing the
   companion. No status changes; counts unchanged.
-- **`docs/synthesis_team_round3_brief.md`** — §2 reading list
+- **round-3 forward-brief** — §2 reading list
   gains a new entry (3a) pointing to the threat-landscape
   companion as required reading for the synthesis seat.
 - **`artifact_registry.md`** — version 0.0.40 → 0.0.41
@@ -1507,7 +1443,7 @@ what's the deployment-context recommendation.
 
 ### Added
 
-- **`docs/synthesis_team_round3_brief.md`** — Q7 (synthesis
+- **round-3 forward-brief** — Q7 (synthesis
   seat) + A7 (edge-witness seat). Top-of-doc 2026-05-05
   update note documenting the addition. §5 word cap raised
   2500 → 2800. §5 "six-point evaluation" → "seven-point
@@ -1554,7 +1490,7 @@ what's the deployment-context recommendation.
 
 ## 0.0.39 — 2026-05-04 — Round-3 brief skeleton (pre-trigger preparation)
 
-Lands `docs/synthesis_team_round3_brief.md` as **parallel-safe
+Lands round-3 forward-brief as **parallel-safe
 pre-trigger preparation** for the imminent round-3 synthesis-
 team review. The brief skeleton is substantively complete on
 the LavaLamp side; paper-specific and engine-specific blanks
@@ -1574,7 +1510,7 @@ No spec entry changes; counts unchanged at 24 / 0 / 3 / 0 /
 
 ### Added
 
-- **`docs/synthesis_team_round3_brief.md`** (~14 KB).
+- **round-3 forward-brief** (~14 KB).
   - **§1 What changed since round 2.** Two work modes:
     empirical refinement of round-2 :benchmarked cohort
     (0.0.23-0.0.32; LL-020 fix; LL-021/LL-019 high-res;
@@ -6020,8 +5956,8 @@ synchronized.
 ## 0.0.2 — 2026-05-01 — Language-plan correction
 
 Pattern-match correction on the priority-stack language assignments.
-0.0.1 inherited the triadic-coordination-engine's "Haskell core +
-Lean 4 formalisation" stack via pattern-matching, without checking
+0.0.1 inherited a "Haskell core + Lean 4 formalisation" stack from
+prior in-house projects via pattern-matching, without checking
 whether it fit LavaLamp's actual technical needs. Aaron flagged
 the mismatch: LavaLamp is continuous-numerical / real-time /
 sensor-coupled, which is Julia's natural register, not Haskell's.
@@ -6055,12 +5991,12 @@ LavaLamp's prototype core needs to live where the chaos / SDE /
 real-time-numerical community has done the algorithmic work, which
 is Julia's `DifferentialEquations.jl` + `DynamicalSystems.jl` +
 `ChaosTools.jl` stack. Haskell still has a role — but a *different*
-role from the engine project: as the **compositional-completeness
-checker** at the prove stage, expressing the spec as types and
-running QuickCheck-style universal coverage to catch corollaries
-the example tests miss. The S-026 `semanticSimilarity` symmetry
-bug in the engine is the canonical example of why this stage
-matters: hand-built example tests passed; QuickCheck immediately
+role from where it sits in some other in-house projects: as the
+**compositional-completeness checker** at the prove stage,
+expressing the spec as types and running QuickCheck-style
+universal coverage to catch corollaries the example tests miss.
+A canonical in-house example: a `semanticSimilarity` symmetry
+bug — hand-built example tests passed; QuickCheck immediately
 falsified symmetry. Without that stage, an unspotted universal
 sails into Lean and any C/C++ rewrite. Lean stays at "prove
 (formal) — is the theorem true," which is a different job from
@@ -6086,9 +6022,8 @@ those entries get implemented and verified, not what they assert.
 ## 0.0.1 — 2026-04-30 — Concept-stage foundation
 
 Bootstrap the project's discipline scaffolding before any code or
-attack-surface enumeration. Mirrors the triadic-coordination-engine
-foundation pattern (spec → registry → dashboard → companion docs →
-governance).
+attack-surface enumeration. Mirrors the in-house foundation pattern
+(spec → registry → dashboard → companion docs → governance).
 
 ### Added
 
@@ -6130,18 +6065,16 @@ governance).
 ### Why
 
 Concept-stage projects accumulate decisions in chat history that
-get lost. Mirroring the triadic-coordination-engine foundation
-pattern: every named claim gets an LL-ID with status; every
-substantive session produces a companion doc; the spec is ground
-truth. This commit captures the architecture as currently
+get lost. Mirroring the in-house foundation pattern: every named
+claim gets an LL-ID with status; every substantive session
+produces a companion doc; the spec is ground truth. This commit captures the architecture as currently
 synthesized — the result of one full round of synthesis-team
 (Gemini) + edge-witness-team (Grok) review, with Aaron's
 decoupling-resolution closing the round-1 blindspot.
 
 The decision to scaffold the discipline *before* attack-surface
-enumeration mirrors the engine project's spec-first arc and is
-consistent with the corpus-wide spec → registry → companion → code
-sequence. Code work is gated on attack-surface enumeration, which
+enumeration mirrors the in-house spec-first arc and is consistent
+with the corpus-wide spec → registry → companion → code sequence. Code work is gated on attack-surface enumeration, which
 is gated on this scaffold.
 
 ### Known gaps

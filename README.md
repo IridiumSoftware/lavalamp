@@ -151,10 +151,10 @@ gains cost-asymmetry footer) → 0.0.43 (round-3 brief paper-
 side blanks filled; closure_forces_structure v1.0 2026-04-01
 paper-grounded; three load-bearing section clusters captured;
 three V-NNN candidates surfaced; engine-side blanks pending)
-→ 0.0.44 (round-3 brief engine-side blanks filled; TCE v0.2.2
-corpus-agnostic Discovery.Triadic primitive; V-NNN tag
-collision rationalized to V-014..V-017; brief substantively
-complete on both paper + engine sides; forward-ready) →
+→ 0.0.44 (round-3 forward-brief engine-side blanks filled;
+V-NNN tag collision rationalized to V-014..V-017; brief
+substantively complete on both paper + engine sides;
+forward-ready) →
 0.0.45 (synthesis-team round 3 Tier 1; seat rotation Grok →
 synthesis + ChatGPT → edge-witness; both verdicts non-fail;
 LL-025 A7-passive-emanation-boundary + LL-026 three-layer-

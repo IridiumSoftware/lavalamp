@@ -495,8 +495,8 @@ P5 — **Haskell compositional-completeness layer.** Spec-as-types
   and universals the example-tested suite would miss. Haskell's
   job is *composition-space coverage*, not implementation —
   prevents an unspotted universal sailing into Lean / production.
-  Same discipline that caught S-026 in the triadic-coordination-
-  engine.
+  Same discipline that surfaced a similarity-function symmetry
+  bug in prior in-house work that example tests had passed.
 
 P6 — **Lean 4 formal verification.** Machine-verify the structural
   security claims (resolution-bounded unclonability theorem,
@@ -846,32 +846,20 @@ Remaining `:open` entries fall into two classes:
   conformance + LL-029 multi-channel entropy independence +
   LL-019 deployment-context expansion). Counts 24/0/3/0/4/16/1
   → 26/0/3/0/4/18/1; 7 new V-IDs added.
-- **`docs/synthesis_team_round3_brief.md` engine-side fill +
+- **round-3 forward-brief engine-side fill +
   V-NNN rationalization** (0.0.44, 2026-05-05) — round-3
-  brief engine-side blanks filled. Engine status delivered
-  by parallel TCE Claude session: TCE v0.2.2 (2026-05-05);
-  corpus-agnostic `Discovery.Triadic.findTriadicClosures`
-  primitive extracted; `closureV5Corpus` (240,745 candidates
-  on v167+2 corpus) + `businessEntityCorpus` clients
-  verified; 8 QuickCheck invariant properties; spec at 51
-  entries (13 :proved / 24 :tested / 6 :verified / 3
-  :benchmarked / 5 :open). Has Discovery.Triadic been run
-  against LavaLamp specifically? **No** — would require
-  writing a `lavaLampCorpus` adapter (future-session work);
-  not gating round-3. Specific-deployment-next decision
-  (Lazarus / LavaLamp / PharOS) deferred per memory note
-  `project_engine_redirect_to_triad.md`. **V-NNN tag
-  collision rationalized:** §4 A7 EMF V-014 (added 0.0.40,
-  came first) keeps V-014; §4 A6 paper-derived candidates
-  renumbered to V-015 (cross-sector autopoiesis spoofing),
-  V-016 (threshold gaming), V-017 (three-layer logical-tier
-  confusion). §2 reading-list item 8 fills with concrete
-  pointers (engine repo dashboard.md / ENGINE_SPEC.md
-  S-047..S-051 / discovery_refactor companion /
-  changelog.md top entries). **Brief is now substantively
-  complete on both paper + engine sides; forward-ready.**
-  Counts unchanged at 24/0/3/0/4/16/1.
-- **`docs/synthesis_team_round3_brief.md` paper-side fill**
+  brief engine-side blanks filled with project-private
+  context (substance redacted from public record).
+  Specific-deployment-next decision (Lazarus / LavaLamp /
+  PharOS) deferred. **V-NNN tag collision rationalized:**
+  §4 A7 EMF V-014 (added 0.0.40, came first) keeps V-014;
+  §4 A6 paper-derived candidates renumbered to V-015
+  (cross-sector autopoiesis spoofing), V-016 (threshold
+  gaming), V-017 (three-layer logical-tier confusion).
+  **Brief is now substantively complete on both paper +
+  engine sides; forward-ready.** Counts unchanged at
+  24/0/3/0/4/16/1.
+- **round-3 forward-brief paper-side fill**
   (0.0.43, 2026-05-05) — round-3 brief paper-side blanks
   filled. Aaron 2026-05-05: *"paper done. almost done with
   engine."* The `closure_forces_structure` paper is at v1.0
@@ -963,7 +951,7 @@ Remaining `:open` entries fall into two classes:
   footers. No new spec entries (companion is meta-architectural;
   round-3 may surface LL-025+ from the §6 questions). Counts
   unchanged at 24/0/3/0/4/16/1.
-- **`docs/synthesis_team_round3_brief.md` Q7 + A7 update**
+- **round-3 forward-brief Q7 + A7 update**
   (0.0.40, 2026-05-05) — round-3 brief gains a synthesis-seat
   Q7 + edge-witness-seat A7 covering the **EMF /
   passive-emanation-adversary gap** surfaced in conversation
@@ -984,7 +972,7 @@ Remaining `:open` entries fall into two classes:
   mid-tier-SDR / wide-spread) bounds A7. Word cap raised
   2500 → 2800. No spec changes; counts unchanged at
   24/0/3/0/4/16/1.
-- **`docs/synthesis_team_round3_brief.md`** (0.0.39) — round-3
+- **round-3 forward-brief** (0.0.39) — round-3
   brief skeleton landed pre-trigger. Substantively complete on
   the LavaLamp side: §1 What changed (0.0.20 → 0.0.38 work-set
   in two modes — empirical refinement + parallel-safe

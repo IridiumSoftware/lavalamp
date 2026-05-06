@@ -899,8 +899,6 @@ the user.
 
 The cockroach/catapult/castle/immune-system framing is not
 LavaLamp-specific. It applies to:
-- The triadic-coordination-engine project (which has its own
-  threat landscape that this kind of analysis would surface).
 - Future Triad Deployments work (Lazarus's threat landscape;
   PharOS's specific OS-tier threat surface).
 - Aaron's broader corpus work on possibilistic security and

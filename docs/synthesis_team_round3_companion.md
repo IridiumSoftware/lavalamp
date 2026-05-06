@@ -12,16 +12,14 @@ and the metabolic synthesis (proposed integration plan
 pending Aaron's instantiator confirmation) ahead of the
 spec-change implementation pass.
 
-The forward-brief is at
-`docs/synthesis_team_round3_brief.md`. Per-seat split files
-were `docs/round3_for_grok.md` (synthesis-seat payload) and
-`docs/round3_for_chatgpt.md` (edge-witness-seat payload),
-forwarded by Aaron with three supporting documents
-(`docs/threat_landscape_companion.md`,
+Forward-briefs (per-seat split: synthesis-seat payload +
+edge-witness-seat payload) were forwarded by Aaron with three
+supporting documents (`docs/threat_landscape_companion.md`,
 `docs/synthesis_team_round2_companion.md`, public link to
-the closure_forces_structure paper v1.0 release tag). Engine
-repo kept private at Aaron's direction; engine deep-dive
-references in brief §2 item 8 left unfollowable.
+the closure_forces_structure paper v1.0 release tag). The
+brief files themselves are not part of the public record —
+they were per-seat input artifacts containing project-private
+context; this companion is the canonical synthesis.
 
 Responses arrived sequentially — Grok first, ChatGPT second.
 This companion captures both plus Aaron's pending resolution.
@@ -32,11 +30,11 @@ This companion captures both plus Aaron's pending resolution.
 
 ### §1A — Aaron's brief (forwarded)
 
-`docs/synthesis_team_round3_brief.md` summarised what
-changed since round 2 (eighteen versions across 0.0.20 →
-0.0.44 spanning two distinct work modes — empirical
-refinement of the round-2 :benchmarked cohort, then
-parallel-safe scaffolding while paused awaiting upstream),
+The forward-brief summarised what changed since round 2
+(eighteen versions across 0.0.20 → 0.0.44 spanning two
+distinct work modes — empirical refinement of the round-2
+:benchmarked cohort, then parallel-safe scaffolding while
+paused awaiting upstream),
 pointed at the reading set in priority order, and posed
 seven questions per seat:
 
@@ -588,9 +586,9 @@ libraries are mature; Option A's first-theorem cost is low.
 Option B's custom DS-machinery is a multi-session research
 investment before the first theorem lands; landing it as
 theorem 2 instead lets the proof track demonstrate viability
-sooner. The engine project's option-B precedent (project-
-local Category typeclass; no Mathlib) was for category
-theory, not measure theory — different ecosystem maturity.
+sooner. A parallel in-house option-B precedent (project-local
+Category typeclass; no Mathlib) was for category theory, not
+measure theory — different ecosystem maturity.
 ChatGPT's adaptive-adversary critique (A4) lands in spec
 text via the LL-021 amendment in Tier 2; the Lean theorem
 proves the bound shape, with the spec articulating what the
@@ -833,9 +831,10 @@ added (six new entries) in Tier 1 implementation pass.
 
 - **Companion files referenced above must exist.** Verify:
   `threat_landscape_companion.md` ✓ (0.0.41-0.0.42),
-  `synthesis_team_round2_companion.md` ✓ (0.0.12),
-  `synthesis_team_round3_brief.md` ✓ (0.0.39 → 0.0.44).
-  All exist in `git ls-files`.
+  `synthesis_team_round2_companion.md` ✓ (0.0.12). All exist
+  in `git ls-files`. (Per-seat round-3 forward-briefs were
+  removed from the public record; their substance is
+  metabolised into this companion.)
 - **Aaron's resolution.** Three open decisions per §1D.vi.
   After Aaron's call, this companion's §1D should be
   amended in-place (not replaced) with the actual decisions

@@ -84,12 +84,9 @@ companion + the 0.0.34 P-PharOS companion. See
 **Mathlib integrated at 0.0.47** per round-3 §1D.v Decision 1
 (Aaron rendered 2026-05-06: Option A — full Mathlib).
 LavaLamp's theorem priorities are probability / real-analysis-
-flavoured (different from the category-theory of the
-triadic-coordination-engine project, which uses a project-
-local `Category` typeclass with an opt-in Mathlib track at
-`src/lean4-cv/`); Option A pulls the full Mathlib ecosystem
-to give probability / measure / Real / exp lemmas in their
-full generality, accepting the build-time cost.
+flavoured, so Option A pulls the full Mathlib ecosystem to
+give probability / measure / Real / exp lemmas in their full
+generality, accepting the build-time cost.
 
 Three options were on the table pre-decision (kept here for
 historical reference):

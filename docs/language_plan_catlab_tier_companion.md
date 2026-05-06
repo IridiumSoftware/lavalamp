@@ -27,11 +27,11 @@ No scripts. Methodology refinement.
   active, audited evidence type with `:proved` status, used
   e.g. for S25 (adhesivity), Q₂₄ vertex-count and orbit-closure
   verification.
-- Triadic-coordination-engine `src/lean4/TriadicTheorems.lean` —
-  S-029 closure-equation proof landed via project-local
-  `Category` typeclass, no Catlab precedent in that project; in
-  retrospect Catlab would have been a useful pre-Lean step for
-  the closure equation `R_γα ∘ R_βγ ∘ R_αβ = id_τα`.
+- A parallel in-house Lean track has the closure-equation
+  proof landed via a project-local `Category` typeclass with
+  no Catlab precedent in that project; in retrospect Catlab
+  would have been a useful pre-Lean step for the closure
+  equation `R_γα ∘ R_βγ ∘ R_αβ = id_τα`.
 
 ---
 
@@ -149,7 +149,7 @@ Catlab is *optional* per project. Decision rule:
   transformations, universal constructions, adhesive-category
   rewriting (DPO), spectral-triple structure, multicategory
   composition. The Closure v5 corpus is the canonical example;
-  the triadic-coordination-engine's closure equation
+  a parallel in-house engine's closure equation
   `R_γα ∘ R_βγ ∘ R_αβ = id_τα` is a smaller but real example.
 
 ### 2.5 LavaLamp-specific applicability
@@ -190,10 +190,10 @@ already-verified facts:
    with `:proved` status. Audit rule A4 admits this combination.
    The corpus's evidence-type taxonomy is the precedent.
 2. **Three-jobs distinction is load-bearing.** Documented in §2.2
-   above; demonstrated by the triadic-coordination-engine S-026
-   catch (Haskell QuickCheck discovered a universal that example
-   tests missed; this is different from "is this theorem true,"
-   which is Lean's job; and different from "does this categorical
+   above; demonstrated by a prior in-house catch (Haskell
+   QuickCheck discovered a universal that example tests missed;
+   this is different from "is this theorem true," which is
+   Lean's job; and different from "does this categorical
    structure close on instances," which is Catlab's job).
 3. **Productivity gradient is empirical.** Catlab + Julia
    iteration speed is observably faster than Haskell + GHC or

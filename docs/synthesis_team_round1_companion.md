@@ -269,7 +269,7 @@ After the enumeration lands, P2 is the architectural design pass
 (formalising the residue audit, the resolution-bounded security
 claim, the chaos-guard implementation, the sensor-coupling
 potential field). Then P3 is the language tracks (Haskell + Lean
-4) mirroring the triadic-coordination-engine pattern. Then P4 is
+4) mirroring the in-house spec-as-types pattern. Then P4 is
 the visual skin scaffolding (low priority, decoupled per LL-002).
 
 ## §4 — Spec impact
@@ -362,12 +362,11 @@ Aaron's broader articulated methodology:
 The "prove" phase splits into two distinct jobs: Haskell catches
 "did we miss a universal the spec implies" via types-as-spec +
 QuickCheck; Lean catches "is the theorem actually true" via formal
-proof. Complementary. The S-026 `semanticSimilarity` symmetry bug
-in the triadic-coordination-engine is the canonical example of why
-the Haskell compositional-completeness stage matters: hand-built
-example tests passed; QuickCheck immediately falsified symmetry on
-specific duplicate-token inputs. Without that stage the bug would
-have sailed into Lean and any C/C++ rewrite.
+proof. Complementary. A canonical in-house example: a similarity
+function's symmetry bug — hand-built example tests passed;
+QuickCheck immediately falsified symmetry on specific duplicate-
+token inputs. Without that stage the bug would have sailed into
+Lean and any C/C++ rewrite.
 
 LavaLamp's revised priority stack (in `dashboard.md`):
 

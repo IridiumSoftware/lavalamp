@@ -231,9 +231,9 @@ gradient that makes the tier worthwhile.
   of compositions and structure what "complete coverage" means.
   Catching an unspotted universal at the Haskell stage is cheap;
   catching it after a Lean proof has been written against a flawed
-  spec is expensive. (See triadic-coordination-engine S-026: the
-  hand-built suite passed; QuickCheck immediately falsified
-  symmetry on `"force-force-spec"` vs `"force_c-c-spec"`.)
+  spec is expensive. (Cautionary pattern from prior in-house work:
+  a hand-built suite passed while QuickCheck immediately falsified
+  the same property on the first generated counter-example.)
 - **Lean 4 is for formal truth on theorems**, not for compositional
   enumeration. Lean catches "is this true"; Haskell catches "did
   we enumerate everything." Complementary, not redundant.
@@ -386,7 +386,7 @@ companion is the permanent record — chat history is ephemeral. If a
 design decision was made in conversation but not captured in the
 companion, it does not exist.
 
-Sections (parallel to triadic-coordination-engine convention):
+Sections:
 
 - **§1 — Computational basis.** What was built or run, with files,
   dependencies, build commands, test data.
