@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.45 — synthesis-team round 3 Tier 1 landed; LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline; V-014..V-020 enumerated in attack-surface).
+Last updated: 2026-05-06 (0.0.46 — synthesis-team round 3 Tier 2 spec changes; LL-027 asymptotic-Lyapunov-density-invariant added :benchmarked; LL-021 round-3 finite-N scope-limit + adaptive-adversary amendment; LL-014 round-3 numerical-threshold non-fundamentality tie).
 
 ## Status summary
 
@@ -514,15 +514,18 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 26 (was 24; +LL-025 + LL-026 from 0.0.45 round-3 Tier 1)
+- Total spec entries: 27 (was 26; +LL-027 from 0.0.46 round-3 Tier 2)
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007 — unchanged)
 - `:verified`: 0
-- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021 — unchanged)
+- `:benchmarked`: 5 (LL-003, LL-006, LL-019, LL-021, LL-027 —
+  LL-027 added 0.0.46 :benchmarked from the existing 0.0.30
+  P3e N-scaling benchmark)
 - `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026 —
-  LL-025 + LL-026 added 0.0.45)
+  LL-014 gains round-3 numerical-threshold non-fundamentality
+  tie; LL-025 + LL-026 added 0.0.45)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -586,6 +589,39 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **Round-3 Tier 2 spec pass** (0.0.46, 2026-05-06) —
+  paper-grounded spec evolution per round-3 §1D.vii rendered
+  sequencing. Three changes:
+  - **LL-027 — asymptotic-Lyapunov-density-invariant**
+    added (Core, benchmarked, `:benchmarked`). Promotes the
+    0.0.30 P3e N-scaling result (`s ≈ 0.255` per dimension
+    at F=8) from a deployment-design rule into a spec-level
+    invariant claim. Deployment-design rule: `N* ≈ Δh*/s`;
+    PharOS Δh*=8.0 → N*≈32; Lazarus Δh*=4.0 → N*≈16. The
+    0.0.30 benchmark *is* the empirical evidence; no new
+    benchmarking required to land the entry. Per Grok §1B.Q6
+    proposal + ChatGPT §1C.A5 large-N caveat (V-020 / LL-021
+    amendment).
+  - **LL-021 round-3 amendment** added (status unchanged at
+    `:benchmarked`). Two-pronged: (a) explicit scope-limit
+    to finite-N regime (operationally N ≤ 80; large-N at
+    N ≥ 160 requires re-benchmarking per V-020); (b)
+    adaptive-adversary bound stated explicitly. Per ChatGPT
+    §1C.A4 critique that LL-021 is a containment bound, not
+    closure of A6 — the per-SDE universality result means
+    one successful linear-model fit applies to all candidate
+    SDEs.
+  - **LL-014 round-3 amendment** added (status unchanged at
+    `:argued`). Numerical-threshold non-fundamentality tie:
+    the 10% FPR baseline and paper §13.6's 5-12% spurious-
+    merge zone are the same phenomenon expressed in different
+    vocabulary ("threshold ≠ structure"). Defends V-016
+    by making non-fundamentality explicit. Per ChatGPT
+    §1C.A6.
+  Tier 2 first Lean theorem deferred to a separate version
+  pass — adding Mathlib + writing real measure-theoretic
+  proofs is multi-hour work that warrants its own session
+  focus. Counts 26/0/3/0/4/18/1 → 27/0/3/0/5/18/1.
 - **`docs/synthesis_team_round3_companion.md` + Tier 1 spec
   pass** (0.0.45, 2026-05-06) — synthesis-team round 3
   metabolic synthesis + Tier 1 implementation. Round 3 ran a

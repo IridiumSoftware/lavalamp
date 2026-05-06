@@ -60,14 +60,14 @@ for hardware-bound deployment (Linux-first roadmap; FFI
 implementations forthcoming post-round-3). CI runs `Pkg.test()`
 on every push (202 assertions pass in ~53s).
 
-**Spec ledger:** 26 entries with the current breakdown:
+**Spec ledger:** 27 entries with the current breakdown:
 
 | status | count | entries |
 |---|---:|---|
 | `:proved` | 0 | — |
 | `:verified` | 0 | — |
 | `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
-| `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
+| `:benchmarked` | 5 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound (with round-3 finite-N scope-limit), LL-027 asymptotic Lyapunov density invariant |
 | `:argued` | 18 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1: LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
@@ -126,7 +126,15 @@ synthesis + ChatGPT → edge-witness; both verdicts non-fail;
 LL-025 A7-passive-emanation-boundary + LL-026 three-layer-
 logic-tier-annotation-discipline added; V-014..V-020
 enumerated in attack-surface — V-021/V-022 absorbed into
-V-015/V-016 per Aaron's resolution decision).
+V-015/V-016 per Aaron's resolution decision) → 0.0.46
+(round-3 Tier 2 spec changes; LL-027 asymptotic Lyapunov
+density invariant `s ≈ 0.255` per dimension added
+:benchmarked from the existing 0.0.30 P3e benchmark; LL-021
+round-3 finite-N scope-limit + adaptive-adversary amendment;
+LL-014 round-3 numerical-threshold non-fundamentality tie;
+first Lean theorem deferred to a separate version pass for
+session-focus reasons — adding Mathlib + writing measure-
+theoretic proofs warrants its own session).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new
@@ -136,12 +144,14 @@ fixes`; ChatGPT `pass-after-fixes` — complementary, neither
 fail. Aaron's three resolution decisions rendered same day:
 V-021/V-022 merge into V-015/V-016; Tier 1/2/3 sequencing
 confirmed; Lean Option A — LL-021 worst-case bound + Mathlib
-full as first theorem. Tier 2 (LL-027 chaos density invariant
-+ LL-021 scope-limit + LL-014 amendment) pairs with the
-first Lean theorem in the next version. Tier 3 (LL-028
-runtime conformance + LL-029 multi-channel entropy
-independence + LL-019 deployment-context expansion) sequenced
-by P-RS Level 2 prototype availability. See
+full as first theorem. **Tier 1 landed 0.0.45** (LL-025 +
+LL-026 + V-014..V-020). **Tier 2 spec landed 0.0.46**
+(LL-027 + LL-021 amendment + LL-014 amendment); first Lean
+theorem deferred to a separate session pass given Mathlib
+integration scope. Tier 3 (LL-028 runtime conformance +
+LL-029 multi-channel entropy independence + LL-019
+deployment-context expansion) sequenced by P-RS Level 2
+prototype availability. See
 `docs/synthesis_team_round3_companion.md` for the full
 metabolic synthesis.
 

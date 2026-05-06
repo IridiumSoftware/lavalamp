@@ -627,6 +627,25 @@ LL-ID, not the Key.
   vector at scale; tightening requires more trials, a chi-
   squared aggregate test, or adaptive-threshold history.
   See `synthesis_team_round2_companion.md` §1C-A5.
+- **Round-3 numerical-threshold non-fundamentality tie
+  (2026-05-06, 0.0.46):** Surfaced by synthesis-team round
+  3 §1C.A6 (ChatGPT edge-witness): the 10% FPR baseline at
+  k=5 / n_trials=10 maps almost exactly to the
+  closure_forces_structure paper §13.6's 5-12% spurious-
+  merge zone. Quote: *"This is not coincidence — it is the
+  same phenomenon in different language: threshold ≠
+  structure."* The paper's resolution at threshold
+  `1 − 10⁻¹²` (200/200 canonical seeds; vs ~5-12% spurious
+  at threshold `0.999`) maps to LL-014's resolution by
+  tightening: more trials, chi-squared aggregate test, or
+  adaptive-threshold history. The threshold is *calibration
+  convenience*, not part of the spec's structural claim.
+  Status unchanged at `:argued` — framing amendment, not
+  new evidence. Defends V-016 (numerical-threshold
+  calibration gaming) by making non-fundamentality
+  explicit. PharOS-tier deployments should tighten beyond
+  the prototype's 10% baseline; the prototype's threshold
+  is honest residual-risk.
 
 ---
 
@@ -1018,6 +1037,44 @@ LL-ID, not the Key.
   (deterministic; wall-clock timings excluded from result
   file per the CLAUDE.md §Benchmarking discipline byte-
   identical convention).
+- **Round-3 scope-limit + adaptive-adversary amendment
+  (2026-05-06, 0.0.46):** Two-pronged amendment surfaced by
+  synthesis-team round 3 §1C.A4 + §1C.A5 (ChatGPT edge-
+  witness):
+
+  (a) **Scope-limit to finite-N regime.** The benchmark fit
+  constants (K=1, c′=0.0288, T=60.0) were validated at N=20
+  in 0.0.18 + 0.0.28; the bound shape `ε_eff = ε_A · proj`
+  applies in the finite-N regime (operationally N ≤ 80).
+  Large-N regime (N ≥ 160) requires re-benchmarking — at
+  N=160 the attractor has 52 unstable / 108 stable
+  directions, and the curvature of the attractor manifold,
+  mixing times, and per-mode detectability thresholds may
+  shift the parametric constants. See V-020 (stable-manifold
+  stealth injection) for the attack-class surfaced at
+  large N.
+
+  (b) **Adaptive-adversary bound.** The bound is stated
+  against an *adaptive* linear-model adversary, not a
+  static one. The 0.0.31 per-SDE detection-power result
+  shows the bound shape is universal across Lorenz-96 /
+  Lorenz-63 / Rössler at the prototype configuration; this
+  is structurally consequential for adversary capability —
+  *one* successful linear-model fit by an adversary applies
+  to all candidate SDEs at the same configuration. Real
+  adversaries adapt; the bound must be honest about that.
+  See `synthesis_team_round3_companion.md` §1C.A4 — ChatGPT
+  *"if all SDEs share the same bound shape, attacker needs
+  only one successful model. LL-021 is a containment bound,
+  not closure of A6."*
+
+  Status unchanged at `:benchmarked` — these are scope /
+  framing amendments to the existing benchmark evidence,
+  not new evidence requirements. Future Lean formalization
+  (Tier 2 first theorem; round-3 §1D.v decision: Option A
+  Mathlib full) will state the bound parametric in
+  adversary-tier and N regime, capturing the scope-limits in
+  the theorem statement.
 
 ---
 
@@ -1198,7 +1255,7 @@ LL-ID, not the Key.
 
 ---
 
-## Surfaced by synthesis-team round 3 (0.0.45)
+## Surfaced by synthesis-team round 3 (0.0.45+)
 
 ### LL-025 — A7-passive-emanation-boundary
 - Key: tier-bounded scoping of TEMPEST-class side-channel attacks (A7)
@@ -1325,15 +1382,82 @@ LL-ID, not the Key.
   session scope). The annotation is documentation-only;
   existing entry text remains unchanged.
 
+### LL-027 — asymptotic-Lyapunov-density-invariant
+- Key: asymptotic Lyapunov density `s ≈ 0.255` per dimension is deployment-invariant for Lorenz-96 at F=8
+- Logic tier: Core
+- Description: The Lorenz-96 SDE at F=8 exhibits **linear
+  extensive-chaos scaling**: the metric (Kolmogorov-Sinai)
+  entropy rate `h_KS(N)` scales linearly with system size N
+  with asymptotic density `s ≈ 0.255` per dimension.
+  Empirically validated at N ∈ {20, 40, 80, 160} via the
+  0.0.30 P3e benchmark (linear fit `h_KS(N) = s · N` with
+  `s ≈ 0.2547` at N=160). The density is deployment-
+  invariant: it depends on the SDE's parametric family +
+  forcing, not on N or on coupling structure; it emerges
+  from the Lorenz-96 attractor's geometry.
+
+  **Deployment-design rule.** For a target chaos-production
+  rate `Δh*`, choose `N* ≈ Δh* / s = Δh* / 0.255`. PharOS
+  (high-assurance, OS-auth identity) targets `Δh* = 8.0` at
+  N* ≈ 32; Lazarus (consumer-product) targets `Δh* = 4.0`
+  at N* ≈ 16. The 0.0.30 benchmark validates the linear
+  scaling through N=160; deployments at larger N inherit the
+  invariant by extrapolation (modulo LL-021 large-N caveat
+  on stable-direction attack surface — see V-020).
+
+  **Paper-tier framing (paper §10.1-10.2):** the linear
+  extensive-chaos result aligns with the
+  closure_forces_structure paper's §10.1-10.2 treatment of
+  bound-shape universality across SDE families. The density
+  `s` is a property of the attractor, not of the candidate
+  SDE family — Lorenz-63 / Rössler at their natural
+  F-equivalent forcing exhibit different density values, but
+  the *linear scaling form* is universal.
+- Evidence type: benchmarked
+- Status: :benchmarked
+- Source: src/julia/src/Engine.jl (Lorenz-96 at F=8;
+  parametric over N).
+- Test: src/julia/benchmark/p3e_n_scaling.jl +
+  src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt
+  (deterministic per-N spectrum; linear fit
+  `h_KS(N) = s · N` with `s ≈ 0.255` at F=8 across N ∈
+  {20, 40, 80, 160}).
+- Benchmark: docs/p3e_n_scaling_companion.md (linear
+  extensive-chaos scaling confirmed; Lyapunov density
+  `s ≈ 0.255` per dimension at F=8; per-N spectrum compute
+  cost O(N³)).
+- Notes: LL-027 promotes the 0.0.30 N-scaling result from a
+  *deployment-design rule* (in the P3e companion) to a
+  *spec-level invariant claim*. The promotion is what
+  Grok §1B.Q6 proposed and Aaron's resolution decision 3
+  confirmed (Tier 2 sequencing). Depends on LL-003 (single-
+  attractor chaotic engine — Lorenz-96 at F=8 is the target
+  SDE). LL-027's `:benchmarked` status comes from the 0.0.30
+  benchmark *being* the empirical evidence; no additional
+  benchmarking required to land the entry.
+- **Lean theorem-shape implication:** Future Lean theorem
+  about deployment-config sizing must use LL-027 as a
+  parametric input — `N ≥ ceil(Δh_target / s_invariant)`
+  where `s_invariant = 0.255` is the LL-027 constant. The
+  invariant lifts to a real-valued constant in the Lean
+  formalization with provenance traced to the P3e benchmark
+  result file.
+- **Round-3 origin:** Grok §1B.Q6 surfaced this as a
+  parametric-invariant promotion candidate; ChatGPT §1C.A5
+  surfaced V-020 as the large-N caveat that LL-027 must
+  acknowledge (the linear scaling form holds; the *attack
+  surface* at large N is open per V-020 and the LL-021
+  amendment in this version).
+
 ---
 
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 26
+- Total: 27
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
-- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
+- `:benchmarked`: 5 (LL-003, LL-006, LL-019, LL-021, LL-027)
 - `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026)
@@ -1341,16 +1465,19 @@ LL-ID, not the Key.
   by design)
 
 **Prototype-stage; spec fully evidenced through round-3
-Tier 1. Four empirically-validated :benchmarked entries
+Tier 2. Five empirically-validated :benchmarked entries
 (LL-003 SDE choice via comparative bench, LL-006 detection
 bound, LL-019 timing-indistinguishability, LL-021 worst-case
-bound); three :tested entries (LL-002 visual ↔ security
-decoupling via the visual layer + decoupling-assertion
-testset added in 0.0.33; LL-004 sensor coupling; LL-007
-chaos-guard); eighteen :argued at design level (now
-including LL-025 A7-passive-emanation-boundary from
-synthesis-team round 3 — parallel boundary triple with
-LL-015 / LL-024; and LL-026 three-layer-logic-tier-
-annotation-discipline — paper-§1.2-derived governance);
-only LL-015 remains :open as the honest scoping declaration
-that A3 (kernel-level) adversaries are out of scope.**
+bound — with round-3 finite-N scope-limit + adaptive-
+adversary amendment, LL-027 asymptotic Lyapunov density
+invariant — paper-§10.1-10.2-aligned linear extensive-chaos
+density `s ≈ 0.255`); three :tested entries (LL-002 visual
+↔ security decoupling via the visual layer + decoupling-
+assertion testset added in 0.0.33; LL-004 sensor coupling;
+LL-007 chaos-guard); eighteen :argued at design level
+(LL-025 A7-passive-emanation-boundary parallel boundary
+triple with LL-015 / LL-024; LL-026 three-layer-logic-tier-
+annotation-discipline paper-§1.2 governance; LL-014 gains
+round-3 numerical-threshold non-fundamentality tie); only
+LL-015 remains :open as the honest scoping declaration that
+A3 (kernel-level) adversaries are out of scope.**

@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.45 (synthesis-team round 3 Tier 1; LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline added; V-014..V-020 enumerated in attack-surface; 2026-05-06)
+Version: 0.0.46 (synthesis-team round 3 Tier 2 spec changes; LL-027 asymptotic-Lyapunov-density-invariant added (:benchmarked from 0.0.30); LL-021 round-3 scope-limit + adaptive-adversary amendment; LL-014 round-3 numerical-threshold non-fundamentality tie; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -106,33 +106,35 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-024 | real-sensor-deployment-strategy | Operational | manual | docs/p_real_sensor_scoping_companion.md §2 + src/julia/test/runtests.jl (Real-sensor scaffold testset; 18 assertions) | src/julia/src/RealSensors.jl (scaffold tier) | :argued |
 
-## Surfaced by synthesis-team round 3 (0.0.45)
+## Surfaced by synthesis-team round 3 (0.0.45+)
 
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
 | LL-025 | A7-passive-emanation-boundary | Boundary | manual | docs/synthesis_team_round3_companion.md §1B.Q7 + §1C.A7 + docs/attack_surface_enumeration.md §3 V-014 | — | :argued |
 | LL-026 | three-layer-logic-tier-annotation-discipline | Core | manual | docs/synthesis_team_round3_companion.md §1B.Q1 + §1C.A6 + docs/attack_surface_enumeration.md §3 V-017 | — | :argued |
+| LL-027 | asymptotic-Lyapunov-density-invariant | Core | benchmarked | src/julia/benchmark/p3e_n_scaling.jl + src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt + docs/p3e_n_scaling_companion.md (linear extensive-chaos scaling; `s ≈ 0.255` per dimension) | src/julia/src/Engine.jl | :benchmarked |
 
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 26
+- Total: 27
 - `:proved`: 0
 - `:tested`: 3
 - `:verified`: 0
-- `:benchmarked`: 4
+- `:benchmarked`: 5
 - `:argued`: 18
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.45)
+## Cross-audit A1–A6 self-check (post-0.0.46)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (26 of 26).
+  here. ✓ (27 of 27).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
-  LL-025 registry key (`A7-passive-emanation-boundary`) and
-  LL-026 registry key (`three-layer-logic-tier-annotation-
-  discipline`) match spec keys.
+  LL-025 / LL-026 / LL-027 registry keys match spec keys
+  (`A7-passive-emanation-boundary`, `three-layer-logic-tier-
+  annotation-discipline`, `asymptotic-Lyapunov-density-
+  invariant`).
 - **A3 — Evidence exists.** Nine entries cite
   `docs/architecture_design_companion.md`; four entries
   (LL-003, LL-004, LL-006, LL-007) cite
@@ -141,32 +143,39 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   `docs/os_identity_security_scoping_companion.md`. LL-025 +
   LL-026 cite `docs/synthesis_team_round3_companion.md` plus
   `docs/attack_surface_enumeration.md` (V-014 for LL-025;
-  V-017 for LL-026). All cited paths exist in `git ls-files`
-  after this commit.
+  V-017 for LL-026). LL-027 cites
+  `src/julia/benchmark/p3e_n_scaling.jl` +
+  `src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt` +
+  `docs/p3e_n_scaling_companion.md` (the 0.0.30 N-scaling
+  result is the empirical evidence for the deployment-
+  invariant density claim). All cited paths exist in
+  `git ls-files` after this commit.
 - **A4 — Status honesty.** All `:argued` entries carry `manual`;
   all `:tested` entries carry `example-tested`; all
   `:benchmarked` entries carry `benchmarked`; all `:open`
   entries carry `none`. ✓. LL-025 + LL-026 are `:argued` with
-  `manual` evidence — the strongest status their evidence
-  types support. No entry has a status its evidence type
-  cannot support.
-- **A5 — Stale counts.** Counts above (26 / 0 / 3 / 0 / 4 /
-  18 / 1) match `LAVALAMP_SPEC.md` 0.0.45 final-section counts
-  and `dashboard.md` 0.0.45 spec-status section. **LL-025 +
-  LL-026 added** (round-3 Tier 1) so total 24 → 26 and
-  :argued 16 → 18. Other counts unchanged.
+  `manual` evidence; LL-027 is `:benchmarked` with
+  `benchmarked` evidence (the 0.0.30 P3e benchmark fits the
+  invariant). No entry has a status its evidence type cannot
+  support.
+- **A5 — Stale counts.** Counts above (27 / 0 / 3 / 0 / 5 /
+  18 / 1) match `LAVALAMP_SPEC.md` 0.0.46 final-section counts
+  and `dashboard.md` 0.0.46 spec-status section. **LL-027
+  added** (round-3 Tier 2) so total 26 → 27 and
+  :benchmarked 4 → 5. Other counts unchanged. The LL-021 +
+  LL-014 round-3 amendments are notes-amendments to existing
+  entries; statuses unchanged.
 - **A6 — Test sync.** LL-002, LL-003, LL-004, LL-005 (part-
   (a) only), LL-006, LL-007 are exercised by
   `src/julia/test/runtests.jl`, runnable via `Pkg.test()`
   from `src/julia/`; 202/202 assertions pass in ~53 s
-  (unchanged from 0.0.38; round-3 Tier 1 adds no new code or
-  tests — spec / governance only). LL-025 has no test/proof
-  file beyond the companions and attack-surface enumeration
-  (manual evidence at the deployment-context scoping level);
-  empirical EM/acoustic emanation testing would be
-  operational-tooling work, deferred. LL-026 is governance
-  discipline, not engineering — no runtime test artifact
-  applies.
+  (unchanged from 0.0.38; round-3 Tier 1 + Tier 2 add no
+  new code or tests — spec / governance only). LL-027's
+  empirical evidence is the existing 0.0.30 P3e benchmark
+  result file (no new test required). LL-025 has no
+  test/proof file beyond the companions and attack-surface
+  enumeration (deferred operational-tooling work). LL-026 is
+  governance discipline; no runtime test artifact applies.
 
 ## Test-coverage notes
 

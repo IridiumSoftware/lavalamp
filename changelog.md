@@ -5,6 +5,95 @@ messages match entry summaries.
 
 ---
 
+## 0.0.46 — 2026-05-06 — Synthesis-team round 3 Tier 2 spec changes (LL-027 + LL-021/LL-014 amendments)
+
+Lands round-3 Tier 2 spec changes per the rendered Aaron-
+resolution decisions in
+`docs/synthesis_team_round3_companion.md` §1D.vii. Tier 2
+spec-only this version; first Lean theorem (LL-021 worst-
+case bound + Mathlib full per Aaron's Decision 1 — Option A)
+deferred to a separate pass to give the Lean work its own
+session focus (adding Mathlib + writing measure-theoretic
+proofs is multi-hour work; the spec changes alone are
+substantial).
+
+**Tier 2 spec changes (this version):**
+
+- **LL-027 — asymptotic-Lyapunov-density-invariant**
+  added (Core, `benchmarked` evidence, `:benchmarked`
+  status). Promotes the 0.0.30 P3e N-scaling result from a
+  deployment-design rule (in the P3e companion) to a spec-
+  level invariant claim. The Lorenz-96 SDE at F=8 exhibits
+  linear extensive-chaos scaling: `h_KS(N) = s · N` with
+  `s ≈ 0.255` per dimension across N ∈ {20, 40, 80, 160}.
+  Deployment-design rule: `N* ≈ Δh* / s`; PharOS Δh*=8.0
+  → N*≈32; Lazarus Δh*=4.0 → N*≈16. The 0.0.30 benchmark
+  *is* the empirical evidence; no new benchmarking required
+  to land the entry. Depends on LL-003 (single-attractor
+  chaotic engine).
+- **LL-021 round-3 amendment** (status unchanged at
+  `:benchmarked`). Two-pronged scope/framing amendment:
+  (a) explicit scope-limit to finite-N regime
+  (operationally N ≤ 80; large-N at N ≥ 160 requires
+  re-benchmarking per V-020); (b) adaptive-adversary bound
+  stated explicitly — the 0.0.31 per-SDE universality result
+  means one successful linear-model fit applies to all
+  candidate SDEs at the same configuration. Per ChatGPT
+  §1C.A4 critique that LL-021 is a containment bound, not
+  closure of A6.
+- **LL-014 round-3 amendment** (status unchanged at
+  `:argued`). Numerical-threshold non-fundamentality tie:
+  the 10% FPR baseline at k=5 / n_trials=10 maps almost
+  exactly to the closure_forces_structure paper §13.6's
+  5-12% spurious-merge zone — same phenomenon, different
+  vocabulary ("threshold ≠ structure"). The threshold is
+  calibration convenience, not part of the spec's structural
+  claim. Defends V-016 by making non-fundamentality
+  explicit. Per ChatGPT §1C.A6.
+
+**Counts:** 26/0/3/0/4/18/1 → 27/0/3/0/5/18/1 (+LL-027
+:benchmarked).
+
+**Spec-section heading update:** "Surfaced by synthesis-
+team round 3 (0.0.45)" → "(0.0.45+)" to acknowledge multi-
+version round-3 series.
+
+**First Lean theorem path (next version, expected 0.0.47):**
+Lake `require` for Mathlib added to `src/lean4/lakefile.lean`;
+`lake update` regenerates `lake-manifest.json` with Mathlib
+pinning; `LavaLamp/Theorems.lean` placeholder replaced with
+real theorem statement for LL-021 worst-case bound. Per Grok
+§1B.Q5 + Aaron's Decision 1 — Option A: full Mathlib;
+theorem 1 is the LL-021 worst-case bound; theorem 2 (Closure
+Detection Soundness over LL-007 + LL-014 + LL-021 interplay)
+will be added atop theorem 1's environment, with custom DS-
+machinery introduced as needed. CI workflow at
+`.github/workflows/lean.yml` will pull Mathlib on first
+build.
+
+**Tier 3 unchanged from 0.0.45 plan:** LL-028 (runtime
+conformance) + LL-029 (multi-channel entropy independence)
++ LL-019 deployment-context expansion. Sequenced by P-RS
+Level 2 prototype availability.
+
+**Files touched this version:**
+
+- `LAVALAMP_SPEC.md` — LL-027 entry added; LL-021 + LL-014
+  notes amendments appended; section heading updated to
+  "(0.0.45+)"; Counts section updated.
+- `artifact_registry.md` — version bump; LL-027 row added;
+  counts updated; A1-A6 self-check refreshed for 0.0.46.
+- `dashboard.md` — last-updated stamp; spec-status section
+  updated; Recent companion docs section gets new top entry.
+- `changelog.md` — this entry.
+- `README.md` — count refresh; trajectory entry for 0.0.46.
+
+Test suite unchanged at 202/202 (Tier 2 spec changes are
+governance only; no new code). Cross-audit A1-A6 passes
+post-edit.
+
+---
+
 ## 0.0.45 — 2026-05-06 — Synthesis-team round 3 Tier 1 (LL-025 + LL-026; V-014..V-020 enumerated)
 
 Lands round-3 Tier 1 spec changes per the rendered Aaron-
