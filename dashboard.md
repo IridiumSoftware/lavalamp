@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-05 (0.0.43 — round-3 brief paper-side blanks filled; closure_forces_structure v1.0 paper-grounded; engine-side pending).
+Last updated: 2026-05-05 (0.0.44 — round-3 brief engine-side blanks filled; TCE v0.2.2 corpus-agnostic Discovery.Triadic; brief forward-ready).
 
 ## Status summary
 
@@ -586,6 +586,31 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/synthesis_team_round3_brief.md` engine-side fill +
+  V-NNN rationalization** (0.0.44, 2026-05-05) — round-3
+  brief engine-side blanks filled. Engine status delivered
+  by parallel TCE Claude session: TCE v0.2.2 (2026-05-05);
+  corpus-agnostic `Discovery.Triadic.findTriadicClosures`
+  primitive extracted; `closureV5Corpus` (240,745 candidates
+  on v167+2 corpus) + `businessEntityCorpus` clients
+  verified; 8 QuickCheck invariant properties; spec at 51
+  entries (13 :proved / 24 :tested / 6 :verified / 3
+  :benchmarked / 5 :open). Has Discovery.Triadic been run
+  against LavaLamp specifically? **No** — would require
+  writing a `lavaLampCorpus` adapter (future-session work);
+  not gating round-3. Specific-deployment-next decision
+  (Lazarus / LavaLamp / PharOS) deferred per memory note
+  `project_engine_redirect_to_triad.md`. **V-NNN tag
+  collision rationalized:** §4 A7 EMF V-014 (added 0.0.40,
+  came first) keeps V-014; §4 A6 paper-derived candidates
+  renumbered to V-015 (cross-sector autopoiesis spoofing),
+  V-016 (threshold gaming), V-017 (three-layer logical-tier
+  confusion). §2 reading-list item 8 fills with concrete
+  pointers (engine repo dashboard.md / ENGINE_SPEC.md
+  S-047..S-051 / discovery_refactor companion /
+  changelog.md top entries). **Brief is now substantively
+  complete on both paper + engine sides; forward-ready.**
+  Counts unchanged at 24/0/3/0/4/16/1.
 - **`docs/synthesis_team_round3_brief.md` paper-side fill**
   (0.0.43, 2026-05-05) — round-3 brief paper-side blanks
   filled. Aaron 2026-05-05: *"paper done. almost done with

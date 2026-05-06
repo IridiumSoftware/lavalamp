@@ -28,14 +28,24 @@ operation; §11.13 Self-Reproducing Fixed Point —
 *"the daughter IS the parent"*; §13.6 Evidence Classification
 — same honest-framing discipline as LavaLamp's CLAUDE.md
 §Evidence types) and surfaces three V-NNN candidates from
-the paper's framing (V-014 cross-sector autopoiesis
-spoofing; V-015 numerical-threshold calibration gaming;
-V-016 three-layer logical-tier confusion). Synthesis seat
-Q1 reframed with sub-questions on structural-transfer-vs-
-vocabulary, "daughter IS the parent" mapping, and threshold
-robustness. Edge-witness A6 reframed with paper-derived
-attack-vector candidates. Engine-side blanks remain pending
-engine completion.
+the paper's framing (cross-sector autopoiesis spoofing;
+numerical-threshold calibration gaming; three-layer logical-
+tier confusion).
+
+**Update 2026-05-05 (0.0.44):** Engine-side blanks filled.
+The triadic-coordination-engine landed at v0.2.2 on
+2026-05-05; corpus-agnostic `Discovery.Triadic` primitive
+extracted; closure-v5 + BusinessEntity corpus clients
+verified; 8 QuickCheck invariant properties. Has
+Discovery.Triadic been run against LavaLamp specifically?
+**No** — would require writing a `lavaLampCorpus` adapter
+(future-session work). Specific-deployment-next decision
+deferred per memory note. **V-NNN tag collision rationalized:**
+§4 A7 EMF V-014 (added 0.0.40, came first) keeps V-014;
+§4 A6 paper-derived candidates renumbered to V-015 (cross-
+sector), V-016 (threshold gaming), V-017 (three-layer
+confusion). Brief now substantively complete on both paper
++ engine sides; ready to forward to Gemini + Grok.
 
 This is a **brief** — the document Aaron forwards to each seat
 to set up Round 3. The dialogue itself lives in
@@ -198,11 +208,52 @@ directly onto LavaLamp's residue-audit threshold-calibration
 discipline (LL-014) — the threshold is *numerical
 convenience*, not part of the mathematical definition.
 
-**Engine-side changes since round 2:**
-**`[FILL: triadic-coordination-engine updates that landed —
-spec changes, new theorems, scaling results, Zig kernel
-status. Reading-list pointer to the engine repo's relevant
-artifacts.]`**
+**Engine-side status since round 2:**
+
+The triadic-coordination-engine landed at **v0.2.2 on
+2026-05-05**. The architectural arc (v0.1.13 → v0.2.0 →
+v0.2.1 → v0.2.2) extracted a **corpus-agnostic discovery
+primitive** `Discovery.Triadic.findTriadicClosures` from what
+was previously a closure-v5-specific implementation. The
+primitive consumes a `DiscoveryCorpus n` record (fields:
+`dcAnchors`, `dcRelated`, `dcTripleValid`, `dcScore`,
+`dcCollapsed`) and returns ranked triadic candidates over
+any node type. Two corpus clients exist:
+`closureV5Corpus` (similarity-based; run end-to-end on the
+v167+2 corpus producing 240,745 candidates) and
+`businessEntityCorpus` (directed-graph cycles; the original
+smoke-fixture pipeline now routed through the engine). Eight
+QuickCheck invariant properties on randomly-generated
+`DiscoveryCorpus Int` lift the engine's structural claims to
+`:verified`. Spec at 51 entries (13 `:proved` / 24 `:tested`
+/ 6 `:verified` / 3 `:benchmarked` / 5 `:open`); ~96 assertions
+across five cabal test suites, all green.
+
+**The engine is now a generic primitive available to any
+deployment that can supply a corpus adapter — including
+LavaLamp.** Has Discovery.Triadic been run against
+LavaLamp's spec or repo? **No.** That would require writing
+a `lavaLampCorpus :: <inputs> → DiscoveryCorpus n` adapter
+with domain-specific definitions for `dcRelated`,
+`dcTripleValid`, `dcScore`, `dcCollapsed`, plus a decision
+on what `n` should be (LL-NNN spec IDs? V-NNN candidates?
+sensor events? threat-vector primitives?). Future-session
+work; not gating round-3.
+
+**Which deployment gets engine work next:** *deferred, not
+decided.* Aaron's session-close framing on 2026-05-05 was
+*"moving the engine to triadic deployments to assist that
+project"* — singular framing but no named deployment. Memory
+note `project_engine_redirect_to_triad.md` records this with
+explicit "ask on resume" instruction. Round-3 should treat
+the engine as available to all three deployments (Lazarus /
+LavaLamp / PharOS) without specific assignment; the
+deployment selection is a post-round-3 architectural decision.
+
+Round 2's recommendation was `engage-and-formalise-after-fixes`.
+Round 3's question: with the empirical and architectural work
+landed, **do the load-bearing claims still cohere — and what
+does the paper update revise?**
 
 Round 2's recommendation was `engage-and-formalise-after-fixes`.
 Round 3's question: with the empirical and architectural work
@@ -282,9 +333,31 @@ The minimum set for a round-3 review:
      discipline).
    - `docs/p3_nyq_companion.md` (LL-005 negative finding;
      round-3 architectural input).
-8. **Engine update**:
-   **`[FILL: triadic-coordination-engine relevant docs / spec
-   diff since round 2.]`**
+8. **Engine update (v0.2.2, 2026-05-05)** —
+   triadic-coordination-engine repository at
+   `/Users/aarongreen/Desktop/triadic-coordination-engine/`.
+   Reading priority:
+   - `dashboard.md` — section *"Discovery engine architecture
+     (v0.2.1)"* — current-state entry point.
+   - `ENGINE_SPEC.md` — sections **S-047 through S-051**
+     specifically. S-047 is the type-checked engine primitive
+     (`discovery-triadic-engine-primitive`); S-048 is the
+     corpus-agnostic property (`discovery-triadic-corpus-
+     agnostic`); S-049 is the triple-validity predicate;
+     S-050 is the BusinessEntity-through-engine routing;
+     S-051 is the property-tested invariant set.
+   - `docs/discovery_refactor_companion.md` — large-session
+     companion with §1 computational basis, §2 results, §4
+     spec impact. v0.2.1 addendum at the end covers the
+     second-corpus-client work.
+   - `changelog.md` — v0.2.0, v0.2.1, v0.2.2 entries (top of
+     file).
+   For deep dive (technical audience):
+   `src/haskell/Discovery/Triadic.hs` (~120 lines; the actual
+   engine; doc-block at top has the conventions) and
+   `src/haskell/SpecBridge.hs` (closure-v5 adapter; useful as
+   the template for what `lavaLampCorpus` would look like
+   when written).
 9. **`LAVALAMP_SPEC.md`** for current entry texts (24
    entries).
 
@@ -622,9 +695,10 @@ v1.0 2026-04-01 settled and LavaLamp inheriting from a
 canonical published corpus, what attack vectors does the
 paper's framing imply that V-001..V-013 don't capture?
 
-Three candidate V-NNN entries the paper surfaces:
+Three candidate V-NNN entries the paper surfaces (numbered to
+avoid collision with §4 A7's V-014 EMF candidate):
 
-(a) **V-014 — Cross-sector autopoiesis spoofing.** The 0/5202
+(a) **V-015 — Cross-sector autopoiesis spoofing.** The 0/5202
 empirical result (Closure v5 `catlab_spec.jl` Thm_Q51_autopoietic)
 shows cross-sector autopoiesis fails at threshold 0.999. **But
 the result is a *negative* — the adversary's autopoietic
@@ -635,7 +709,7 @@ that produces some genuine-looking trajectory before
 diverging? This is the analog of V-005 (slow-drift threshold
 gaming) at the autopoietic-tier rather than the spectrum-tier.
 
-(b) **V-015 — Numerical-threshold calibration gaming.** The
+(b) **V-016 — Numerical-threshold calibration gaming.** The
 paper's §13.6 remark says spurious merges occur 5%-12% at
 threshold 0.999; LL-014 (threshold calibration) sets per-
 exponent τ_i = 3·σ(λ̂_i | T) baseline. Can an adversary
@@ -647,7 +721,7 @@ analog (k=5 with n_trials=10) has 10% baseline FPR per the
 P3-bound benchmark. Is the FPR-to-spurious-merge mapping
 exact, and does the calibration discipline transfer?
 
-(c) **V-016 — Three-layer logical-tier confusion attack.**
+(c) **V-017 — Three-layer logical-tier confusion attack.**
 The paper's §1.2 explicit warning: *"these are not
 interchangeable; conflating them produces category errors."*
 LavaLamp's spec entries cluster across the three layers:
@@ -660,14 +734,15 @@ defended at the Possibilistic tier?** Round-3 should weigh
 whether LL-018 (per-class quantification) needs explicit
 layer-tagging.
 
-**Edge-witness call:** which of V-014/015/016 is real, which
+**Edge-witness call:** which of V-015/016/017 is real, which
 is theoretical, and which is already covered implicitly by
 existing LL-IDs? Are there V-NNN candidates beyond these
 three that the paper's structural priors imply? The
 deployment-stack triple LL-022/023/024 + the candidate
-LL-025 (A7 emanation per Q7/A7) cover four sub-domains;
-V-014/015/016 might cluster into a fifth (autopoiesis-tier
-attacks), warranting a fifth Boundary entry.
+LL-025 (A7 emanation per Q7/A7, V-014) cover four sub-
+domains; V-015/016/017 might cluster into a fifth
+(autopoiesis-tier attacks), warranting a fifth Boundary
+entry.
 
 ### A7 — A7 / V-014: is passive-emanation reconstruction realistic?
 
@@ -799,59 +874,63 @@ other (same convention as round 2).
 
 ---
 
-## Internal note: brief status at 0.0.43
+## Internal note: brief status at 0.0.44
 
-This brief is **paper-side substantively complete; engine-side
-pending.** Status of each section:
+This brief is **substantively complete on both paper + engine
+sides; ready to forward.** Status of each section:
 
-- **§1** — LavaLamp side complete; paper-side fill-in landed
-  at 0.0.43 (paper at v1.0 2026-04-01 settled; LavaLamp
-  inherits from canonical published corpus rather than a
-  moving target; three load-bearing section clusters cited
-  with content); engine-side paragraph still
-  `[FILL: ...]` pending engine completion.
+- **§1** — LavaLamp side complete; paper-side fill landed at
+  0.0.43; engine-side fill landed at 0.0.44 (TCE v0.2.2;
+  Discovery.Triadic corpus-agnostic primitive; closure-v5 +
+  BusinessEntity clients; 8 QuickCheck invariants;
+  deployment-next decision deferred).
 - **§2** — LavaLamp companions cited; paper item 1 filled at
-  0.0.43 with file paths + LavaLamp-relevant section
-  pointers; engine item 8 still `[FILL: ...]`.
-- **§3 Q1** — paper-specific reframing landed at 0.0.43 with
-  three sub-questions (a/b/c) on structural-transfer load-
-  bearing-vs-aesthetic, "daughter IS the parent" mapping,
-  numerical-threshold robustness.
-- **§3 Q2-Q6** — LavaLamp-derived (skeleton tier), unchanged.
-- **§3 Q7** — EMF / A7 / LL-025 gap (added 0.0.40); paper-
-  independent.
+  0.0.43; engine item 8 filled at 0.0.44 with concrete
+  reading-priority list (dashboard / ENGINE_SPEC S-047..S-051
+  / discovery_refactor companion / changelog top entries).
+- **§3 Q1** — paper-specific reframing (0.0.43) with sub-
+  questions (a/b/c) on structural-transfer-vs-vocabulary,
+  "daughter IS the parent" mapping, numerical-threshold
+  robustness.
+- **§3 Q2-Q6** — LavaLamp-derived, unchanged.
+- **§3 Q7** — EMF / A7 / LL-025 gap (0.0.40).
 - **§4 A1-A5** — LavaLamp-derived, unchanged.
-- **§4 A6** — paper-specific stress questions landed at 0.0.43
-  with three V-NNN candidates: V-014 cross-sector autopoiesis
-  spoofing, V-015 numerical-threshold calibration gaming,
-  V-016 three-layer logical-tier confusion.
-- **§4 A7** — passive-emanation V-014 candidate (added 0.0.40);
-  paper-independent. Note: this V-numbering predates the
-  V-014/015/016 above; integration on round-3 close will
-  rationalize the V-NNN allocation.
-- **§5** — response format complete; seven-point evaluation;
-  word cap 2800.
-- **§6** — followups complete (8 questions including the 0.0.42
-  Q8 cost-asymmetry one).
+- **§4 A6** — paper-derived V-NNN candidates V-015/016/017
+  (cross-sector autopoiesis spoofing; threshold gaming;
+  three-layer logical-tier confusion). Renumbered from
+  V-014/015/016 at 0.0.44 to resolve collision with §4 A7's
+  V-014 EMF candidate.
+- **§4 A7** — passive-emanation V-014 (added 0.0.40, came
+  first; keeps the V-014 number).
+- **§5** — seven-point evaluation; word cap 2800.
+- **§6** — followups (8 questions).
 
-**Remaining `[FILL: ...]` blanks at 0.0.43:**
+**No remaining `[FILL: ...]` blanks at 0.0.44.** Brief is
+forward-ready.
 
-- §1 engine-side paragraph (waits on engine completion)
-- §2 reading-list item 8 (engine update; waits on engine
-  completion)
+**Round-3 trigger response time at 0.0.44:** zero — Aaron
+forwards §1+§2+§3 to Gemini and §1+§2+§4 to Grok at his
+discretion. Both seats receive §5. §6 is internal.
 
-**Round-3 trigger response time at 0.0.43:** when engine
-completes, ~15-30 minutes to fill the two engine-side blanks
-+ rationalize the V-NNN tags (V-014 candidate from §4 A7
-collides with V-014 candidate from §4 A6's autopoiesis
-spoofing; the integration commit reassigns numbers).
+**Note on Tier 2 audit (Discovery.Triadic on LavaLamp):**
+not done; would require a `lavaLampCorpus` adapter. The
+synthesis seat may surface this as a candidate post-round-3
+work item. Not adding §3 Q9 to the brief because doing so
+would commit to an audit artifact that doesn't exist — the
+question is well-formed but un-answerable until the adapter
+is written.
 
-**Paper-side fill summary:** the paper at v1.0 2026-04-01 is
-*stable*, not in flux. The fill captures three load-bearing
-section clusters (§10.5 C-closure; §11.13 Self-Reproducing
-Fixed Point; §13.6 Evidence Classification) and surfaces
-three V-NNN candidates (V-014/015/016). The synthesis-seat's
-Q1 weighs structural-transfer-vs-vocabulary; the edge-
-witness's A6 weighs which V-NNN candidates are real attacks
-vs theoretical concerns. Both seats' work is now paper-
-grounded rather than paper-pending.
+**V-NNN allocation summary post-rationalization:**
+- V-001..V-010: original (attack_surface_enumeration.md)
+- V-011/012/013: round-2 additions
+- V-014: passive-emanation EMF (round-3, §4 A7 / Q7 / LL-025)
+- V-015: cross-sector autopoiesis spoofing (round-3, §4 A6)
+- V-016: numerical-threshold calibration gaming (round-3, §4 A6)
+- V-017: three-layer logical-tier confusion (round-3, §4 A6)
+
+V-014 EMF and V-015 autopoiesis-spoofing both warrant
+candidate Boundary entries (LL-025 EMF; potential LL-026
+autopoiesis-tier). Synthesis seat's Q7 weighs LL-025; §4 A6
+implicitly suggests LL-026 as a fifth entry alongside the
+deployment-stack triple. Round-3's resolution determines the
+final spec-impact shape.

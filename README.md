@@ -116,7 +116,11 @@ cost-asymmetry; symbiosis-as-equilibrium-not-victory; LL-008
 gains cost-asymmetry footer) → 0.0.43 (round-3 brief paper-
 side blanks filled; closure_forces_structure v1.0 2026-04-01
 paper-grounded; three load-bearing section clusters captured;
-three V-NNN candidates surfaced; engine-side blanks pending).
+three V-NNN candidates surfaced; engine-side blanks pending)
+→ 0.0.44 (round-3 brief engine-side blanks filled; TCE v0.2.2
+corpus-agnostic Discovery.Triadic primitive; V-NNN tag
+collision rationalized to V-014..V-017; brief substantively
+complete on both paper + engine sides; forward-ready).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update. Brief
