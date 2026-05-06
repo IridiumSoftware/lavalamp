@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.49 — LL-021 squared-effective-magnitude composition foothold landed; `LL021_eff_squared_bound : (ε_A · proj)² ≤ ε_A²` via `pow_le_pow_left₀`; `lake build` clean with 767 jobs and zero warnings; sets up the round-3 §1D.v priority-4 LL-006 detection-bound theorem; counts unchanged at 27/1/3/0/4/18/1 — corollary is additional `lean-proved` content for the existing LL-021 `:proved` entry).
+Last updated: 2026-05-06 (0.0.50 — synthesis-team round 3 Tier 3 spec landing; LL-028 runtime-conformance-verification added (Boundary, `:argued`; defends V-019); LL-029 multi-channel-entropy-independence added (Operational, `:argued`; defends V-018); LL-019 round-3 deployment-context expansion footer (regime-1 dev-host artifact + regime-2 multi-tenant real-channel + shared-environment deployment constraint); counts 27/1/3/0/4/18/1 → 29/1/3/0/4/20/1).
 
 ## Status summary
 
@@ -514,7 +514,8 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 27 (was 26; +LL-027 from 0.0.46 round-3 Tier 2)
+- Total spec entries: 29 (was 27; +LL-028 +LL-029 from 0.0.50
+  round-3 Tier 3 spec landing)
 - `:proved`: 1 (LL-021 — first-ever LavaLamp `:proved` entry;
   promoted at 0.0.48 L2 by the Lean 4 + Mathlib v4.29.1 proof
   in `src/lean4/LavaLamp/Theorems.lean`)
@@ -522,11 +523,12 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-027 — was 5
   pre-0.0.48; LL-021 promoted out at L2)
-- `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 20 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026 —
-  LL-014 gains round-3 numerical-threshold non-fundamentality
-  tie; LL-025 + LL-026 added 0.0.45)
+  LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026,
+  LL-028, LL-029 — LL-014 gains round-3 numerical-threshold
+  non-fundamentality tie; LL-025 + LL-026 added 0.0.45;
+  LL-028 + LL-029 added 0.0.50)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -590,6 +592,67 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **Round-3 Tier 3 spec landing** (0.0.50, 2026-05-06) —
+  Spec-only pass landing the three Tier 3 changes per round-3
+  §1D.iii / §1D.iv / §1D.vii. Engineering implementation is
+  separately sequenced by P-RS Level 2 prototype availability
+  per round-3 §1D.viii — this version lands the architecture-
+  design content for the gaps round-3 surfaced; the
+  engineering pass comes later. Three changes:
+  - **LL-028 — runtime-conformance-verification** added
+    (Boundary, manual, `:argued`; defends V-019). The
+    deployment-stack triple LL-022 + LL-023 + LL-024
+    specifies *what* must hold; LL-028 specifies *how to
+    verify it holds at runtime*. Four conformance
+    requirements: (1) attestation continuity (TPM-attested
+    boot + measured runtime state); (2) sensor cross-
+    validation with adversarial probes; (3) verifier-side
+    LL-023 API conformance probing; (4) continuous TRNG
+    attestation. Closes the API-conformance vs invariant-
+    conformance gap (V-019: deployer satisfies API while
+    violating invariants). `:tested` upgrade gated by P-RS
+    Level 2 conformance-check module. Per ChatGPT §1C.A3.
+  - **LL-029 — multi-channel-entropy-independence** added
+    (Operational, manual, `:argued`; defends V-018).
+    Cross-validation requires *physical-mechanism* diversity,
+    not just sensor diversity. A heater-coupled thermal +
+    battery-discharge + AC-current readings are correlated
+    (one mechanism, three sensors); LL-029 forces enumeration
+    of uncorrelated physical-mechanism families
+    (thermal / acoustic / EM / electrical / optical /
+    entropy-source-decay / quantum) before cross-validation
+    qualifies. Calibration-window correlation test
+    (`|ρ| > 0.3` over 60s) flags same-family pairs at
+    registration. `:tested` upgrade gated by P-RS Level 2
+    sensor architecture. Per ChatGPT §1C.A2 (sensor-fusion-
+    inversion attack class).
+  - **LL-019 round-3 deployment-context expansion footer**
+    (status unchanged at `:benchmarked`). Two-regime framing
+    of the timing-channel claim: regime 1 = dev-host artifact
+    (the 0.0.19 benchmark regime, sub-microsecond channel
+    below jitter floor); regime 2 = multi-tenant shared
+    environment (real channel, observable by co-tenant
+    adversary). Regime-2 deployments need shared-environment
+    deployment constraints — dedicated core / pinned
+    scheduling, constant-time padding above shared-host noise
+    floor (≥ 10 ms), jitter randomisation (≥ 1 ms uniform
+    offset). The 0.0.19 `:benchmarked` evidence is unchanged;
+    the amendment is a scope-honesty refinement on the
+    regime-2 generalisation. Per ChatGPT §1C.A1 (LL-019 is
+    BOTH artifact AND real channel).
+  - **Counts:** 27/1/3/0/4/18/1 → 29/1/3/0/4/20/1
+    (+LL-028 +LL-029 to `:argued`).
+  - **Round-3 closure check:** Tier 1 (0.0.45) ✓ + Tier 2
+    (0.0.46) ✓ + Lean L1 (0.0.47) ✓ + Lean L2 (0.0.48) ✓ +
+    LL-006 composition foothold (0.0.49) ✓ + Tier 3 spec
+    (0.0.50) ✓. Round-3 spec-side deliverables fully landed
+    end-to-end; engineering work (P-RS Level 2 prototype
+    implementation; LL-028 / LL-029 conformance modules) is
+    sequenced separately as it requires hardware availability
+    and multi-version implementation passes. Round-3 §1D.viii
+    ("Round 4 trigger: after Tier 1 + Tier 2 land *and* the
+    first Lean theorem is type-checked") is now satisfied —
+    Round 4 may be initiated when ready.
 - **LL-021 squared-effective-magnitude composition foothold**
   (0.0.49, 2026-05-06) — A corollary lemma
   `LL021_eff_squared_bound : 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 →

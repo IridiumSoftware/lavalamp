@@ -60,7 +60,7 @@ for hardware-bound deployment (Linux-first roadmap; FFI
 implementations forthcoming post-round-3). CI runs `Pkg.test()`
 on every push (202 assertions pass in ~53s).
 
-**Spec ledger:** 27 entries with the current breakdown:
+**Spec ledger:** 29 entries with the current breakdown:
 
 | status | count | entries |
 |---|---:|---|
@@ -68,7 +68,7 @@ on every push (202 assertions pass in ~53s).
 | `:verified` | 0 | — |
 | `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
 | `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-027 asymptotic Lyapunov density invariant |
-| `:argued` | 18 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1: LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline) |
+| `:argued` | 20 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1: LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline + round-3 Tier 3: LL-028 runtime-conformance-verification + LL-029 multi-channel-entropy-independence) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 **Trajectory:** 0.0.1 (concept-stage scaffold) → 0.0.3
@@ -169,7 +169,24 @@ detection-bound theorem composition step (squared-magnitude
 monotonicity into LL-006's `exp(-c·T·ε_eff²)` shape); `lake
 build` clean with 767 jobs and zero warnings; counts
 unchanged — corollary is additional `lean-proved` content
-supporting the existing LL-021 `:proved` entry).
+supporting the existing LL-021 `:proved` entry) → 0.0.50
+(round-3 Tier 3 spec landing per §1D.iii / §1D.iv; LL-028
+runtime-conformance-verification added Boundary `:argued`
+defending V-019 with four runtime-verification requirements
+— attestation continuity / sensor cross-validation with
+adversarial probes / verifier-side LL-023 API probing /
+continuous TRNG attestation; LL-029 multi-channel-entropy-
+independence added Operational `:argued` defending V-018
+with seven-family physical-mechanism taxonomy and
+calibration-window correlation test `|ρ| > 0.3` over 60s;
+LL-019 round-3 deployment-context expansion footer covering
+regime-1 dev-host artifact + regime-2 multi-tenant real-
+channel + shared-environment deployment constraint;
+engineering implementation deferred to P-RS Level 2
+prototype availability per §1D.viii; counts 27/1/3/0/4/18/1
+→ 29/1/3/0/4/20/1; round-3 spec-side trajectory closes
+end-to-end and §1D.viii Round-4-trigger condition is now
+satisfied).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new
@@ -187,10 +204,18 @@ integration scope. **Lean L1 landed 0.0.47** (Mathlib
 v4.29.1 integrated; `LL021_worst_case_bound` theorem-statement
 sorry-stubbed). **Lean L2 landed 0.0.48** (sorry replaced
 with real proof; LL-021 promoted to `:proved` —
-first-ever LavaLamp `:proved` entry). Tier 3 (LL-028 runtime
-conformance + LL-029 multi-channel entropy independence +
-LL-019 deployment-context expansion) sequenced by P-RS Level 2
-prototype availability. See
+first-ever LavaLamp `:proved` entry). **LL-006 composition
+foothold 0.0.49** (`LL021_eff_squared_bound` corollary
+lemma; sets up round-3 §1D.v priority-4 detection-bound
+theorem). **Tier 3 spec landed 0.0.50** (LL-028 runtime
+conformance + LL-029 multi-channel entropy independence
+added; LL-019 deployment-context expansion footer). Tier 3
+*engineering* (P-RS Level 2 prototype + LL-028 conformance-
+check module + LL-029 sensor-architecture enumeration) is
+sequenced separately as engineering work. **Round-3 spec-
+side trajectory complete; §1D.viii Round-4 trigger
+condition satisfied** (Tier 1 + Tier 2 landed; first Lean
+theorem type-checked). See
 `docs/synthesis_team_round3_companion.md` for the full
 metabolic synthesis.
 

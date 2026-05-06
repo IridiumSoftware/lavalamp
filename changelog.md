@@ -5,6 +5,242 @@ messages match entry summaries.
 
 ---
 
+## 0.0.50 — 2026-05-06 — Synthesis-team round 3 Tier 3 spec landing (LL-028 + LL-029 + LL-019 deployment-context expansion)
+
+Lands the three Tier 3 spec changes per round-3 §1D.iii and
+§1D.iv. **Spec-only this version** — engineering
+implementation is separately sequenced by P-RS Level 2
+prototype availability per round-3 §1D.viii. The
+architecture-design content for the gaps round-3 surfaced
+lands now; the engineering pass (conformance-check module,
+sensor architecture with physical-mechanism family
+enumeration, P-RS Level 2 prototype hardware availability)
+comes later, in multiple separate version bumps as the
+engineering completes.
+
+This version closes the round-3 spec-side trajectory
+end-to-end: Tier 1 (0.0.45) → Tier 2 (0.0.46) → Lean L1
+(0.0.47) → Lean L2 (0.0.48) → LL-006 composition foothold
+(0.0.49) → Tier 3 (this version). The round-3 §1D.viii
+"Round 4 trigger" condition ("after Tier 1 + Tier 2 land
+*and* the first Lean theorem is type-checked") is now
+satisfied; Round 4 may be initiated when ready.
+
+**Tier 3 spec changes (this version):**
+
+### LL-028 — runtime-conformance-verification (added)
+
+- **Logic tier:** Boundary.
+- **Evidence type:** manual.
+- **Status:** `:argued`.
+- **Defends:** V-019 (runtime conformance bypass — deployer
+  satisfies API while violating invariants internally).
+- **Round-3 origin:** ChatGPT §1C.A3 (edge-witness round-3
+  seat): *"system satisfies API but violates invariants
+  internally. This is equivalent to type-level vs semantic
+  conformance mismatch."*
+
+The deployment-stack triple (LL-022 + LL-023 + LL-024)
+specifies *what* must hold — required OS-trust-stack
+mechanisms, exposed consumer-API surface, real-sensor
+deployment strategies. None of the three specifies *how to
+verify it holds at runtime*. A malicious or compromised
+deployer can satisfy the LL-023 API contract while violating
+LL-022 invariants internally: TRNG-replacement (seeded once
+at boot, replayed); sensor-fusion forgery (cached / scripted
+sensor reads); TPM-attestation stubs returning hardcoded
+`valid`; cached-randomness reuse with API contract preserved.
+
+LL-028 closes this gap with four runtime-verification
+requirements:
+
+1. **Attestation continuity.** TPM-attested boot PLUS
+   measured runtime state — periodic re-attestation that the
+   running binary matches the boot-time-attested measurement.
+2. **Sensor cross-validation with adversarial probes.**
+   Periodic LL-024 cross-validation runs include adversarial
+   test inputs (challenge-response patterns) to detect cached
+   / scripted sensor responses.
+3. **Verifier-side LL-023 API probing.** Verifier issues
+   API queries with embedded conformance probes — queries
+   whose results would diverge if the deployer were stubbing
+   the underlying mechanisms (statistical fingerprints of
+   TRNG output; cross-call entropy decorrelation tests).
+4. **Continuous TRNG attestation.** Where the platform
+   supports it (e.g. Intel `RDRAND` health-check return-code),
+   verifier reads the health-check status alongside random
+   output.
+
+These requirements are operational-tier — satisfied by the
+deployment, not by LavaLamp's internal logic. LL-028 is the
+spec-level statement that runtime conformance is a Boundary
+requirement: LL-008 (resolution-bounded security) holds *only*
+in deployments where runtime conformance is verified.
+
+`:tested` upgrade path: P-RS Level 2 prototype's
+conformance-check module exercises the four requirements on
+the prototype's reference deployment (Linux + TPM-equipped
+host).
+
+### LL-029 — multi-channel-entropy-independence (added)
+
+- **Logic tier:** Operational.
+- **Evidence type:** manual.
+- **Status:** `:argued`.
+- **Defends:** V-018 (coordinated multi-sensor synthesis —
+  sensor-fusion-inversion attack class).
+- **Round-3 origin:** ChatGPT §1C.A2: *"the cross-validation
+  model assumes independent noise sources, but a determined
+  adversary can couple channels physically. This is a classic
+  sensor-fusion-inversion attack: attacker injects signals
+  that satisfy constraints rather than violate them."*
+
+LL-016 Strategy 2 (multi-sensor cross-validation) defends
+against *naive* spoofing where the adversary manipulates one
+sensor in isolation. The defence rests on the implicit
+assumption that distinct sensors carry *independent* entropy.
+The assumption fails when sensors share an underlying
+*physical mechanism*: a heater couples thermal sensor +
+battery-discharge sensor (one mechanism, two sensors); a
+load injector couples AC current + thermal rise (one
+mechanism, two sensors); a vibration motor couples microphone
++ accelerometer (one mechanism, two sensors). The
+cross-validation algorithm sees correlated readings — exactly
+the signal it's looking for — and passes.
+
+LL-029 requires *physical-mechanism* diversity, not just
+sensor diversity. Sensor selection must span *uncorrelated*
+physical mechanisms. The initial taxonomy (deployment-
+expandable):
+
+1. **Thermal.** Temperature; battery-discharge curves; CPU
+   thermal-throttle telemetry; cooler-fan PWM.
+2. **Acoustic / vibrational.** Microphones; accelerometers;
+   gyroscopes; mechanical-resonance sensors.
+3. **Electromagnetic / RF.** EMI; antenna noise floor;
+   magnetic-field sensors.
+4. **Electrical.** Voltage rails; AC current; ground-plane
+   impedance; PSU noise.
+5. **Optical.** Ambient-light; camera sensor noise; IR
+   proximity; OLED display refresh patterns.
+6. **Entropy-source-decay.** Hardware TRNG drift; CPU
+   jitter accumulation; clock-skew envelope.
+7. **Quantum-flavoured.** Radioactive-decay sensors;
+   quantum-tunneling diodes (PharOS-tier deployments).
+
+Cross-validation across families: at least two *uncorrelated*
+families contribute, with correlation measured empirically
+during registration over a 60-second calibration window.
+Pairs with correlation magnitude `|ρ| > 0.3` are flagged
+same-family and counted as one entropy source.
+
+**Within-family multi-sensor is NOT a defence.** Adding more
+sensors of the same family (four thermal sensors instead of
+one) does not satisfy LL-029 — the V-018 coupling attack
+defeats correlated readings regardless of count.
+
+`:tested` upgrade path: P-RS Level 2 sensor architecture
+enumerates physical-mechanism families per platform +
+implements the calibration-window correlation test in the
+registration flow.
+
+### LL-019 — deployment-context expansion (amendment)
+
+- **Status unchanged at `:benchmarked`.**
+- **Round-3 origin:** ChatGPT §1C.A1 (LL-019 is BOTH
+  methodological artifact AND real adversary channel).
+- **Disposition note:** Grok proposed collapsing LL-019 into
+  an LL-022 sub-claim ("no new LL-ID required"); ChatGPT
+  countered that LL-019 stays as a standalone entry because
+  the timing-channel structural claim is independent of the
+  OS-trust-stack scoping declaration. Aaron's resolution
+  decision 3 confirmed standalone framing.
+
+LL-019's scope is expanded to cover both deployment regimes:
+
+**Regime 1 — Dev-host artifact (the 0.0.19 benchmark
+regime).** Sub-microsecond timing channel below OS scheduling
+jitter; KS-test verdicts statistically indistinguishable
+with margin. The 0.0.19 + 0.0.29 high-res evidence
+characterises this regime and is the basis for the
+`:benchmarked` status.
+
+**Regime 2 — Multi-tenant shared environment (real channel).**
+Cloud VMs, container orchestrators with neighbouring
+workloads, co-tenant CPUs. Timing channel *not* below the
+jitter floor — observable by co-tenant adversary. The
+dev-host benchmark does not characterise this regime.
+LL-019's `:benchmarked` status applies to regime 2 only with
+the shared-environment deployment constraint:
+
+1. **Dedicated core / pinned scheduling.** Verify path runs
+   on a CPU core not shared with adversary-accessible
+   workloads (`taskset`, CPU-affinity, dedicated container).
+2. **Constant-time padding above shared-host noise floor.**
+   Padded response duration calibrated to dominate observable
+   shared-host jitter (operationally `pad_target ≥ 10 ms`).
+3. **Jitter randomisation.** Uniform offset on
+   `[0, jitter_window]` with `jitter_window ≥ 1 ms`
+   decorrelates systematic timing leakage from verify result.
+
+Deployments that don't meet these constraints fall outside
+LL-019's `:benchmarked` claim space. The amendment is a
+scope-honesty refinement, not a status change — the regime-1
+evidence is unchanged.
+
+### Round-3 closure status
+
+All round-3 spec-side deliverables landed end-to-end:
+
+- ✓ Tier 1 (0.0.45) — LL-025 + LL-026; V-014..V-020 enumerated.
+- ✓ Tier 2 spec (0.0.46) — LL-027 + LL-021 amendment + LL-014
+  amendment.
+- ✓ Lean L1 (0.0.47) — Mathlib v4.29.1; LL-021 sorry-stubbed.
+- ✓ Lean L2 (0.0.48) — LL-021 proved (`:proved`).
+- ✓ LL-006 composition foothold (0.0.49) —
+  `LL021_eff_squared_bound` lemma.
+- ✓ Tier 3 spec (this version) — LL-028 + LL-029 + LL-019
+  expansion.
+
+Round-3 §1D.viii "Round 4 trigger" satisfied: Tier 1 + Tier 2
+landed; first Lean theorem type-checked. Round 4 may be
+initiated when ready.
+
+Tier 3 *engineering* implementation (LL-028 conformance-check
+module, LL-029 physical-mechanism-family enumeration in P-RS
+Level 2 sensor architecture, P-RS Level 2 prototype
+availability) is sequenced separately as engineering work,
+per-entry version bumps as engineering completes.
+
+### Counts
+
+27/1/3/0/4/18/1 → 29/1/3/0/4/20/1.
+
+- Total: 27 → 29 (+LL-028 +LL-029).
+- `:argued`: 18 → 20 (+LL-028 +LL-029).
+- All other counts unchanged.
+- LL-019 amendment is notes-amendment to existing entry; no
+  count change.
+
+### Files touched this version
+
+- `LAVALAMP_SPEC.md` — LL-028 + LL-029 entries added under
+  the round-3 surfaced-section; LL-019 entry gains the
+  round-3 deployment-context expansion footer; Counts
+  section updated to 29/1/3/0/4/20/1.
+- `artifact_registry.md` — version line bump; LL-028 +
+  LL-029 rows added under round-3 section; counts updated;
+  A1-A6 self-check refreshed for 0.0.50.
+- `dashboard.md` — last-updated stamp; spec-status section
+  count flips; Recent companion docs section gets new top
+  entry covering all three Tier 3 changes + round-3 closure
+  check.
+- `changelog.md` — this entry.
+- `README.md` — count breakdown table (`:argued` 18 → 20);
+  trajectory entry for 0.0.50.
+
+---
+
 ## 0.0.49 — 2026-05-06 — LL-021 squared-effective-magnitude composition foothold (`LL021_eff_squared_bound`)
 
 Lands a corollary lemma in

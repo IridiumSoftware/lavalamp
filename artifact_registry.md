@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.49 (LL-021 squared-effective-magnitude composition foothold landed; `LL021_eff_squared_bound : 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 → (ε_A · proj)² ≤ ε_A²` proved by `pow_le_pow_left₀` over the worst-case bound; `lake build` clean (767 jobs, zero warnings); supports the round-3 §1D.v priority-4 LL-006 detection-bound theorem via the squared-magnitude monotonicity step; counts unchanged at 27/1/3/0/4/18/1 — corollary is additional `lean-proved` content for the existing LL-021 `:proved` entry, not a new entry; 2026-05-06)
+Version: 0.0.50 (synthesis-team round 3 Tier 3 spec landing; LL-028 runtime-conformance-verification added (Boundary, manual, `:argued`; defends V-019); LL-029 multi-channel-entropy-independence added (Operational, manual, `:argued`; defends V-018); LL-019 round-3 deployment-context expansion footer (regime 1 dev-host artifact + regime 2 multi-tenant real-channel + shared-environment deployment constraint; status unchanged at `:benchmarked`); counts 27/1/3/0/4/18/1 → 29/1/3/0/4/20/1; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -113,23 +113,26 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 | LL-025 | A7-passive-emanation-boundary | Boundary | manual | docs/synthesis_team_round3_companion.md §1B.Q7 + §1C.A7 + docs/attack_surface_enumeration.md §3 V-014 | — | :argued |
 | LL-026 | three-layer-logic-tier-annotation-discipline | Core | manual | docs/synthesis_team_round3_companion.md §1B.Q1 + §1C.A6 + docs/attack_surface_enumeration.md §3 V-017 | — | :argued |
 | LL-027 | asymptotic-Lyapunov-density-invariant | Core | benchmarked | src/julia/benchmark/p3e_n_scaling.jl + src/julia/benchmark/results/p3e_n_scaling_lorenz96.txt + docs/p3e_n_scaling_companion.md (linear extensive-chaos scaling; `s ≈ 0.255` per dimension) | src/julia/src/Engine.jl | :benchmarked |
+| LL-028 | runtime-conformance-verification | Boundary | manual | docs/synthesis_team_round3_companion.md §1C.A3 + docs/attack_surface_enumeration.md §3 V-019 (deployment-stack triple specifies what must hold; LL-028 specifies how to verify it holds at runtime; four conformance requirements: attestation continuity / sensor cross-validation with adversarial probes / verifier-side LL-023 API probing / continuous TRNG attestation; `:tested` upgrade gated by P-RS Level 2 prototype's conformance-check module) | — | :argued |
+| LL-029 | multi-channel-entropy-independence | Operational | manual | docs/synthesis_team_round3_companion.md §1C.A2 + docs/attack_surface_enumeration.md §3 V-018 (cross-validation requires physical-mechanism diversity, not just sensor diversity; seven-family taxonomy: thermal / acoustic / EM / electrical / optical / entropy-source-decay / quantum; calibration-window correlation test `|ρ| > 0.3` over 60s flags same-family pairs; `:tested` upgrade gated by P-RS Level 2 sensor architecture) | — | :argued |
 
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 27
+- Total: 29 (+LL-028 +LL-029 from round-3 Tier 3 spec landing
+  at 0.0.50)
 - `:proved`: 1 (LL-021 — first-ever; promoted at 0.0.48 L2)
 - `:tested`: 3
 - `:verified`: 0
 - `:benchmarked`: 4
-- `:argued`: 18
+- `:argued`: 20 (+LL-028 +LL-029)
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.49)
+## Cross-audit A1–A6 self-check (post-0.0.50)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (27 of 27).
+  here. ✓ (29 of 29; +LL-028 +LL-029 added at 0.0.50).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
   LL-025 / LL-026 / LL-027 registry keys match spec keys
   (`A7-passive-emanation-boundary`, `three-layer-logic-tier-
@@ -162,18 +165,21 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   its evidence type cannot support; CLAUDE.md §Honest framing
   rule (`:proved` requires `lean-proved`, `type-checked`, or
   `algebraic`) is satisfied.
-- **A5 — Stale counts.** Counts above (27 / 1 / 3 / 0 / 4 /
-  18 / 1) match `LAVALAMP_SPEC.md` 0.0.49 final-section counts
-  and `dashboard.md` 0.0.49 spec-status section. **Counts
-  unchanged from 0.0.48** — the 0.0.49 corollary
-  (`LL021_eff_squared_bound`) is additional `lean-proved`
-  content supporting the existing LL-021 `:proved` entry, not
-  a new entry; entry-level status and evidence type are
-  unchanged. The composition foothold sets up the round-3
-  §1D.v priority-4 LL-006 detection-bound theorem (future
-  version pass) which would, when proved, promote LL-006
-  evidence-type `benchmarked` → `lean-proved` and status
-  `:benchmarked` → `:proved`.
+- **A5 — Stale counts.** Counts above (29 / 1 / 3 / 0 / 4 /
+  20 / 1) match `LAVALAMP_SPEC.md` 0.0.50 final-section counts
+  and `dashboard.md` 0.0.50 spec-status section. **Counts
+  shifted at 0.0.50** — round-3 Tier 3 spec landing added
+  LL-028 (runtime-conformance-verification, Boundary,
+  `:argued`) + LL-029 (multi-channel-entropy-independence,
+  Operational, `:argued`); total 27 → 29; `:argued` 18 → 20;
+  others unchanged. LL-019 deployment-context expansion is a
+  notes-amendment to the existing LL-019 entry — status
+  unchanged at `:benchmarked`, no row addition. **`:tested`
+  upgrade path for both new entries:** sequenced by P-RS
+  Level 2 prototype availability per round-3 §1D.viii — the
+  spec entries land now (architecture-design tier);
+  engineering implementation lands later when P-RS Level 2
+  is built.
 - **A6 — Test sync.** LL-002, LL-003, LL-004, LL-005 (part-
   (a) only), LL-006, LL-007 are exercised by
   `src/julia/test/runtests.jl`, runnable via `Pkg.test()`
@@ -185,6 +191,15 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   test/proof file beyond the companions and attack-surface
   enumeration (deferred operational-tooling work). LL-026 is
   governance discipline; no runtime test artifact applies.
+  **0.0.50:** LL-028 + LL-029 have no test/proof file beyond
+  the round-3 companion + attack-surface enumeration —
+  deferred operational/engineering work; sequenced by P-RS
+  Level 2 prototype availability per round-3 §1D.viii.
+  Implementation hooks: LL-028 needs a conformance-check
+  module exercising the four runtime-verification
+  requirements; LL-029 needs the registration-flow
+  correlation test + per-platform physical-mechanism-family
+  enumeration.
   **0.0.47:** the Lean track at `src/lean4/` enters CI via
   `.github/workflows/lean.yml` (`lake build` on every push;
   Mathlib v4.29.1 cache via `lake exe cache get`; timeout

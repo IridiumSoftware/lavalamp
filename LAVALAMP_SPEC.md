@@ -879,6 +879,77 @@ LL-ID, not the Key.
   `src/julia/benchmark/ll019_timing_distribution_high_res.jl`;
   result file:
   `src/julia/benchmark/results/ll019_timing_distribution_high_res.txt`.
+- **Round-3 deployment-context expansion (2026-05-06, 0.0.50):**
+  Per round-3 §1D.iv (ChatGPT edge-witness, A1) and Aaron's
+  resolution decision 3 (Tier 3 sequencing), LL-019's scope
+  is expanded to cover both deployment regimes:
+
+  **Regime 1 — Dev-host artifact (the 0.0.19 benchmark
+  regime).** On a dedicated dev workstation, the data-
+  dependent timing channel is sub-microsecond and below the
+  OS scheduling-jitter floor; KS-test results at α=0.05 /
+  n=400 show statistical indistinguishability with margin.
+  Adversary exploitability is operationally negligible
+  because the channel sits below the jitter floor. The 0.0.19
+  benchmark + 0.0.29 high-res refresh together characterise
+  this regime and are the basis for LL-019's
+  `:benchmarked` status.
+
+  **Regime 2 — Multi-tenant shared environment (real
+  channel).** On shared hosts (cloud VMs; container
+  orchestrators with neighbouring workloads; co-tenant CPUs)
+  the data-dependent timing channel is *not* below the
+  jitter floor — it can be observed and aggregated by a
+  co-tenant adversary. The dev-host benchmark does *not*
+  characterise this regime. LL-019's `:benchmarked` status
+  applies only to deployments that meet the
+  shared-environment deployment constraint below.
+
+  **Shared-environment deployment constraint (load-bearing
+  for the LL-019 claim under Regime 2).** Deployments in
+  multi-tenant or shared-CPU environments must include:
+
+  1. **Dedicated core / pinned scheduling.** LavaLamp's
+     verify path runs on a CPU core not shared with
+     adversary-accessible workloads (e.g. via `taskset` /
+     CPU-affinity / dedicated container with cpu-set).
+  2. **Constant-time padding above shared-host noise floor.**
+     The padded response duration must be calibrated to
+     dominate observable shared-host jitter (operationally
+     `pad_target ≥ 10 ms` for typical container hosts;
+     calibrated empirically per deployment).
+  3. **Jitter randomisation.** A randomised offset
+     (uniform on `[0, jitter_window]` with `jitter_window
+     ≥ 1 ms`) is added to the response time so that even
+     systematic timing leakage is decorrelated from the
+     verify result.
+
+  Deployments that do not meet these constraints fall outside
+  LL-019's `:benchmarked` claim space. The constraint is
+  documented here rather than at LL-022 because it's
+  specifically about the LL-019 timing-channel claim, not
+  about the broader OS-trust-stack scope LL-022 covers.
+
+  **Why this isn't a status change.** The 0.0.19 benchmark
+  evidence is unchanged; the regime-1 claim still holds at
+  `:benchmarked`. The amendment surfaces an honest scope-
+  limit on the regime-2 generalisation — without the
+  shared-environment constraint, the dev-host benchmark
+  doesn't transfer. Per ChatGPT's framing in §1C.A1: LL-019
+  is *both* a methodological artifact (regime 1) *and* a real
+  channel (regime 2); the dev-host benchmark addresses the
+  artifact regime, not the channel regime. Status remains
+  `:benchmarked` for regime 1; regime 2 has the deployment
+  constraint as its `:argued`-tier defence.
+
+  **Round-3 disposition note.** Grok proposed collapsing
+  LL-019 into an LL-022 sub-claim ("no new LL-ID required");
+  ChatGPT countered that LL-019 stays as a standalone entry
+  because the timing-channel structural claim is independent
+  of the OS-trust-stack scoping declaration. Aaron's
+  resolution decision 3 confirmed the standalone entry
+  framing — this amendment is the integration of ChatGPT's
+  position.
 
 ### LL-020 — calibration-confidentiality
 - Key: registered envelope sealed against registration-channel observers, not just substitution
@@ -1507,19 +1578,231 @@ LL-ID, not the Key.
   surface* at large N is open per V-020 and the LL-021
   amendment in this version).
 
+### LL-028 — runtime-conformance-verification
+- Key: deployment-stack triple specifies what must hold; runtime conformance specifies how to verify it holds at runtime
+- Logic tier: Boundary
+- Description: The deployment-stack triple (LL-022 + LL-023 +
+  LL-024) defines what LavaLamp's claims *depend on* (LL-022:
+  OS-trust-stack required mechanisms), what LavaLamp *exposes*
+  (LL-023: consumer-API-surface), and *how* LavaLamp
+  instantiates against real sensors (LL-024: real-sensor-
+  deployment-strategy). Each entry specifies *requirements*;
+  none specifies *runtime enforcement* of those requirements.
+  A malicious or compromised deployer can satisfy the LL-023
+  API contract while violating LL-022 invariants internally —
+  the type/interface-level conformance vs semantic/invariant-
+  level conformance gap (V-019).
+
+  **Concrete bypass shapes (V-019 scenarios):**
+
+  - **TRNG-replacement.** LL-022(c) requires OS-grade entropy
+    sources (e.g. `getrandom` on Linux, `SecRandomCopyBytes`
+    on Darwin). Adversary substitutes a deterministic PRNG
+    seeded once at boot; verifier sees the API-shape
+    `getrandom(buf, len, 0)` succeed; under the hood, the
+    entropy is replayable.
+  - **Sensor-fusion forgery.** LL-024 Strategy 2 requires
+    multi-sensor cross-validation. Adversary replaces sensor
+    reads with cached or scripted values that satisfy the
+    cross-validation algorithm without actually reading
+    hardware.
+  - **TPM-attestation stub.** LL-022(a) requires hardware
+    root of trust. Adversary returns hardcoded `valid` from
+    the attestation API stub without invoking TPM hardware.
+  - **Cached-randomness reuse.** Verifier reads "fresh"
+    randomness from a buffer that was filled once and is
+    silently re-served; LL-022(c) freshness invariant
+    violated, API contract preserved.
+
+  **Conformance requirement.** LavaLamp deployments must
+  include runtime invariant verification — the deployment is
+  not just *configured* to satisfy LL-022/023/024 but is
+  *continuously verified* to be doing so:
+
+  1. **Attestation continuity.** TPM-attested boot (where
+     LL-022(a) requires hardware root of trust) PLUS measured
+     runtime state — periodic re-attestation that the running
+     binary matches the boot-time-attested measurement.
+  2. **Sensor cross-validation with adversarial probes.**
+     Periodic LL-024 cross-validation runs include
+     adversarial test inputs (e.g. challenge-response patterns
+     across sensor families) to detect cached / scripted
+     sensor responses.
+  3. **Verifier-side LL-023 API probing.** Verifier issues
+     LL-023 API queries with embedded conformance probes —
+     queries whose results would diverge if the deployer were
+     stubbing rather than executing the underlying
+     mechanisms (e.g. statistical fingerprints of TRNG output;
+     cross-call entropy decorrelation tests).
+  4. **Continuous TRNG attestation.** Where the platform
+     supports it (e.g. Intel CPU `RDRAND` health-check
+     return-code), verifier reads the health-check status
+     alongside random output.
+
+  These four requirements are operational-tier; they must be
+  satisfied by the deployment, not by LavaLamp's internal
+  logic. LL-028 is the spec-level statement that runtime
+  conformance is a Boundary requirement: LavaLamp's
+  resolution-bounded security claim (LL-008) holds *only* in
+  deployments where runtime conformance is verified.
+- Evidence type: manual
+- Status: :argued
+- Source: docs/synthesis_team_round3_companion.md §1C.A3
+  (ChatGPT round-3 edge-witness seat) +
+  docs/attack_surface_enumeration.md §3 V-019.
+- Notes: LL-028 is a **Boundary** entry: it specifies a
+  scope-limit on LL-022/023/024's claim space rather than
+  introducing a new internal mechanism. Without runtime
+  conformance verification, the deployment-stack triple is
+  *honest about its scope* (configuration trust) but the
+  attack surface is real for adversaries who control the
+  deployment context (A2 deployer; occasionally A3 in deeper
+  bypass).
+
+  **`:tested` upgrade path.** P-RS Level 2 prototype must
+  include a conformance-check module that exercises the four
+  requirements above on the prototype's reference deployment
+  (Linux + TPM-equipped host). Deferred — engineering work,
+  sequenced by P-RS Level 2 prototype availability per
+  round-3 §1D.viii.
+- **Round-3 origin:** ChatGPT §1C.A3 surfaced this as a gap
+  in the deployment-stack triple's runtime-enforcement
+  posture: *"system satisfies API but violates invariants
+  internally. This is equivalent to type-level vs semantic
+  conformance mismatch."* Defends V-019. Logic tier
+  Boundary because it scopes the claim-space of LL-022 +
+  LL-023 + LL-024 rather than introducing a new
+  load-bearing internal mechanism. Depends on LL-022, LL-023,
+  LL-024 (the triple LL-028 scopes); composes with LL-026
+  (the conformance check is a Bridge-layer protocol per the
+  three-layer logic-tier discipline).
+
+### LL-029 — multi-channel-entropy-independence
+- Key: cross-validation requires physical-mechanism diversity, not just sensor diversity
+- Logic tier: Operational
+- Description: LL-016 Strategy 2 (multi-sensor cross-
+  validation) defends against *naive* spoofing where the
+  adversary manipulates one sensor in isolation. The defence
+  rests on the implicit assumption that distinct sensors
+  carry *independent* entropy. The assumption fails when
+  sensors share an underlying *physical mechanism* — a
+  determined adversary can physically couple channels to
+  satisfy the cross-validation constraints rather than
+  violate them (V-018):
+
+  - **Heater → thermal sensor + battery-discharge sensor.**
+    Both downstream of the heat-injection mechanism;
+    correlated under coupling.
+  - **Load injector → AC current draw + thermal rise sensor.**
+    Both downstream of the load mechanism; correlated.
+  - **Vibration motor → microphone + accelerometer.** Both
+    downstream of the mechanical mechanism; correlated.
+
+  The cross-validation algorithm sees correlated readings —
+  which is *exactly the signal it's looking for* — and
+  passes. The attack defeats LL-016 Strategy 2 *because the
+  independence assumption is wrong*, not because the
+  cross-validation mechanism is wrong.
+
+  **Independence requirement.** Sensor selection must span
+  *uncorrelated physical mechanisms*, not merely uncorrelated
+  sensors. LavaLamp deployments must enumerate the
+  physical-mechanism families their sensors draw from, and
+  cross-validation must operate across at least two
+  uncorrelated families.
+
+  **Physical-mechanism family taxonomy (initial; deployment-
+  expandable):**
+
+  1. **Thermal.** Temperature sensors; battery-discharge
+     curves; CPU thermal-throttle telemetry; cooler-fan PWM;
+     thermal-runaway timers.
+  2. **Acoustic / vibrational.** Microphones; accelerometers;
+     gyroscopes; mechanical-resonance sensors.
+  3. **Electromagnetic / RF.** EMI sensors; antenna noise
+     floor; magnetic-field sensors; RFID-tag detection.
+  4. **Electrical.** Voltage rails; AC current draw; ground-
+     plane impedance; PSU noise; bus contention timing.
+  5. **Optical.** Ambient-light sensors; camera sensor noise;
+     IR proximity; OLED display refresh patterns.
+  6. **Entropy-source-decay.** Hardware TRNG drift over time;
+     CPU jitter accumulation; clock-skew envelope.
+  7. **Quantum-flavoured.** Where available — radioactive-
+     decay sensors; quantum-tunneling diodes; vacuum-
+     fluctuation sensors. (Most consumer hardware lacks
+     these; PharOS-tier deployments may include them.)
+
+  Cross-validation across families: at least two
+  *uncorrelated* families must contribute, with correlation
+  measured empirically over a calibration window during
+  registration. Within-family multi-sensor cross-validation
+  is *not* sufficient — heater-correlated thermal + battery
+  is one family, not two.
+
+  **Calibration-window correlation test.** During the
+  LL-011 registration ceremony, the cross-correlation matrix
+  across all sensor pairs must be computed; pairs with
+  correlation magnitude exceeding a calibration threshold
+  (operationally `|ρ| > 0.3` over a 60-second window) are
+  flagged as same-family and counted as one entropy source
+  for cross-validation purposes.
+- Evidence type: manual
+- Status: :argued
+- Source: docs/synthesis_team_round3_companion.md §1C.A2
+  (ChatGPT round-3 edge-witness seat) +
+  docs/attack_surface_enumeration.md §3 V-018.
+- Notes: LL-029 is **Operational**: it specifies a sensor-
+  architecture requirement that operates at deployment-time
+  during registration and at runtime during cross-validation.
+  Depends on LL-016 (sensor-authenticity, the entry it
+  refines) and LL-024 (real-sensor-deployment-strategy, the
+  entry that hosts the sensor-architecture decisions in
+  practice).
+
+  **`:tested` upgrade path.** P-RS Level 2 sensor architecture
+  must enumerate the physical-mechanism families each
+  prototype platform supports + implement the calibration-
+  window correlation test in the registration flow.
+  Deferred — engineering work, sequenced by P-RS Level 2
+  prototype availability per round-3 §1D.viii.
+
+  **Within-family correlation is NOT a defence.** A common
+  early implementation mistake is to add *more sensors of the
+  same family* (e.g. four thermal sensors instead of one) and
+  conclude that diversity is achieved. The V-018 attack
+  defeats this — coupling the heat-injection mechanism still
+  produces correlated readings across all four thermal
+  sensors. LL-029 is explicit that *family count*, not
+  *sensor count*, is the load-bearing quantity.
+- **Round-3 origin:** ChatGPT §1C.A2 surfaced this as a
+  sensor-fusion-inversion attack class: *"the cross-validation
+  model assumes independent noise sources, but a determined
+  adversary can couple channels physically. This is a classic
+  sensor-fusion-inversion attack: attacker injects signals
+  that satisfy constraints rather than violate them."*
+  Defends V-018. Logic tier Operational because it operates
+  at the sensor-architecture / registration-time / runtime
+  layer rather than the spec-statement-of-claim layer.
+  Depends on LL-016 (sensor-authenticity), LL-024 (P-RS
+  deployment-strategy); compounds with V-006 (sensor-input
+  poisoning) by raising the adversary capability required to
+  defeat cross-validation.
+
 ---
 
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 27
+- Total: 29 (was 27; +LL-028 + LL-029 from 0.0.50 round-3 Tier 3
+  spec landing)
 - `:proved`: 1 (LL-021 — first-ever LavaLamp `:proved` entry;
   Lean 4 + Mathlib v4.29.1; promoted at 0.0.48)
 - `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-027)
-- `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 20 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026)
+  LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026,
+  LL-028, LL-029)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
