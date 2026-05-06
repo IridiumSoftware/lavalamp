@@ -1198,29 +1198,159 @@ LL-ID, not the Key.
 
 ---
 
+## Surfaced by synthesis-team round 3 (0.0.45)
+
+### LL-025 — A7-passive-emanation-boundary
+- Key: tier-bounded scoping of TEMPEST-class side-channel attacks (A7)
+- Logic tier: Boundary
+- Description: Formal statement of LavaLamp's defense posture
+  against passive-emanation reconstruction attacks (TEMPEST-
+  class A7). The claim is **tier-bounded**, not universal, and
+  parallels the LL-015 shape (A3 OOS) in declaring scope rather
+  than promising defense. Three adversary tiers:
+
+  **Tier 1 — State actor (sub-meter, lab equipment, targeted
+  device).** Modern TEMPEST research (Genkin et al. 2014 RSA-
+  from-acoustic; DDR3/DDR4 EM leakage; van Eck phreaking)
+  demonstrates partial state recovery from EM / acoustic /
+  optical emanations at this tier. LavaLamp's primitive does
+  not defend against Tier 1 adversaries; deployments requiring
+  Tier 1 resistance must use TEMPEST-rated enclosures +
+  hardware-platform-tier guidance (PharOS scope). LL-025
+  declares scope, not defense.
+
+  **Tier 2 — Mid-tier (room-scale SDR, commercial equipment).**
+  Signal extraction is possible; full trajectory reconstruction
+  is unlikely at LavaLamp's chaos-production rate (h_KS · N).
+  LL-025 applies deployment-context guidance: avoid co-located
+  shared-environment deployments where Tier 2 capture is
+  plausible.
+
+  **Tier 3 — Commodity adversary (no specialized equipment).**
+  The noise floor of multi-GHz CPUs plus the decode complexity
+  at LavaLamp's chaos-production rate makes A7 attacks
+  negligible at this tier. LL-025 implicitly defends Tier 3.
+
+  LL-025 forms a **parallel boundary triple** with LL-015
+  (downward adversary boundary — A3 OOS) and LL-024
+  (operational sensor instantiation). The three close adversary
+  scoping at three levels: *what's structurally out of scope*
+  (LL-015), *what's tier-bounded* (LL-025), *what we
+  instantiate operationally* (LL-024).
+- Evidence type: manual
+- Status: :argued
+- Source: docs/synthesis_team_round3_companion.md §1B.Q7 +
+  §1C.A7; attack-surface entry V-014.
+- Notes: LL-025 mirrors LL-015's "scope declaration" pattern at
+  the side-channel boundary rather than the kernel boundary.
+  The tier-bounded honest framing (per ChatGPT round 3 §1C.A7
+  *"V-014 is real but bounded: should be explicitly scoped, not
+  universalized"*) is the load-bearing structure. Promotion
+  paths: `:tested` would require empirical EM / acoustic
+  emanation measurements on a reference deployment +
+  reconstruction attempts at each tier (operational-tooling
+  work; deferred); `:proved` is structurally infeasible (LL-025
+  is a deployment-context scoping commitment, not a property of
+  the primitive). LL-025 stays `:argued` permanently in the
+  prototype's scope, paralleling LL-015's permanent `:open`
+  status.
+- **Theorem-shape implication:** Future Lean theorems about
+  trajectory privacy or unobservability must be stated
+  parametrically in adversary tier — `forall (tier :
+  AdversaryTier) (h_tier : tier ≤ Tier3),
+  <unobservability_property>` — rather than unconditionally.
+  The asymmetry-trap defense is making tier-boundedness
+  explicit in the theorem statement. See
+  `synthesis_team_round3_companion.md` §1C.A7.
+- **Threat-landscape framing:** LL-025 covers the "virus /
+  cancer injection under our nose" defeat condition of the
+  cockroach / catapult / castle metaphor
+  (`threat_landscape_companion.md` §2.4). Tier 1 (state actor)
+  is the adversary class for which this defeat is real; LL-025
+  declares scope honestly rather than promising defense.
+
+### LL-026 — three-layer-logic-tier-annotation-discipline
+- Key: every spec entry tagged Possibilistic / Probabilistic / Bridge per paper §1.2
+- Logic tier: Core
+- Description: Spec-level governance discipline requiring every
+  LL entry to carry an explicit logical-tier annotation per the
+  closure_forces_structure paper §1.2 three-layer logic
+  structure:
+
+  - **Possibilistic Layer.** Claims about what is *forced*,
+    *forbidden*, or *compatible* under the constraint surface.
+    Discrete combinatorial. Examples: LL-001 substrate-bound
+    identity (forbidden: cloning); LL-008 resolution-bounded
+    security (forbidden: forge below resolution boundary);
+    LL-018 per-class quantification (forced: A1 / A2 / A4
+    capability bounds).
+
+  - **Probabilistic Layer.** Claims about statistical bounds,
+    detection probabilities, FPR / FNR, ε-DP envelopes.
+    Measurement-tier. Examples: LL-006 detection bound
+    `P(detect) ≥ 1 - K·exp(-c·T·δ²)`; LL-019 KS-test timing-
+    indistinguishability; LL-020 ε-DP envelope; LL-021 worst-
+    case bound `ε_eff ≤ ε_A · proj`.
+
+  - **Bridge Layer.** Claims spanning the layers: deployment
+    protocols, ceremonies, transition-handling. Examples:
+    LL-011 registration ceremony; LL-012 cold-start; LL-013
+    cross-config; LL-017 verification-no-oracle.
+
+  The discipline is the defense against V-017 (logical-tier
+  confusion attacks): an adversary cannot apply Probabilistic
+  reasoning to a claim that's tagged Possibilistic. Per-entry
+  tags are added to existing LL-001..LL-024 entries in a
+  follow-up small-session pass; new entries (LL-027+) carry
+  tags from creation.
+- Evidence type: manual
+- Status: :argued
+- Source: docs/synthesis_team_round3_companion.md §1B.Q1 +
+  §1C.A6 + closure_forces_structure paper §1.2.
+- Notes: LL-026 is a **governance discipline**, not an
+  engineering primitive. The "test" is consistency: every spec
+  entry has a tag; cross-audit can include layer-consistency
+  check. `:tested` upgrade meaningless for a documentation
+  discipline; `:proved` similarly inapplicable. LL-026 stays
+  `:argued` permanently — the discipline IS the evidence.
+- **Round-3 origin:** Both seats independently surfaced this
+  discipline. Grok §1B.Q1 noted LL-005's parameter-compliance
+  sub-claim is Possibilistic and adversary detection is Bridge-
+  layer. ChatGPT §1C.A6 named V-017 explicitly as *"meta-
+  attack: apply probabilistic reasoning to possibilistic
+  claims; exploit mismatch in guarantee type"*. The discipline
+  defends V-017 by construction.
+- **Per-entry annotation pass (pending):** existing LL-001..
+  LL-024 entries will be annotated in a follow-up pass (small-
+  session scope). The annotation is documentation-only;
+  existing entry text remains unchanged.
+
+---
+
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
-- Total: 24
+- Total: 26
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021)
-- `:argued`: 16 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022, LL-023, LL-024)
+  LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
-**Prototype-stage; spec essentially fully evidenced. Four
-empirically-validated :benchmarked entries (LL-003 SDE
-choice via comparative bench, LL-006 detection bound,
-LL-019 timing-indistinguishability, LL-021 worst-case
+**Prototype-stage; spec fully evidenced through round-3
+Tier 1. Four empirically-validated :benchmarked entries
+(LL-003 SDE choice via comparative bench, LL-006 detection
+bound, LL-019 timing-indistinguishability, LL-021 worst-case
 bound); three :tested entries (LL-002 visual ↔ security
 decoupling via the visual layer + decoupling-assertion
 testset added in 0.0.33; LL-004 sensor coupling; LL-007
-chaos-guard); sixteen :argued at design level (now
-including LL-024 real-sensor-deployment-strategy from the
-0.0.38 P-RS scoping pass — completes the deployment-stack
-triple alongside LL-022 / LL-023); only LL-015 remains
-:open as the honest scoping declaration that A3 (kernel-
-level) adversaries are out of scope.**
+chaos-guard); eighteen :argued at design level (now
+including LL-025 A7-passive-emanation-boundary from
+synthesis-team round 3 — parallel boundary triple with
+LL-015 / LL-024; and LL-026 three-layer-logic-tier-
+annotation-discipline — paper-§1.2-derived governance);
+only LL-015 remains :open as the honest scoping declaration
+that A3 (kernel-level) adversaries are out of scope.**

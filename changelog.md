@@ -5,6 +5,131 @@ messages match entry summaries.
 
 ---
 
+## 0.0.45 — 2026-05-06 — Synthesis-team round 3 Tier 1 (LL-025 + LL-026; V-014..V-020 enumerated)
+
+Lands round-3 Tier 1 spec changes per the rendered Aaron-
+resolution decisions in `docs/synthesis_team_round3_companion.md`
+§1D.vi. Round 3 ran a seat rotation: Gemini (round-2
+synthesis) was struggling on the round-3 task and stepped
+out; Grok rotated edge-witness → synthesis; ChatGPT joined
+as new edge-witness entrant. Both seats responded
+substantively. Verdicts: Grok (synthesis) `engage-and-
+formalise-after-fixes`; ChatGPT (edge-witness)
+`pass-after-fixes` — complementary lenses, neither says fail.
+
+**Aaron's three resolution decisions (rendered 2026-05-06):**
+
+1. **V-021 / V-022 disposition: MERGE.** V-021 (Prefix-
+   Trajectory Mimicry) absorbs into V-015 as the attack-
+   mechanism axis; V-022 (Threshold Equivalence Exploit)
+   absorbs into V-016 as the language axis. Net new V-IDs
+   after merge: 7 (V-014 through V-020).
+2. **Tier sequencing: confirm default.** Tier 1 (this
+   version) → Tier 2 (paired with first Lean theorem) → Tier
+   3 (engineering availability).
+3. **Lean first theorem + Mathlib: Option A.** LL-021 worst-
+   case bound; Mathlib full. Theorem 2 will be Closure
+   Detection Soundness atop theorem 1's environment.
+   ChatGPT's adaptive-adversary critique handled in spec text
+   via Tier 2 LL-021 amendment, not Lean.
+
+**Tier 1 changes (this version):**
+
+- **LL-025 — A7-passive-emanation-boundary.** New Boundary
+  entry (`:argued`). Tier-bounded scoping declaration:
+  state-actor / mid-tier / commodity. Forms a parallel
+  boundary triple with LL-015 (downward — A3 OOS) and
+  LL-024 (operational — sensor instantiation). Three closure-
+  of-three groupings now in spec: deployment-stack triple
+  (LL-022 / LL-023 / LL-024) + adversary-scoping triple
+  (LL-015 / LL-024 / LL-025). Defends V-014 by tier-bounded
+  scoping rather than universal defense.
+- **LL-026 — three-layer-logic-tier-annotation-discipline.**
+  New Core (governance) entry (`:argued`). Spec-level
+  governance: every LL entry tagged Possibilistic /
+  Probabilistic / Bridge per closure_forces_structure paper
+  §1.2. Defends V-017 logical-tier-confusion attacks by
+  construction. Per-entry annotation pass on existing
+  LL-001..LL-024 deferred to follow-up small-session.
+- **V-014..V-020 enumerated** in
+  `docs/attack_surface_enumeration.md`. Seven new attack
+  vectors:
+  - V-014 — Passive-emanation reconstruction (LL-025
+    surface).
+  - V-015 — Cross-sector autopoiesis spoofing (paper-derived;
+    LL-006 / LL-007 limitation; absorbs the V-021 prefix-
+    trajectory mimicry mechanism axis).
+  - V-016 — Numerical-threshold calibration gaming (paper-
+    derived; LL-014 / LL-026 surface; absorbs the V-022
+    threshold-equivalence-exploit language axis).
+  - V-017 — Three-layer logical-tier confusion (LL-026
+    surface).
+  - V-018 — Coordinated multi-sensor synthesis (LL-029
+    future, Tier 3).
+  - V-019 — Runtime conformance bypass (LL-028 future,
+    Tier 3).
+  - V-020 — Stable-manifold stealth injection (LL-021
+    amendment, Tier 2).
+- **§4 adversary × vector matrix** updated with V-014..V-020
+  rows.
+- **§5 residual risks** extended with entries 10-13 covering
+  V-014 (LL-025 tier-bounded), V-018 (LL-029 pending —
+  largest engineering gap post-round-3), V-019 (LL-028
+  pending), V-020 (LL-021 amendment pending).
+
+**LL-008 cost-asymmetry footer** already landed in 0.0.42 —
+no additional change needed. Grok §1B.Q1 ratified the
+existing footer as the load-bearing framing.
+
+**Counts:**
+
+- Total: 24 → 26 (+LL-025 +LL-026)
+- `:argued`: 16 → 18 (+LL-025 +LL-026)
+- Other counts unchanged: `:proved` 0; `:tested` 3 (LL-002,
+  LL-004, LL-007); `:verified` 0; `:benchmarked` 4 (LL-003,
+  LL-006, LL-019, LL-021); `:open` 1 (LL-015 permanent).
+- Attack vectors: V-001..V-013 + V-014..V-020 = 20 enumerated
+  total (V-021 absorbed into V-015; V-022 absorbed into V-016).
+
+**Spec growth path next:**
+
+- **Tier 2 (next version, paired with first Lean theorem):**
+  LL-027 (asymptotic Lyapunov density invariant `s ≈ 0.255`
+  per dimension; promotes 0.0.30 N-scaling result to spec-
+  level invariant) + LL-021 scope-limit (finite-N regime,
+  N ≤ 80) + adaptive-adversary amendment + LL-014 numerical-
+  threshold non-fundamentality tie. First Lean theorem:
+  `theorem ll021_worst_case_bound : ε_eff ≤ ε_A * proj`
+  with full Mathlib measure-theoretic environment.
+- **Tier 3 (engineering availability):** LL-028 (runtime
+  conformance verification — defends V-019) + LL-029 (multi-
+  channel entropy independence — defends V-018) + LL-019
+  deployment-context expansion (shared-env constant-time
+  padding requirement). Sequenced by P-RS Level 2 prototype
+  scope.
+
+**Files touched this version:**
+
+- `LAVALAMP_SPEC.md` — new L2 section "Surfaced by synthesis-
+  team round 3 (0.0.45)"; LL-025 + LL-026 entries added;
+  Counts section updated.
+- `artifact_registry.md` — version bump; new section + rows
+  for LL-025 / LL-026; counts updated; A1-A6 self-check
+  refreshed.
+- `dashboard.md` — last-updated stamp; spec-status section
+  updated; Recent companion docs section gets new top entry.
+- `changelog.md` — this entry.
+- `docs/attack_surface_enumeration.md` — V-014..V-020
+  entries inserted before §4; §4 matrix extended; §5
+  residual risks extended.
+- `README.md` — count refresh.
+
+Test suite unchanged at 202/202 (round-3 Tier 1 is spec /
+governance only; no new code). Cross-audit A1-A6 passes
+post-edit.
+
+---
+
 ## 0.0.44 — 2026-05-05 — Round-3 brief engine-side blanks filled (TCE v0.2.2; brief forward-ready)
 
 Fills the engine-side `[FILL: ...]` blanks in the round-3 brief.

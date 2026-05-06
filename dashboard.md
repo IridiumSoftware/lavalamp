@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-05 (0.0.44 — round-3 brief engine-side blanks filled; TCE v0.2.2 corpus-agnostic Discovery.Triadic; brief forward-ready).
+Last updated: 2026-05-06 (0.0.45 — synthesis-team round 3 Tier 1 landed; LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline; V-014..V-020 enumerated in attack-surface).
 
 ## Status summary
 
@@ -514,15 +514,15 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 
 ## Spec status (per LAVALAMP_SPEC.md)
 
-- Total spec entries: 24 (was 23; +LL-024 from 0.0.38 P-RS pass)
+- Total spec entries: 26 (was 24; +LL-025 + LL-026 from 0.0.45 round-3 Tier 1)
 - `:proved`: 0
 - `:tested`: 3 (LL-002, LL-004, LL-007 — unchanged)
 - `:verified`: 0
 - `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-021 — unchanged)
-- `:argued`: 16 (LL-001, LL-005, LL-008, LL-009,
+- `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
-  LL-018, LL-020, LL-022, LL-023, LL-024 — LL-024 added
-  0.0.38)
+  LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026 —
+  LL-025 + LL-026 added 0.0.45)
 - `:open`: 1 (LL-015 — A3-OOS scoping declaration; permanent
   by design)
 
@@ -586,6 +586,39 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/synthesis_team_round3_companion.md` + Tier 1 spec
+  pass** (0.0.45, 2026-05-06) — synthesis-team round 3
+  metabolic synthesis + Tier 1 implementation. Round 3 ran a
+  seat rotation (Gemini stepped out; Grok rotated edge-witness
+  → synthesis; ChatGPT joined as new edge-witness entrant).
+  Both seats responded substantively. **Verdicts:** Grok
+  (synthesis) `engage-and-formalise-after-fixes`; ChatGPT
+  (edge-witness) `pass-after-fixes` — complementary lenses,
+  neither says fail. Aaron rendered three resolution
+  decisions on 2026-05-06 (V-021/022 merge into V-015/016;
+  Tier 1/2/3 sequencing confirmed; Lean Option A — LL-021
+  worst-case bound + Mathlib full). Tier 1 (this version)
+  lands: **LL-025 A7-passive-emanation-boundary** (parallel
+  boundary triple with LL-015 + LL-024; tier-bounded scope
+  per ChatGPT A7); **LL-026 three-layer-logic-tier-
+  annotation-discipline** (paper §1.2-derived governance;
+  defends V-017 by construction); **V-014..V-020 enumerated**
+  in `docs/attack_surface_enumeration.md` (V-014 EMF / V-015
+  cross-sector autopoiesis spoofing absorbing V-021 / V-016
+  numerical-threshold gaming absorbing V-022 / V-017 logical-
+  tier confusion / V-018 coordinated multi-sensor synthesis /
+  V-019 runtime conformance bypass / V-020 stable-manifold
+  stealth). §5 residual-risks list extended with entries 10-13.
+  §4 matrix updated. **LL-008 cost-asymmetry footer** already
+  landed in 0.0.42 — no additional change needed; ratified by
+  Grok §1B.Q1. Tier 2 (next version) pairs with first Lean
+  theorem and lands LL-027 (asymptotic chaos density invariant)
+  + LL-021 scope-limit + adaptive-adversary amendment + LL-014
+  numerical-threshold non-fundamentality tie. Tier 3 sequenced
+  by P-RS Level 2 prototype availability (LL-028 runtime
+  conformance + LL-029 multi-channel entropy independence +
+  LL-019 deployment-context expansion). Counts 24/0/3/0/4/16/1
+  → 26/0/3/0/4/18/1; 7 new V-IDs added.
 - **`docs/synthesis_team_round3_brief.md` engine-side fill +
   V-NNN rationalization** (0.0.44, 2026-05-05) — round-3
   brief engine-side blanks filled. Engine status delivered

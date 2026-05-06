@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.44 (round-3 brief engine-side blanks filled; TCE v0.2.2 corpus-agnostic Discovery.Triadic; brief forward-ready, 2026-05-05)
+Version: 0.0.45 (synthesis-team round 3 Tier 1; LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline added; V-014..V-020 enumerated in attack-surface; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -106,54 +106,67 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-024 | real-sensor-deployment-strategy | Operational | manual | docs/p_real_sensor_scoping_companion.md §2 + src/julia/test/runtests.jl (Real-sensor scaffold testset; 18 assertions) | src/julia/src/RealSensors.jl (scaffold tier) | :argued |
 
+## Surfaced by synthesis-team round 3 (0.0.45)
+
+| LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
+|---|---|---|---|---|---|---|
+| LL-025 | A7-passive-emanation-boundary | Boundary | manual | docs/synthesis_team_round3_companion.md §1B.Q7 + §1C.A7 + docs/attack_surface_enumeration.md §3 V-014 | — | :argued |
+| LL-026 | three-layer-logic-tier-annotation-discipline | Core | manual | docs/synthesis_team_round3_companion.md §1B.Q1 + §1C.A6 + docs/attack_surface_enumeration.md §3 V-017 | — | :argued |
+
 ---
 
 ## Counts (must match LAVALAMP_SPEC.md and dashboard.md)
 
-- Total: 24
+- Total: 26
 - `:proved`: 0
 - `:tested`: 3
 - `:verified`: 0
 - `:benchmarked`: 4
-- `:argued`: 16
+- `:argued`: 18
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.38)
+## Cross-audit A1–A6 self-check (post-0.0.45)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
-  here. ✓ (24 of 24).
+  here. ✓ (26 of 26).
 - **A2 — Key match.** Spec → registry keys are identical. ✓.
-  LL-022 registry key (`OS-trust-stack-dependency`) matches
-  spec key.
+  LL-025 registry key (`A7-passive-emanation-boundary`) and
+  LL-026 registry key (`three-layer-logic-tier-annotation-
+  discipline`) match spec keys.
 - **A3 — Evidence exists.** Nine entries cite
   `docs/architecture_design_companion.md`; four entries
-  (LL-003, LL-004, LL-006, LL-007) cite `src/julia/test/runtests.jl`
-  as their test file with source files in `src/julia/src/`.
-  LL-006 additionally cites
-  `src/julia/benchmark/results/p3b_detection_lorenz96.txt` as
-  supporting empirical-data evidence. LL-022 cites
-  `docs/os_identity_security_scoping_companion.md`. All cited
-  paths exist in `git ls-files` after this commit.
+  (LL-003, LL-004, LL-006, LL-007) cite
+  `src/julia/test/runtests.jl` as their test file with source
+  files in `src/julia/src/`. LL-022 cites
+  `docs/os_identity_security_scoping_companion.md`. LL-025 +
+  LL-026 cite `docs/synthesis_team_round3_companion.md` plus
+  `docs/attack_surface_enumeration.md` (V-014 for LL-025;
+  V-017 for LL-026). All cited paths exist in `git ls-files`
+  after this commit.
 - **A4 — Status honesty.** All `:argued` entries carry `manual`;
   all `:tested` entries carry `example-tested`; all
   `:benchmarked` entries carry `benchmarked`; all `:open`
-  entries carry `none`. ✓. LL-022 is `:argued` with `manual`
-  evidence — the strongest status its evidence type supports.
-  No entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (23 / 0 / 3 / 0 / 4 /
-  15 / 1) match `LAVALAMP_SPEC.md` 0.0.34 final-section counts
-  and `dashboard.md` 0.0.34 spec-status section. **LL-023
-  added** (consumer-API-surface, Boundary, manual, :argued)
-  so total 22 → 23 and :argued 14 → 15. Other counts unchanged.
+  entries carry `none`. ✓. LL-025 + LL-026 are `:argued` with
+  `manual` evidence — the strongest status their evidence
+  types support. No entry has a status its evidence type
+  cannot support.
+- **A5 — Stale counts.** Counts above (26 / 0 / 3 / 0 / 4 /
+  18 / 1) match `LAVALAMP_SPEC.md` 0.0.45 final-section counts
+  and `dashboard.md` 0.0.45 spec-status section. **LL-025 +
+  LL-026 added** (round-3 Tier 1) so total 24 → 26 and
+  :argued 16 → 18. Other counts unchanged.
 - **A6 — Test sync.** LL-002, LL-003, LL-004, LL-005 (part-
   (a) only), LL-006, LL-007 are exercised by
   `src/julia/test/runtests.jl`, runnable via `Pkg.test()`
-  from `src/julia/`; 184/184 assertions pass in ~51 s
-  (unchanged from 0.0.33; the P-PharOS scoping pass adds no
-  new code or tests — design-only). LL-023 has no test/proof
-  file beyond the companion (manual evidence at the
-  consumer-API contract level); operational conformance
-  testing lands in PharOS's future repo.
+  from `src/julia/`; 202/202 assertions pass in ~53 s
+  (unchanged from 0.0.38; round-3 Tier 1 adds no new code or
+  tests — spec / governance only). LL-025 has no test/proof
+  file beyond the companions and attack-surface enumeration
+  (manual evidence at the deployment-context scoping level);
+  empirical EM/acoustic emanation testing would be
+  operational-tooling work, deferred. LL-026 is governance
+  discipline, not engineering — no runtime test artifact
+  applies.
 
 ## Test-coverage notes
 

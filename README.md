@@ -60,7 +60,7 @@ for hardware-bound deployment (Linux-first roadmap; FFI
 implementations forthcoming post-round-3). CI runs `Pkg.test()`
 on every push (202 assertions pass in ~53s).
 
-**Spec ledger:** 24 entries with the current breakdown:
+**Spec ledger:** 26 entries with the current breakdown:
 
 | status | count | entries |
 |---|---:|---|
@@ -68,7 +68,7 @@ on every push (202 assertions pass in ~53s).
 | `:verified` | 0 | — |
 | `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
 | `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound |
-| `:argued` | 16 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple) |
+| `:argued` | 18 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1: LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 **Trajectory:** 0.0.1 (concept-stage scaffold) → 0.0.3
@@ -120,13 +120,30 @@ three V-NNN candidates surfaced; engine-side blanks pending)
 → 0.0.44 (round-3 brief engine-side blanks filled; TCE v0.2.2
 corpus-agnostic Discovery.Triadic primitive; V-NNN tag
 collision rationalized to V-014..V-017; brief substantively
-complete on both paper + engine sides; forward-ready).
+complete on both paper + engine sides; forward-ready) →
+0.0.45 (synthesis-team round 3 Tier 1; seat rotation Grok →
+synthesis + ChatGPT → edge-witness; both verdicts non-fail;
+LL-025 A7-passive-emanation-boundary + LL-026 three-layer-
+logic-tier-annotation-discipline added; V-014..V-020
+enumerated in attack-surface — V-021/V-022 absorbed into
+V-015/V-016 per Aaron's resolution decision).
 
-**Round 3** (next synthesis-team review) is gated on the
-`closure_forces_structure` physics-paper update. Brief
-skeleton at `docs/synthesis_team_round3_brief.md` is
-substantively complete on the LavaLamp side; paper-specific
-blanks fill in when the upstream lands.
+**Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
+rotated from edge-witness in rounds 1/2) and ChatGPT (new
+edge-witness entrant; Gemini stepped out due to round-3 task
+difficulty). Verdicts: Grok `engage-and-formalise-after-
+fixes`; ChatGPT `pass-after-fixes` — complementary, neither
+fail. Aaron's three resolution decisions rendered same day:
+V-021/V-022 merge into V-015/V-016; Tier 1/2/3 sequencing
+confirmed; Lean Option A — LL-021 worst-case bound + Mathlib
+full as first theorem. Tier 2 (LL-027 chaos density invariant
++ LL-021 scope-limit + LL-014 amendment) pairs with the
+first Lean theorem in the next version. Tier 3 (LL-028
+runtime conformance + LL-029 multi-channel entropy
+independence + LL-019 deployment-context expansion) sequenced
+by P-RS Level 2 prototype availability. See
+`docs/synthesis_team_round3_companion.md` for the full
+metabolic synthesis.
 
 See:
 - `LAVALAMP_SPEC.md` — authoritative claim ledger

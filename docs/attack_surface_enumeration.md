@@ -675,6 +675,457 @@ witness response, A3 + A6).
 
 ---
 
+### V-014 — Passive-emanation reconstruction (LL-025 surface)
+
+**Adversary classes:** A4 primary; A1 / A2 limited at higher
+adversary tiers.
+
+**Mechanism.** Modern TEMPEST-class research demonstrates
+state recovery from acoustic / EM / optical side-channels:
+cryptographic key extraction from CPU acoustic emanations
+(Genkin et al. 2014); EM leakage at DDR3/DDR4 read rates;
+van Eck phreaking on modern displays. The attack on
+LavaLamp specifically: the SDE solver runs on a CPU; the
+trajectory state lives in registers + memory; integration
+steps emanate at the pipeline's clock rate. A passive
+adversary with appropriate equipment may extract:
+
+- Full or partial trajectory state via EM / acoustic capture
+  of the integration pipeline.
+- Per-component state via memory-bus / register-file
+  emanations.
+- Sensor-coupling parameters via observation of the coupling
+  computation.
+
+Reconstruction feasibility scales with adversary tier
+(equipment, distance, target specificity); the noise floor
+of multi-GHz CPUs makes full trajectory reconstruction at
+LavaLamp's chaos-production rate (h_KS · N) hard for all
+but state-tier adversaries.
+
+**Defenses.** Partial:
+
+- **LL-025 (A7-passive-emanation-boundary, this version).**
+  Tier-bounded scoping declaration: state-actor / mid-tier /
+  commodity. Articulates what's defended at each tier and
+  what's conceded; commits to honest scope rather than
+  universal defense.
+- **Hardware-platform choice (deployment-context guidance).**
+  TEMPEST-rated enclosure shifts the tier threshold upward;
+  not part of LavaLamp itself but available to deployment
+  consumers (PharOS scope).
+- **Cost-asymmetry framing (LL-008 footer).** Even at state-
+  actor tier, attacking LavaLamp via TEMPEST has high
+  per-target cost relative to easier targets (cf.
+  `threat_landscape_companion.md` §2.7).
+
+**Residual risk.** Bounded by tier:
+
+- **Tier 1 (state actor, sub-meter, lab equipment):** real;
+  LL-025 declares scope rather than promising defense.
+- **Tier 2 (room-scale SDR, commercial equipment):** signal
+  extraction possible; full reconstruction unlikely. LL-025
+  scope still applies.
+- **Tier 3 (commodity adversary):** negligible capability;
+  noise floor + decode complexity bound the threat.
+
+**Mitigation pending.** Hardware-platform-tier guidance for
+high-assurance deployments (PharOS scope). LL-025 is a
+scoping commitment, not a primitive; deeper mitigation
+lives in deployment guidance + hardware-platform choice.
+
+**Source.** Surfaced by Aaron 2026-05-05 ("how does one
+stop their machine from leaking radio and other emf that
+can be picked up and decoded by passive sensors?") prior to
+the round-3 brief; confirmed in synthesis-team round 3 by
+both seats (`synthesis_team_round3_companion.md` §1B.Q7 —
+Grok synthesis "load-bearing parallel boundary triple"; §1C.A7
+— ChatGPT edge-witness "real but tier-bounded").
+
+---
+
+### V-015 — Cross-sector autopoiesis spoofing (paper-derived; LL-006 / LL-007 limitation)
+
+**Adversary classes:** A2, A4
+
+**Mechanism.** The closure_forces_structure paper §11.13
+(Self-Reproducing Fixed Point) shows Q_102 = Q_51 ∪ C(Q_51)
+is autopoietically closed: 100% of 420 composition products
+map back to existing Q_102 vertices, depth-independent at
+depths 2-4 (Theorem S130). The Closure v5 corpus's
+`catlab_spec.jl` empirically confirms this with the 0/5202
+result at threshold 0.999 — cross-sector autopoiesis fails
+structurally.
+
+But: the *attempted* attack still produces a partial
+trajectory before divergence triggers structural failure. An
+adversary can craft an early-stage trajectory that:
+
+- Looks genuine for the first T < T_div integration steps.
+- Exhibits sensor-coupling that *would* be authentic if
+  fully extended.
+- Diverges from a genuine trajectory only after the
+  structural mismatch accumulates past the divergence
+  threshold.
+
+This is the analog of prefix-valid cryptographic forgery —
+the early-stage trajectory passes as authentic; only the
+sustained-pattern check would catch it.
+
+The attack-mechanism axis (early-stage prefix mimicry before
+LL-007 reseed triggers) was originally surfaced as V-021 in
+ChatGPT's edge-witness response and merged into V-015 per
+round-3 §1D.vi decision 2.
+
+**Defenses.** Partial:
+
+- **LL-006 (Lyapunov-spectrum residue audit).** Per-exponent
+  vector audit catches sustained mismatches. But the audit
+  needs T ≥ T_div integration steps to accumulate evidence —
+  prefix attacks shorter than T_div may evade.
+- **LL-007 (chaos-guard).** Triggers on `λ̂₁ < τ_λ` divergence
+  collapse — but only after divergence is fully manifest,
+  not at the *beginning* of a partial autopoiesis attempt.
+- **LL-026 (logic-tier annotation discipline, this
+  version).** Forces explicit Possibilistic / Probabilistic
+  / Bridge annotation per claim, reducing the surface for
+  V-017-style logical-tier confusion attacks that compound
+  V-015.
+
+**Residual risk.** Moderate. The structural impossibility
+result (paper §11.13) closes the *long-run* attack; the
+*short-run* attack window before LL-007 / LL-006 catches
+divergence remains. T_div is parameter-dependent; with N=20
+and h_KS · N ≈ 5 nats/sec, T_div is on the order of
+0.5-1.0 s of integration time — exploitable for short-window
+verification protocols.
+
+**Mitigation pending.** Per-request audit with T ≥ T_div
+guarantee (LL-019's audit-on-verify pattern partially
+addresses this). Open: explicit lower-bound on verification
+time as a function of N and chosen-FPR.
+
+**Source.** Paper-derived (closure_forces_structure §11.13).
+Confirmed in synthesis-team round 3 by both seats
+(`synthesis_team_round3_companion.md` §1B.Q1 — Grok
+synthesis "(c) LL-007 reseed instantiation"; §1C.A6 —
+ChatGPT edge-witness "real and not fully covered" + V-021
+prefix-trajectory mimicry mechanism axis).
+
+---
+
+### V-016 — Numerical-threshold calibration gaming (paper-derived; LL-014 / LL-026 surface)
+
+**Adversary classes:** A2, A4
+
+**Mechanism.** The closure_forces_structure paper §13.6
+(Evidence Classification) explicitly notes: at threshold
+`0.999`, spurious merges occur for ~5% (Q_48) to ~12%
+(Q_102) of Haar-random initial conditions; at threshold
+`1 − 10⁻¹²`, 200/200 seeds give the canonical vertex counts.
+The threshold is *numerical convenience*, not part of the
+mathematical definition.
+
+LavaLamp's LL-014 (adversary-signature threshold calibration)
+sets per-exponent `τ_i = 3·σ(λ̂_i | T)` baseline; the
+analog: LavaLamp's threshold zone (~10% baseline FPR per
+the P3-bound benchmark with k=5, n_trials=10) is *the same
+phenomenon as the paper's 5-12% spurious-merge zone*. Quote
+from ChatGPT (round 3 §1C.A6): *"The paper's 5–12% spurious
+merge region maps almost exactly to LL-014 FPR baseline
+(~10%). This is not coincidence — it is the same phenomenon
+in different language: threshold ≠ structure."*
+
+The attack: an adversary crafts a trajectory that lies in
+LavaLamp's analog of the "spurious merge" zone — within the
+audit threshold but not actually a genuine trajectory. The
+language axis (LL-014 FPR ≡ paper §13.6 spurious merge) was
+originally surfaced as V-022 in ChatGPT's edge-witness
+response and merged into V-016 per round-3 §1D.vi decision 2.
+
+**Defenses.** Partial:
+
+- **LL-014 (adversary-signature threshold calibration).**
+  Per-exponent calibration discipline. Partial defense; the
+  threshold zone exists by construction.
+- **LL-014 amendment (Tier 2, pending).** Explicit annotation
+  that the 10% FPR baseline is *calibration convenience*,
+  not structure — same status as the paper's `0.999` vs
+  `1−10⁻¹²` decision. Forces deployment-config attention to
+  threshold tightening for high-assurance scope.
+- **LL-026 (logic-tier annotation discipline, this version).**
+  Reduces surface for compounding V-016 with V-017 logical-
+  tier confusion attacks.
+
+**Residual risk.** Moderate. The threshold zone is
+parameter-controllable; tighter thresholds reduce the zone
+but increase compute cost. PharOS-tier deployments will
+likely tighten beyond the prototype's 10% baseline. The
+core insight ("threshold ≠ structure") is a permanent
+discipline, not a fixable bug.
+
+**Mitigation pending.** LL-014 amendment in Tier 2; per-
+deployment threshold-tightening guidance in PharOS scope.
+
+**Source.** Paper-derived (closure_forces_structure §13.6).
+Confirmed in synthesis-team round 3 by both seats
+(`synthesis_team_round3_companion.md` §1B.Q1 + §1C.A6 —
+ChatGPT edge-witness named the LL-014 ≡ paper §13.6
+equivalence explicitly).
+
+---
+
+### V-017 — Three-layer logical-tier confusion (LL-026 surface)
+
+**Adversary classes:** A1, A2 (meta-attack on the proof
+framing rather than a runtime channel)
+
+**Mechanism.** The closure_forces_structure paper §1.2
+articulates a three-layer logical structure: **Possibilistic
+Layer** (forced / forbidden / compatible — discrete
+combinatorial); **Probabilistic Layer** (Born rule + Gleason
+— measurement); **Bridge Layer** (NCG-derived
+unconditional). Quote: *"these are not interchangeable;
+conflating them produces category errors."*
+
+LavaLamp's spec entries cluster across the three layers
+implicitly: LL-001 / LL-006 / LL-008 / LL-018 are
+Possibilistic-tier (cost-asymmetry; what's forbidden under
+the constraint surface); LL-019 / LL-020 / LL-021 touch
+Probabilistic (statistical bounds, ε-DP, FPR); LL-011 /
+LL-012 / LL-013 / LL-017 are Bridge-tier (deployment
+protocols spanning the layers).
+
+The attack: an adversary deliberately exploits a category
+error in LavaLamp's spec — apply a Probabilistic-tier attack
+against a claim that's only defended at the Possibilistic
+tier. Concrete example from ChatGPT (round 3 §1C.A6):
+*"LL-008 claims forbidden region; adversary reframes as low
+probability. This breaks security proofs at the reasoning
+layer."* The attack doesn't break the runtime; it breaks
+the *justification* for the runtime's claims.
+
+**Defenses.** Full (after LL-026):
+
+- **LL-026 (three-layer logic-tier annotation discipline,
+  this version).** Every spec entry annotated explicitly:
+  Possibilistic / Probabilistic / Bridge per paper §1.2.
+  The annotation itself is the defense — eliminates the
+  category-error surface by construction. Adversary cannot
+  apply Probabilistic reasoning to a claim that's tagged
+  Possibilistic.
+- **CLAUDE.md governance amendment (pending companion
+  doc-standard update).** Future spec amendments must carry
+  the layer tag; cross-audits include layer-consistency check.
+
+**Residual risk.** Low post-LL-026 landing. The discipline
+is governance, not engineering — once the spec is
+annotated, the attack surface closes.
+
+**Mitigation pending.** Per-entry layer annotation pass on
+existing LL-001..LL-024 entries (follow-up companion in
+Tier 2 or as a small-session pass).
+
+**Source.** Paper-derived (closure_forces_structure §1.2).
+Confirmed in synthesis-team round 3 by both seats
+(`synthesis_team_round3_companion.md` §1B.Q1 + §1C.A6 —
+ChatGPT edge-witness *"very real and dangerous"* meta-attack).
+
+---
+
+### V-018 — Coordinated multi-sensor synthesis (LL-029 future)
+
+**Adversary classes:** A4 (physical proximity required for
+coordinated sensor manipulation)
+
+**Mechanism.** LL-016 Strategy 2 (multi-sensor cross-
+validation) defends against *naive* spoofing where the
+adversary manipulates one sensor in isolation. But a
+determined adversary can **physically couple channels** to
+satisfy the cross-validation constraints rather than
+violate them:
+
+- Heater coupled to thermal sensor produces correlated
+  battery-discharge signal → thermal + battery cross-
+  validation passes.
+- Load injector produces both AC current draw and thermal
+  rise → AC + thermal cross-validation passes.
+- Vibration motor produces correlated mic + accelerometer
+  signal → mic + accelerometer cross-validation passes.
+
+Quote from ChatGPT (round 3 §1C.A2): *"The cross-validation
+model assumes independent noise sources, but a determined
+adversary can couple channels physically. This is a classic
+sensor-fusion-inversion attack: attacker injects signals
+that satisfy constraints rather than violate them."*
+
+The attack defeats LL-016 Strategy 2 because the *independence
+assumption* is wrong, not because the cross-validation
+mechanism is wrong.
+
+**Defenses.** None yet structurally; pending LL-029.
+
+- **LL-016 (sensor-authenticity requirement).** Existing
+  spec entry; requires authenticity but does not enumerate
+  *physical-mechanism diversity* as part of the requirement.
+- **LL-029 (multi-channel entropy independence; pending
+  Tier 3).** Will require physical-mechanism diversity —
+  different *physical phenomena*, not just different
+  sensors. Heater + thermal + battery share one physical
+  mechanism (thermal); LL-029 forces enumeration of
+  uncorrelated physical mechanisms (thermal + acoustic +
+  RF + entropy-source-decay) before cross-validation
+  qualifies.
+
+**Residual risk.** High pre-LL-029. Compounds V-006
+(sensor-input poisoning) by raising the adversary capability
+required to defeat cross-validation: V-006 says "sensor
+manipulation possible"; V-018 says "coordinated
+manipulation defeats the cross-check, not just one
+channel". Together they form the *biggest engineering gap*
+post-round-3.
+
+**Mitigation pending.** LL-029 (Tier 3) — physical-mechanism-
+diversity requirement. Operational implication: P-RS Level 2
+sensor architecture must enumerate the physical-mechanism
+families and ensure sensor selection spans uncorrelated
+families.
+
+**Source.** Surfaced in synthesis-team round 3
+(`synthesis_team_round3_companion.md` §1C.A2 — ChatGPT
+edge-witness seat).
+
+---
+
+### V-019 — Runtime conformance bypass (LL-028 future)
+
+**Adversary classes:** A2 (deployer-controlled runtime;
+malicious or compromised deployer); occasionally A3 in
+deeper bypass.
+
+**Mechanism.** The deployment-stack triple (LL-022 +
+LL-023 + LL-024) defines what LavaLamp depends on, what it
+exposes, and how it instantiates — but **conformance is
+deployment-time configuration, not runtime enforcement**.
+A malicious or compromised deployer can satisfy the
+LL-023 API contract while violating LL-022 invariants
+internally:
+
+- Cached randomness reused while reporting fresh entropy
+  (bypasses LL-022(c) host-TRNG requirement).
+- Bypassed TRNG with deterministic replay (verifier sees
+  expected `getrandom` shape; under the hood, fixed seed).
+- Forged sensor-fusion outputs upstream (LL-024 Strategy 2
+  cross-validation reports success without actually reading
+  hardware).
+- TPM attestation stub returns hardcoded "valid" without
+  hardware verification.
+
+Quote from ChatGPT (round 3 §1C.A3): *"system satisfies API
+but violates invariants internally. This is equivalent to
+type-level vs semantic conformance mismatch."*
+
+The attack defeats the deployment-stack triple because the
+triple specifies *what* must hold, not *how* to verify it
+holds at runtime.
+
+**Defenses.** None yet structurally; pending LL-028.
+
+- **LL-022 / LL-023 / LL-024 (existing).** Specify
+  requirements; do not enforce.
+- **LL-028 (runtime conformance verification; pending Tier 3).**
+  Will require runtime invariant verification: continuous
+  attestation that LL-022 mechanisms are actually being
+  used; periodic re-checks of LL-024 sensor authenticity;
+  LL-023 verifier-side conformance probes.
+
+**Residual risk.** High pre-LL-028. The deployment-stack
+triple is *honest about its scope* (configuration trust,
+not runtime enforcement) but the attack surface is real for
+adversaries who control the deployment context.
+
+**Mitigation pending.** LL-028 (Tier 3) — runtime
+conformance verification. Likely requires:
+
+- TPM-attested boot + measured runtime state (where TPM is
+  available per LL-022).
+- Periodic LL-024 sensor cross-validation with adversarial
+  test cases.
+- Verifier-side LL-023 API contract probing.
+
+**Source.** Surfaced in synthesis-team round 3
+(`synthesis_team_round3_companion.md` §1C.A3 — ChatGPT
+edge-witness seat).
+
+---
+
+### V-020 — Stable-manifold stealth injection (LL-021 amendment, Tier 2)
+
+**Adversary classes:** A2, A4
+
+**Mechanism.** At large N (Lyapunov spectrum dimension), the
+attractor manifold has both unstable directions (positive
+λ_i) and stable directions (negative λ_i). At N=160 (the
+0.0.30 N-scaling benchmark's largest case), there are ~52
+unstable directions and ~108 stable directions. An adversary
+can inject perturbations along strongly-contracting stable
+modes:
+
+- **Stable-direction injection.** Perturbations along
+  modes with most-negative λ_i decay rapidly under the
+  flow → minimal spectral impact on LL-006 audit. Audit
+  passes; perturbation persists.
+- **Manifold shadowing.** Adversary maintains trajectory
+  near the attractor while diverging in unobserved
+  subspaces. Standard residue audit compares to envelope
+  in observed coordinates; shadowing in unobserved
+  subspaces evades.
+- **Spectral gap flattening.** High-dimensional attractors
+  have many λ_i values close to each other; the
+  distinguishability margin (max(λ_i) − τ_λ) is reduced
+  per dimension.
+
+Quote from ChatGPT (round 3 §1C.A5): *"LL-021 likely does
+not generalize without re-benchmarking."*
+
+The attack matters because LL-021's worst-case bound was
+validated empirically only at N=20 (0.0.18 / 0.0.28). At
+N=160, the curvature of the attractor manifold, mixing
+times, and detectability thresholds all change. The bound
+shape `ε_eff = ε_A · proj` may still hold but the
+parametric constants differ.
+
+**Defenses.** Pending Tier 2:
+
+- **LL-021 amendment (Tier 2, pending).** Explicit scope-
+  limit: bound is stated for **finite-N regime (N ≤ 80)**;
+  large-N regime requires re-benchmarking. Plus adaptive-
+  adversary amendment (per ChatGPT A4): bound stated
+  against *adaptive* linear-model adversary, not static.
+- **LL-006 (Lyapunov-spectrum residue audit).** Per-
+  exponent vector audit catches divergence in any one mode
+  — including stable-mode reversals. Partial defense at
+  large N; the per-exponent test still applies.
+- **Deployment-tier N selection.** PharOS (high-assurance):
+  N=160 with tight thresholds + LL-021 large-N bench.
+  Lazarus (consumer): N=80 within validated regime.
+
+**Residual risk.** Moderate. The stable-direction injection
+attack class is mathematically real but practically bounded
+by the residue audit's per-exponent sensitivity (LL-006 is
+not just λ_max). At N ≤ 80 the existing LL-021 benchmarks
+apply; at N > 80 honest framing requires the scope-limit.
+
+**Mitigation pending.** LL-021 amendment + large-N
+re-benchmark (Tier 2 + future P3 follow-up benchmark at
+N=160 with structured-direction adversaries).
+
+**Source.** Surfaced in synthesis-team round 3
+(`synthesis_team_round3_companion.md` §1C.A5 — ChatGPT
+edge-witness seat).
+
+---
+
 ## §4 — Adversary class × attack vector matrix
 
 Coverage at a glance. ● = primary adversary class for this
@@ -695,6 +1146,13 @@ vector; ○ = secondary / contributing class; blank = not applicable.
 | V-011 reseed oracle | | ● | OOS | ● | ● | |
 | V-012 calibration leak | | | | ○ | ● | |
 | V-013 structured α-attack | | ● | OOS | ● | | |
+| V-014 passive emanation | ○ | ○ | OOS | ● | | |
+| V-015 cross-sector autopoiesis | | ● | OOS | ● | | |
+| V-016 numerical-threshold game | | ● | OOS | ● | | |
+| V-017 logical-tier confusion | ● | ● | OOS | | | |
+| V-018 coordinated multi-sensor | | | OOS | ● | | |
+| V-019 runtime conformance | | ● | OOS | | | |
+| V-020 stable-manifold stealth | | ● | OOS | ● | | |
 
 **OOS** = out of scope (A3 root assumed defeated; LavaLamp does
 not claim defense against full-kernel adversaries).
@@ -749,6 +1207,38 @@ threshold scheme.
 detection surface is optimistic vs structured adversaries.
 LL-021 pending — worst-case-direction bound and structured-
 adversary benchmark.
+
+**10. Passive emanation (V-014).** TEMPEST-class adversary
+recovers trajectory state from EM / acoustic / optical
+emanations. LL-025 (0.0.45) declares scope by adversary
+tier rather than promising universal defense: Tier 1 (state
+actor, sub-meter) is honest residual risk; Tier 2 (mid-tier
+SDR) is deployment-context guidance; Tier 3 (commodity) is
+negligible. Tier-bounded scope, not universal defense.
+
+**11. Coordinated multi-sensor synthesis (V-018).** Adversary
+physically couples sensor channels to satisfy LL-016 cross-
+validation rather than violate it. LL-029 (Tier 3, pending)
+will require physical-mechanism diversity (different physical
+phenomena, not just different sensors). Compounds V-006
+sensor-input-poisoning. **Largest engineering gap post-
+round-3.**
+
+**12. Runtime conformance bypass (V-019).** Deployer
+satisfies LL-023 API contract while violating LL-022
+invariants internally (cached randomness, deterministic-
+replay TRNG, forged sensor-fusion outputs). LL-028 (Tier 3,
+pending) will require runtime invariant verification. Real
+attack surface for adversaries who control the deployment
+context.
+
+**13. Stable-manifold stealth at large N (V-020).** LL-021
+worst-case bound was validated only at N=20 (0.0.18 / 0.0.28);
+at large N the attractor has many stable directions an
+adversary can exploit (52 unstable / 108 stable at N=160).
+LL-021 amendment (Tier 2, pending) adds explicit scope-limit
+to N ≤ 80 plus adaptive-adversary text; large-N re-benchmark
+pending.
 
 **6. A3 (kernel-level adversary) is explicitly out of scope.**
 This is honest scoping, not residual risk — but consumers of the
