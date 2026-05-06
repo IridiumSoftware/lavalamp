@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.50 (synthesis-team round 3 Tier 3 spec landing; LL-028 runtime-conformance-verification added (Boundary, manual, `:argued`; defends V-019); LL-029 multi-channel-entropy-independence added (Operational, manual, `:argued`; defends V-018); LL-019 round-3 deployment-context expansion footer (regime 1 dev-host artifact + regime 2 multi-tenant real-channel + shared-environment deployment constraint; status unchanged at `:benchmarked`); counts 27/1/3/0/4/18/1 → 29/1/3/0/4/20/1; 2026-05-06)
+Version: 0.0.51 (clone-and-run demo at `src/julia/demo/lavalamp_demo.jl` lands for publication-day shipability; exercises LL-003 / LL-004 / LL-006 / LL-007 / LL-019 / LL-021 end-to-end in ~4 s wall-clock; honest-verify ACCEPT + adversary-verify REJECT + chaos-guard `WARMUP → VALID → INVALID` transition all pass; top-level README gains a "Try it" quickstart section; demo is `:tested`-equivalent walkthrough — uses the same APIs the test suite exercises; counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

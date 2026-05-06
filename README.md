@@ -47,6 +47,40 @@ If those two layers ever get re-coupled, the basin-spoofing
 attack surface (multi-basin reaction-diffusion regimes the visual
 layer would want to use) returns.
 
+## Try it
+
+A clone-and-run end-to-end demo lives at
+`src/julia/demo/lavalamp_demo.jl`. From a fresh checkout:
+
+```bash
+julia --project=src/julia -e 'using Pkg; Pkg.instantiate()'
+julia --project=src/julia src/julia/demo/lavalamp_demo.jl
+```
+
+What you should see (~4 seconds wall-clock on a 2024-vintage laptop):
+
+1. **Engine + coupling** — Lorenz-96 SDE at N=20, F=8 with a
+   linear-in-x synthetic-sensor coupling layer.
+2. **Registration** — 5-trial Lyapunov-spectrum calibration
+   produces an envelope with mean λ₁ ≈ +1.89 and per-exponent σ.
+3. **Honest verification** — `verify_full` accepts the genuine
+   system; max residue / σ ratio ≈ 3 (well under the conservative
+   k=10 threshold).
+4. **Adversary rejection** — a 3σ-magnitude structured-direction
+   adversary produces residue ratio ≈ 14 (well above k=5);
+   `verify_full` rejects.
+5. **Chaos-guard state machine** — five honest λ̂₁ samples drive
+   `WARMUP → VALID`; one sub-threshold sample collapses the guard
+   to `INVALID` (the reseed flow's trigger condition).
+
+The demo exits with `✅ All three pillars of the LavaLamp pipeline
+behave as specified.` if the LL-003 / LL-004 / LL-006 / LL-007 /
+LL-019 / LL-021 layers are all working as the spec requires.
+
+For the formal-verification side, see `src/lean4/` — Lean 4 +
+Mathlib v4.29.1 with `LL021_worst_case_bound` proved at 0.0.48
+(the first-ever LavaLamp `:proved` entry).
+
 ## Status
 
 Prototype-stage. The Julia prototype core (`src/julia/`)
@@ -186,7 +220,14 @@ engineering implementation deferred to P-RS Level 2
 prototype availability per §1D.viii; counts 27/1/3/0/4/18/1
 → 29/1/3/0/4/20/1; round-3 spec-side trajectory closes
 end-to-end and §1D.viii Round-4-trigger condition is now
-satisfied).
+satisfied) → 0.0.51 (clone-and-run demo at
+`src/julia/demo/lavalamp_demo.jl` lands for publication-day
+shipability; exercises LL-003 / LL-004 / LL-006 / LL-007 /
+LL-019 / LL-021 end-to-end in ~4 s wall-clock with honest
+ACCEPT (residue/σ ≈ 3 < k=10) + adversary REJECT at ε_A=3σ
+(residue/σ ≈ 14 > k=5) + chaos-guard `WARMUP → VALID →
+INVALID` transition; top-level README gains a "Try it"
+quickstart; counts unchanged at 29/1/3/0/4/20/1).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new
@@ -294,6 +335,7 @@ lavalamp/
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
         ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard,RealSensors}.jl
         ├── test/runtests.jl                     ← 202 assertions, run via Pkg.test()
+        ├── demo/lavalamp_demo.jl                ← clone-and-run end-to-end walkthrough (0.0.51)
         └── benchmark/
             ├── p3b_detection_probability.jl
             ├── p_r2c_structured_adversary.jl

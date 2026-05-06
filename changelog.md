@@ -5,6 +5,108 @@ messages match entry summaries.
 
 ---
 
+## 0.0.51 — 2026-05-06 — Clone-and-run demo for publication-day shipability
+
+Lands a self-contained end-to-end walkthrough at
+`src/julia/demo/lavalamp_demo.jl` so the new corpus X article
+(publishing 2026-05-06) can credibly reference LavaLamp as a
+*shippable* Triad Deployment, not just source code with a
+spec ledger.
+
+**Why this exists.** The publication-day plan adds LavaLamp to
+the Triad Deployments list alongside Lazarus and OpenQMS. A
+deployment claim should be backed by a runnable artifact a
+reader can execute from a fresh clone — not just by a source
+tree and a 1500-line spec. The demo is the bridge: it stands
+the LavaLamp pipeline up end-to-end, drives it with the same
+APIs the test suite uses, and prints observable evidence at
+each stage so a reader can verify the spec claims behave as
+the spec says they do.
+
+**What the demo exercises.** Six spec layers, sequenced as a
+single ~4-second wall-clock script on a 2024-vintage laptop:
+
+1. **LL-003** — Lorenz-96 SDE engine; F=8 baseline (the
+   `:benchmarked` SDE choice from the 0.0.25 P3d
+   selection benchmark).
+2. **LL-004** — Sensor-coupling layer; linear-in-x with a
+   constant synthetic stream (real hardware = LL-024
+   scaffold tier; demo runs anywhere Julia + the lockfile
+   installs).
+3. **LL-011 / LL-006** — Registration ceremony calibrating
+   an envelope over 5 trajectories at N=20, N_steps=1000;
+   produces mean λ₁ ≈ +1.89 and per-exponent σ.
+4. **LL-019** — `verify_full` API forces full Benettin
+   spectrum at the call boundary (audit-on-every-verify).
+5. **LL-021** — Strong adversary at ε_A=3σ via
+   `synthetic_adversary`; the demo numerically exhibits the
+   bound-shape asymmetry the Lean theorem proves
+   algebraically.
+6. **LL-007** — Chaos-guard state machine; WARMUP → VALID
+   over three honest λ̂₁ samples; INVALID after one
+   sub-threshold collapse sample.
+
+**Output anchors.** The demo prints residue/σ ratios at each
+verify stage and wall-clock timings:
+
+- Honest verify: `max residue / σ` ≈ **2.97** (under k=10).
+- Adversary verify: `max residue / σ` ≈ **14.47** (over k=5).
+- Wall-clock: registration ~3.8 s; each verify ~0.2 s.
+
+If all three pillars — honest ACCEPT, adversary REJECT,
+chaos-guard collapse — behave as expected, the demo prints
+`✅ All three pillars of the LavaLamp pipeline behave as
+specified.` and exits 0. If any pillar diverges, the demo
+prints `❌` and exits 1; CI / reader can use the exit code
+as a smoke check.
+
+**Build verification.** Demo executed cleanly during this
+version pass — full transcript captured in this commit's
+session log; reproducible across Julia versions modulo the
+`Manifest.toml` lockfile.
+
+**README quickstart.** The top-level README gains a "Try it"
+section with the run command, expected output summary, and a
+pointer to `src/lean4/` for the formal-verification side. The
+layout block is updated to surface `demo/lavalamp_demo.jl`
+in the Julia subtree.
+
+**Why this isn't a spec change.** The demo uses the same APIs
+the test suite already exercises (`register_envelope`,
+`verify_full`, `synthetic_adversary`, `Guard / update! /
+is_valid`); it provides no new evidence beyond what the
+:tested entries already carry. The demo is a *packaging
+artifact* for shippability, not a verification artifact.
+Counts unchanged at 29/1/3/0/4/20/1.
+
+**What's deliberately out of scope.**
+
+- **Real hardware sensors.** RealSensors.jl is scaffold-tier
+  (LL-024); calling those functions errors with a deferred-
+  implementation message. P-RS Level 2 prototype track
+  per round-3 §1D.viii.
+- **Calibration confidentiality (LL-020 ε-DP envelope).**
+  Separate API; out of scope for the smoke-walkthrough.
+- **The Lean track.** `src/lean4/` has its own README and
+  build instructions; the demo points there but doesn't
+  invoke `lake build`.
+
+**Files touched this version:**
+
+- `src/julia/demo/lavalamp_demo.jl` — **new file**; ~190
+  lines including header documentation; runnable with
+  `julia --project=src/julia src/julia/demo/lavalamp_demo.jl`.
+- `README.md` — new "Try it" section between "Architectural
+  separation" and "Status"; layout block gains
+  `demo/lavalamp_demo.jl` row in the Julia subtree.
+- `artifact_registry.md` — version line bump (counts
+  unchanged).
+- `dashboard.md` — last-updated stamp; Recent companion
+  docs section gets new top entry.
+- `changelog.md` — this entry.
+
+---
+
 ## 0.0.50 — 2026-05-06 — Synthesis-team round 3 Tier 3 spec landing (LL-028 + LL-029 + LL-019 deployment-context expansion)
 
 Lands the three Tier 3 spec changes per round-3 §1D.iii and

@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.50 — synthesis-team round 3 Tier 3 spec landing; LL-028 runtime-conformance-verification added (Boundary, `:argued`; defends V-019); LL-029 multi-channel-entropy-independence added (Operational, `:argued`; defends V-018); LL-019 round-3 deployment-context expansion footer (regime-1 dev-host artifact + regime-2 multi-tenant real-channel + shared-environment deployment constraint); counts 27/1/3/0/4/18/1 → 29/1/3/0/4/20/1).
+Last updated: 2026-05-06 (0.0.51 — clone-and-run demo at `src/julia/demo/lavalamp_demo.jl` lands for publication-day shipability; exercises LL-003 / LL-004 / LL-006 / LL-007 / LL-019 / LL-021 end-to-end in ~4 s wall-clock with honest ACCEPT + adversary REJECT + chaos-guard transition; top-level README gains a "Try it" quickstart; counts unchanged at 29/1/3/0/4/20/1).
 
 ## Status summary
 
@@ -592,6 +592,33 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **Clone-and-run demo for publication-day** (0.0.51,
+  2026-05-06) — A self-contained end-to-end walkthrough at
+  `src/julia/demo/lavalamp_demo.jl` lets a reader execute the
+  full LavaLamp pipeline from a fresh clone in ~4 seconds:
+  `julia --project=src/julia src/julia/demo/lavalamp_demo.jl`
+  (after `Pkg.instantiate()`). The demo exercises **six spec
+  layers end-to-end** — LL-003 Lorenz-96 SDE; LL-004 sensor-
+  coupling; LL-006 Lyapunov-residue audit; LL-007 chaos-guard
+  state machine; LL-019 `verify_full` audit-on-every-verify;
+  LL-021 worst-case adversary at ε_A=3σ — and prints
+  observable evidence at each stage (residue ratios, guard
+  state transitions, wall-clock timings). **Output anchors**:
+  honest-verify accepts with max residue/σ ratio ≈ 3 (under
+  the conservative k=10 threshold); structured-adversary
+  trajectory at ε_A=3σ produces residue ratio ≈ 14 (over the
+  k=5 rejection threshold; the LL-021 bound shape made
+  numerically visible); chaos-guard transitions WARMUP →
+  VALID over three honest λ̂₁ samples and collapses to INVALID
+  on one sub-threshold sample. **Why this exists:** publication-
+  day shipability — the new corpus X article (2026-05-06)
+  references LavaLamp as a Triad Deployment, and a deployment
+  claim wants to be backed by a runnable artifact, not just
+  source code. The demo is `:tested`-equivalent (uses the
+  same APIs the test suite exercises) without inflating the
+  spec — counts unchanged at 29/1/3/0/4/20/1. Top-level
+  README gains a "Try it" quickstart section pointing to the
+  demo + summarising the expected output.
 - **Round-3 Tier 3 spec landing** (0.0.50, 2026-05-06) —
   Spec-only pass landing the three Tier 3 changes per round-3
   §1D.iii / §1D.iv / §1D.vii. Engineering implementation is
