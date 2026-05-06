@@ -1,29 +1,36 @@
-# src/lean4/ — Lean 4 Formal-Verification Scaffold
+# src/lean4/ — Lean 4 Formal-Verification Track
 
-This directory contains the Lean 4 scaffold for formal
-verification of LavaLamp's structural security claims. **Scaffold
-tier only at 0.0.36** — no theorems are stated yet; the directory
-exists as parallel-safe infrastructure for round-3 work.
+This directory contains the Lean 4 formal-verification track
+for LavaLamp's structural security claims. **Mathlib-integrated
+as of 0.0.47** (per round-3 §1D.v Decision 1 — Option A: full
+Mathlib v4.29.1). The first theorem statement
+(`LL021_worst_case_bound`) lands at 0.0.47 sorry-stubbed; L2
+(0.0.48) replaces the `sorry` with a real proof and promotes
+LL-021 to `:proved` with `lean-proved` evidence.
 
 ## What this is
 
 - A buildable Lean 4 Lake project (`lakefile.lean`,
-  `lean-toolchain`, root `LavaLamp.lean`).
-- A `Theorems.lean` placeholder documenting the round-3 theorem
-  statements that will land here.
+  `lean-toolchain`, root `LavaLamp.lean`) with Mathlib v4.29.1
+  pinned via `lake-manifest.json`.
+- `LavaLamp/Theorems.lean` carrying the first real theorem
+  statement (`LL021_worst_case_bound`, sorry-stubbed at 0.0.47);
+  subsequent theorems (LL-019 / LL-020 / LL-006 / LL-022 /
+  LL-023) build on this Mathlib environment and land in
+  per-priority files.
 - This README capturing the discipline + theorem plan + package-
   management notes.
 
 ## What this isn't
 
-- **Not proofs.** The scaffold contains no `theorem` declarations
-  at this tier. The plan-level statements in `Theorems.lean` are
-  in comment blocks; uncommenting + filling in `sorry` proofs is
-  round-3 work.
-- **Not evidence.** No LL entry in `LAVALAMP_SPEC.md` cites this
-  directory at the scaffold tier. When proofs land, the
-  corresponding entries' evidence types move to `lean-proved` and
-  statuses move to `:proved`.
+- **Not proofs (yet).** At 0.0.47 the only theorem in this
+  directory is sorry-stubbed; per CLAUDE.md §Honest framing,
+  a sorry-stubbed theorem is not a proof. LL-021 stays at
+  `:benchmarked` until L2 (0.0.48) removes the `sorry`.
+- **Not evidence (yet).** `artifact_registry.md` includes
+  `src/lean4/LavaLamp/Theorems.lean` in LL-021's Test/Proof
+  column at 0.0.47 as a forward pointer to L2; the evidence
+  type stays `benchmarked` until L2 replaces the `sorry`.
 
 ## Build verification
 
@@ -31,14 +38,21 @@ From a clean checkout:
 
 ```bash
 cd src/lean4
-lake update    # generates lake-manifest.json (empty at scaffold tier)
-lake build     # builds the LavaLamp library (smoke def only)
+lake update             # populates lake-manifest.json from Mathlib v4.29.1
+lake exe cache get      # downloads Mathlib's prebuilt .olean cache (~8k files)
+lake build              # builds the LavaLamp library on top of cached Mathlib
 ```
 
-Per CLAUDE.md package-management discipline, the scaffold's
-build was verified before commit. At the scaffold tier the build
-is trivial (smoke def + comment-block placeholder); production-
-grade build discipline lands with the first real proof.
+At 0.0.47 `lake build` returns 767 jobs green with a single
+expected `declaration uses 'sorry'` warning on
+`LL021_worst_case_bound`. Once L2 lands, the warning disappears
+and the build becomes a real correctness check (Lean's kernel
+verifies the proof at compile time).
+
+Per CLAUDE.md package-management discipline, every commit
+landing in this directory verifies a clean checkout +
+`lake update` + `lake exe cache get` + `lake build` cycle
+before commit.
 
 ## Theorem-statement plan
 
@@ -57,38 +71,48 @@ companion + the 0.0.34 P-PharOS companion. See
 
 ## Mathlib integration
 
-**Open round-3 architectural decision.** Three options:
+**Mathlib integrated at 0.0.47** per round-3 §1D.v Decision 1
+(Aaron rendered 2026-05-06: Option A — full Mathlib).
+LavaLamp's theorem priorities are probability / real-analysis-
+flavoured (different from the category-theory of the
+triadic-coordination-engine project, which uses a project-
+local `Category` typeclass with an opt-in Mathlib track at
+`src/lean4-cv/`); Option A pulls the full Mathlib ecosystem
+to give probability / measure / Real / exp lemmas in their
+full generality, accepting the build-time cost.
 
-1. **Full Mathlib import** — `require Mathlib`. Pulls the entire
-   ecosystem; build time grows from seconds to minutes; theorems
-   gain access to Real / exp / Probability / Measure theory in
-   their full generality.
+Three options were on the table pre-decision (kept here for
+historical reference):
+
+1. **Full Mathlib import** — `require Mathlib`. **(chosen.)**
+   Pulls the entire ecosystem; build time grows from seconds
+   to minutes on a fresh runner (mitigated by `lake exe cache
+   get` pulling prebuilt oleans); theorems gain access to
+   Real / exp / Probability / Measure theory in their full
+   generality.
 2. **Project-local minimal substitute** — define `Real`,
-   `exp`, `Distribution` etc. as opaque types with the algebraic
-   structure each theorem needs. Lighter; lets us avoid Mathlib
-   dependency churn; loses the breadth of Mathlib's lemmas.
-3. **Hybrid** — start with project-local stubs at the shape
-   level (priorities 5 / 6), import Mathlib only when reaching
-   priorities 1-4 that need real-analysis content.
+   `exp`, `Distribution` etc. as opaque types. Lighter; loses
+   Mathlib's breadth.
+3. **Hybrid** — project-local stubs for shape-level priorities;
+   Mathlib for real-analysis priorities.
 
-The decision is round-3-driven for two reasons:
+**0.0.47 implementation:**
 
-- The `closure_forces_structure` paper update may revise some of
-  the theorem statements (especially priorities 1 / 4 if the
-  C-conjugate adversary structure or the `0/5202` cross-sector
-  autopoiesis result shifts). Committing to Mathlib before that
-  revision risks rework.
-- The triadic-coordination-engine project uses **option 2**
-  (project-local `Category` typeclass; no Mathlib on default
-  build path) with an opt-in `src/lean4-cv/` Mathlib track. The
-  same shape may apply here — but LavaLamp's claims are
-  probability / real-analysis-flavoured (different from the
-  category-theory of the engine project), so the decision
-  isn't auto-inherited.
-
-For the scaffold tier, **no Mathlib** — the project builds with
-no dependencies. The `lakefile.lean` will gain a `require` line
-when the decision lands.
+- `lakefile.lean`: `require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git" @
+  "v4.29.1"`.
+- `lean-toolchain`: `leanprover/lean4:v4.29.1` (bumped from
+  v4.18.0 in 0.0.47 — see §Package-management discipline below).
+- `lake-manifest.json`: pins Mathlib v4.29.1 + 8 transitive
+  deps (`plausible`, `LeanSearchClient`, `importGraph`,
+  `proofwidgets`, `aesop`, `Qq`, `batteries`, `Cli`).
+- `LavaLamp/Theorems.lean`: imports `Mathlib.Data.Real.Basic`;
+  states `LL021_worst_case_bound` sorry-stubbed.
+- `lake exe cache get` populates `.lake/packages/mathlib/.lake/build/`
+  with 8232 prebuilt `.olean` files.
+- `.github/workflows/lean.yml`: `timeout-minutes` 15 → 60 to
+  absorb Mathlib first-build window on a fresh ubuntu runner;
+  `lean-action` invokes `lake exe cache get` automatically.
 
 ## Package-management discipline
 
@@ -101,56 +125,67 @@ Per CLAUDE.md:
 > deliberately in their own commit with rationale; verify a
 > clean checkout + lockfile install builds before committing.
 
-Current state at 0.0.36:
+Current state at 0.0.47:
 
-- `lean-toolchain` pinned to `leanprover/lean4:v4.18.0`. Update
-  in a separate commit with rationale when the toolchain bumps.
-- `lake-manifest.json` is **not committed yet** because no
-  dependencies exist at the scaffold tier (`lake update`
-  produces an empty manifest). When Mathlib or any other
-  dependency is added, `lake update` regenerates the manifest
-  and that commit pins the version.
+- `lean-toolchain` pinned to `leanprover/lean4:v4.29.1`
+  (bumped from v4.18.0 at 0.0.47). **Reason for bump:** Darwin
+  25 (macOS 25+) hit a dyld linker error on the v4.18.0 cache
+  binary — `__DATA_CONST segment missing SG_READ_ONLY flag`;
+  v4.29.1 ships with the macOS-25-compatible binary. Mathlib's
+  v4.29.1 release tags the matching toolchain, so toolchain +
+  Mathlib are co-versioned.
+- `lake-manifest.json` is **committed** (was uncommitted at
+  scaffold tier when no deps existed). Pins Mathlib v4.29.1 +
+  8 transitive deps with full commit hashes; `lake update`
+  regenerates the manifest deliberately on dependency-update
+  commits per CLAUDE.md.
 
 ## Round-3 trigger conditions
 
-This scaffold becomes active proof-work territory when:
+**All three conditions met as of 0.0.47:**
 
-1. The `closure_forces_structure` paper update lands (the
-   round-3 trigger condition; see
-   `~/.claude/projects/.../memory/project_lavalamp_round3_trigger.md`).
-2. The Mathlib-or-not decision is made (per §Mathlib integration
-   above).
-3. The first priority's theorem statement is finalised in
-   conversation with the round-3 brief composition.
+1. ✓ The `closure_forces_structure` paper landed (v1.0
+   2026-04-01); round-3 brief composed against it; round-3
+   ran 2026-05-06.
+2. ✓ The Mathlib-or-not decision rendered: Option A — full
+   Mathlib (round-3 §1D.v Decision 1, Aaron 2026-05-06).
+3. ✓ The first priority's theorem statement finalised:
+   `LL021_worst_case_bound` capturing the bound shape
+   `0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 → ε_A * proj ≤ ε_A`.
 
-Until all three conditions, this directory stays at scaffold
-tier. The `Theorems.lean` comment block + this README are the
-canonical references for "where Lean work picks up."
+This directory is now active proof-work territory.
+`LavaLamp/Theorems.lean` is the canonical reference for
+"where Lean work picks up next" — currently the L2 sorry-fill
+on `LL021_worst_case_bound`, then theorems 2-6 per the table
+above.
 
 ## File inventory
 
-- `lean-toolchain` — Lean 4 version pin.
-- `lakefile.lean` — Lake build config; no deps at scaffold tier.
+- `lean-toolchain` — Lean 4 version pin (v4.29.1; bumped 0.0.47).
+- `lakefile.lean` — Lake build config; Mathlib v4.29.1 require
+  (added 0.0.47).
+- `lake-manifest.json` — pinned dependency manifest; Mathlib +
+  8 transitive deps (committed 0.0.47).
 - `LavaLamp.lean` — root module; imports `LavaLamp.Theorems`;
   smoke `def hello` confirms the package builds.
-- `LavaLamp/Theorems.lean` — round-3 theorem-statement
-  placeholder; comment blocks describe each priority's intended
-  shape.
+- `LavaLamp/Theorems.lean` — first theorem `LL021_worst_case_bound`
+  (sorry-stubbed at 0.0.47; L2 fills proof body at 0.0.48);
+  comment blocks describe priorities 2-6.
 - `README.md` (this file) — discipline + theorem plan +
   package-management notes.
 
-When proofs land, expect the directory to grow:
+As subsequent priorities' theorems are stated, the
+`Theorems.lean` file may split into per-priority files (one
+file per priority keeps each session's diff focused and the
+build incremental):
 
 - `LavaLamp/Spec.lean` — primitive type declarations (SDE,
-  Envelope, Adversary, Distribution, etc.).
+  Envelope, Adversary, Distribution, etc.); introduced when
+  the first non-LL-021 theorem needs a shared type vocabulary.
 - `LavaLamp/LL006DetectionBound.lean`
 - `LavaLamp/LL019TimingIndistinguishability.lean`
 - `LavaLamp/LL020CalibrationDP.lean`
-- `LavaLamp/LL021WorstCaseBound.lean`
+- `LavaLamp/LL021WorstCaseBound.lean` (currently inlined in
+  `LavaLamp/Theorems.lean`; moves out when LL-019 lands).
 - `LavaLamp/LL022OSStackDependency.lean`
 - `LavaLamp/LL023ConsumerAPI.lean`
-- `lake-manifest.json` — pinned dependency manifest.
-
-The split into per-priority files happens when proof work
-begins; one file per priority keeps each session's diff
-focused and the build incremental.

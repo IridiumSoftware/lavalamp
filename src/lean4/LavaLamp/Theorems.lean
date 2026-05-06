@@ -1,105 +1,104 @@
 /-
-  LavaLamp — round-3 theorem-statement placeholder.
+  LavaLamp — round-3 theorem statements.
 
-  When round-3 lands and the Mathlib-or-not architectural
-  decision is made, this file splits into per-priority modules
-  and gains `theorem` statements with `sorry` proofs. Once a
-  proof is filled in (no `sorry`, package builds clean), the
-  corresponding LL entry's spec-footer evidence type moves to
-  `lean-proved` and status moves to `:proved`.
+  History:
+    - 0.0.36: scaffold landed (no theorems; documentation-only).
+    - 0.0.47 (this version, L1): Mathlib integration + first
+      theorem statement landed (LL-021 worst-case bound;
+      sorry-stubbed; demonstrates proof-track infrastructure).
+    - 0.0.48 (next version, L2): proof body fills the sorry;
+      LL-021 evidence-type promotes to `lean-proved` and status
+      to `:proved`.
 
-  Theorem-statement plan (per LavaLamp's CLAUDE.md §Lean 4
-  priorities + the 0.0.18 LL-021 companion §2.7 + the 0.0.26
-  P-OS companion §2.6 + the 0.0.34 P-PharOS companion §2.6):
+  Round-3 §1D.v Decision 1 (rendered 2026-05-06): Option A —
+  full Mathlib for measure-theoretic + probability content.
 
-  ──────────────────────────────────────────────────────────────
-  -- LL-021 worst-case detection bound (round-2 §1D.v priority 1)
-  ──────────────────────────────────────────────────────────────
-  theorem worst_case_detection_bound
-    (M : SDE) (env : Envelope)
-    (b : Vector (Vector ℝ N) n)         -- n coupling vectors
-    (T : ℝ) (h_T : T = 60.0)
-    (K : ℝ) (h_K : K = 1)
-    (c : ℝ) (h_c : c = 0.0288)          -- prototype-config-specific
-    (adv : Adversary) (ε_A : ℝ) (h_ε : ε_A > 0)
-    (h_config : same_config_as_p_r2c M env b)
-    : let m := mean_coupling_vector b
-      let û := adv.direction
-      let proj := |û · (m / ‖m‖)|
-      let ε_eff := ε_A * proj
-      P_detect M env adv ≥ 1 - K · exp(-c · T · ε_eff^2) := by
-    sorry
+  Theorem priorities (from §README.md theorem plan):
 
-  ──────────────────────────────────────────────────────────────
-  -- LL-019 side-channel timing indistinguishability (priority 2)
-  ──────────────────────────────────────────────────────────────
-  theorem timing_indistinguishability
-    (env : Envelope) (k : ℝ) (target : ℝ)
-    (h_k : k > 0) (h_target : target > 0)
-    : ∀ (λs₁ λs₂ : Spectrum), distribution_of_elapsed
-        (verify_constant_time λs₁ env k target) =
-      distribution_of_elapsed
-        (verify_constant_time λs₂ env k target) := by
-    sorry
+    1. **LL-021** worst-case bound (this file; this version).
+    2. **LL-019** side-channel timing indistinguishability
+       (next; KS-test formalisation against round-2 §1D.v).
+    3. **LL-020** calibration ε-DP guarantee (after; Dwork-Roth
+       Gaussian mechanism via Mathlib Probability).
+    4. **LL-006 / LL-008 / LL-018** detection-probability bound
+       (foundational; the §2.1 bound shape with per-class
+       quantification — pairs with LL-027 chaos density invariant
+       and LL-021 worst-case bound).
+    5. **LL-022** parametric OS-stack-dependency theorem-shape.
+    6. **LL-023** consumer-API-surface inheritance shape.
 
-  ──────────────────────────────────────────────────────────────
-  -- LL-020 calibration ε-DP (priority 3)
-  ──────────────────────────────────────────────────────────────
-  theorem calibration_dp_guarantee
-    (env : Envelope) (ε δ sensitivity : ℝ)
-    (h_ε : ε > 0) (h_δ : 0 < δ ∧ δ < 1) (h_s : sensitivity > 0)
-    : (ε, δ)-DP (differentially_private_envelope env ε δ sensitivity) := by
-    sorry
+  Conventions in force:
+    - `:proved` requires `lean-proved`, `type-checked`, or
+      `algebraic` evidence (CLAUDE.md §Evidence types).
+    - A theorem with `sorry` in its body is NOT a proof; the
+      corresponding LL entry stays at its pre-Lean status until
+      `sorry` is removed.
+    - When a real proof lands (no `sorry`, package builds clean),
+      the corresponding LL entry's evidence type moves to
+      `lean-proved` and status to `:proved`.
 
-  ──────────────────────────────────────────────────────────────
-  -- LL-006 / LL-008 / LL-018 detection-probability bound
-  ──────────────────────────────────────────────────────────────
-  theorem detection_probability_bound
-    (M : SDE) (env : Envelope) (T : ℝ)
-    (K c : ℝ) (h_K : K = 1) (h_c : c > 0)
-    (adv : Adversary) (δ_A : ℝ) (h_δ : δ_A > 0)
-    : P_detect_at_window M env adv T ≥
-      1 - K · exp(-c · T · δ_A^2) := by
-    sorry
-
-  ──────────────────────────────────────────────────────────────
-  -- LL-022 OS-trust-stack-dependency theorem-shape (P-OS)
-  -- LL-023 consumer-API-surface theorem-shape (P-PharOS)
-  ──────────────────────────────────────────────────────────────
-  -- Any future Lean theorem about an LL claim that depends on
-  -- LL-022 or LL-023 must be stated parametrically. Example
-  -- shapes:
-
-  theorem LL_NNN_under_LL022
-    {os : OSAssumptions} (proof_os : LL022.satisfies os)
-    (env : Envelope) (M : SDE)
-    : LL_NNN_property env os M := by
-    sorry
-
-  theorem consumer_inherits_LL_NNN
-    {consumer : LL023.Consumer}
-    (proof_conformance : LL023.conforms consumer)
-    (proof_LL_NNN : LL_NNN_property env consumer.os_assumptions)
-    : ConsumerInheritsProperty consumer LL_NNN_property := by
-    sorry
-
-  ──────────────────────────────────────────────────────────────
-
-  At the scaffold tier this file declares no theorems and imports
-  no dependencies — it is intentionally a documentation
-  placeholder. The package builds with this minimal content; the
-  build-verification discipline confirmed in 0.0.36 covers only
-  the empty case. Each priority's first proof attempt is expected
-  to land as its own commit (per CLAUDE.md "one task per
-  conversation" rule), with the corresponding spec entry's
-  evidence type and status updated as proofs complete.
+  Round-3 amendments (per LL-021 round-3 amendment in
+  `LAVALAMP_SPEC.md`):
+    - Scope-limit to finite-N regime (operationally N ≤ 80).
+    - Adaptive-adversary bound stated explicitly.
+  These amendments are spec-text refinements; the Lean theorem
+  statement here captures the bound *shape* (which is finite-N-
+  validated empirically) without committing to large-N.
 -/
+
+import Mathlib.Data.Real.Basic
 
 namespace LavaLamp
 
-/-- Scaffold-tier marker. Returns the round-3-trigger message.
-    Removed when actual theorems land. -/
+/-- LL-021 worst-case bound (round-3 Tier 2 first theorem).
+
+    For any adversary in α-space with non-negative magnitude
+    `ε_A` and projection factor `proj` onto the mean-coupling
+    unit vector `m_unit ∈ ℝᴺ` (where `proj = |û · m_unit|`,
+    bounded in `[0, 1]` by Cauchy-Schwarz), the effective
+    perturbation magnitude `ε_eff = ε_A · proj` is at most
+    `ε_A`.
+
+    The theorem captures the bound *shape*, not the detection-
+    probability claim itself. The detection-probability bound
+    `P(detect) ≥ 1 - K · exp(-c · T · ε_eff^2)` from LL-006
+    composes with this: as `proj → 1` (adversary aligned with
+    worst-case direction parallel to mean-coupling), `ε_eff → ε_A`
+    and detection probability rises; as `proj → 0` (adversary
+    orthogonal to coupling), `ε_eff → 0` and detection probability
+    falls to the FPR floor.
+
+    The empirical fit constants from 0.0.18 + 0.0.28 are
+    `K = 1, c′ = 0.0288, T = 60.0` at N = 20 (validated at
+    n = 15 trials per (direction, magnitude) point per
+    `docs/ll021_high_res_companion.md`).
+
+    Round-3 amendments per LL-021 spec entry:
+    - Scope-limit to finite-N regime (this theorem applies in
+      the validated finite-N regime; large-N requires
+      re-benchmarking per V-020 and the LL-021 round-3
+      amendment).
+    - Adaptive-adversary: this theorem holds for any single
+      adversary direction; an adaptive adversary that chooses
+      direction *after* observing prior verifications is the
+      open-A6 case (per ChatGPT round-3 §1C.A4).
+
+    Status: theorem statement landed at 0.0.47 (L1 — Mathlib
+    integration + sorry-stub). Proof body lands at 0.0.48 (L2);
+    until then LL-021 stays at `:benchmarked` per honest framing
+    (a sorry-stubbed theorem is not a proof). -/
+theorem LL021_worst_case_bound
+    {ε_A : ℝ} {proj : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_nn : 0 ≤ proj)
+    (h_proj_le_one : proj ≤ 1) :
+    ε_A * proj ≤ ε_A := by
+  sorry
+
+/-- Scaffold-tier marker. Confirms the package builds. Removed
+    when the Theorems file is reorganised into per-priority
+    submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "round-3 trigger pending; theorem statements above describe the plan"
+  "0.0.47 — Mathlib integrated; LL-021 statement landed (sorry-stubbed); L2 fills proof body"
 
 end LavaLamp

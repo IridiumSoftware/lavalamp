@@ -11,6 +11,13 @@
 #   only `def hello` smoke + `LavaLamp/Theorems.lean` round-3
 #   placeholder. The CI baseline is "lake build clean."
 #
+# Mathlib integration (0.0.47+): `lean-action` invokes
+#   `lake exe cache get` automatically before `lake build`,
+#   which downloads Mathlib's prebuilt `.olean` cache (~8k
+#   files). First-build-on-fresh-runner is slower than the
+#   pre-Mathlib scaffold — timeout bumped 15 → 60 to absorb
+#   the cache download window.
+#
 # When proofs land (round-3+): `sorry`-stubs still build clean;
 #   real proofs without `sorry` are what CI starts catching as
 #   correctness checks. Same workflow, deeper meaning.
@@ -29,7 +36,7 @@ jobs:
   build:
     name: lake build (Lean 4 / ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

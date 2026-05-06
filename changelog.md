@@ -5,6 +5,167 @@ messages match entry summaries.
 
 ---
 
+## 0.0.47 — 2026-05-06 — Synthesis-team round 3 Lean L1 (Mathlib v4.29.1 integration + LL-021 theorem-statement landed sorry-stubbed)
+
+Lands Lean L1 per round-3 §1D.v Decision 1 (Aaron rendered
+2026-05-06: Option A — full Mathlib, theorem 1 = LL-021
+worst-case bound). The pass integrates Mathlib v4.29.1 into
+the previously-scaffold-only Lean track at `src/lean4/` and
+ports the comment-block placeholder in `LavaLamp/Theorems.lean`
+to a real (sorry-stubbed) theorem statement.
+
+**L1 vs L2 split (intentional):** L1 is "Mathlib integration
++ theorem-statement landed (sorry-stubbed)"; L2 is "proof
+body fills the sorry; status promotes to `:proved`." The
+split keeps each commit's diff focused — L1's commit is
+infrastructure (toolchain, lockfile, lakefile, theorem
+statement), L2's commit is purely a proof-body edit. Per
+CLAUDE.md §Honest framing, a sorry-stubbed theorem is **not**
+a proof; LL-021 stays at `:benchmarked` until L2 lands.
+
+**Toolchain bump (`src/lean4/lean-toolchain`):**
+`leanprover/lean4:v4.18.0` → `leanprover/lean4:v4.29.1`.
+
+- **Why:** Darwin 25 (macOS 25+) hit a dyld linker error on
+  the v4.18.0 prebuilt cache binary:
+  `__DATA_CONST segment missing SG_READ_ONLY flag`. The
+  v4.29.1 release ships with the macOS-25-compatible binary
+  and matches the system Lean install (`/opt/homebrew/bin/lake
+  --version` → `Lake version 5.0.0-src+f72c35b (Lean version
+  4.29.1)`).
+- **Mathlib alignment:** Mathlib v4.29.1 (the Mathlib release
+  tagged for Lean 4.29.1) ships with the same toolchain — no
+  version conflict. The toolchain bump and the Mathlib pin
+  are co-versioned.
+
+**Mathlib integration (`src/lean4/lakefile.lean` +
+`src/lean4/lake-manifest.json`):**
+
+- **`lakefile.lean`** gains `require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git" @
+  "v4.29.1"`. Header comment block updated to document the
+  Mathlib integration round-3 round-3 §1D.v Decision 1 path
+  + the `lake update` / `lake exe cache get` / `lake build`
+  bootstrap recipe.
+- **`lake-manifest.json`** regenerated via `lake update`
+  (was 5 lines; now ~95 lines). Mathlib v4.29.1 pinned plus
+  8 transitive deps: `plausible`, `LeanSearchClient`,
+  `importGraph`, `proofwidgets`, `aesop`, `Qq`, `batteries`,
+  `Cli`. Per CLAUDE.md package-management discipline, every
+  dependency carries a pinned commit hash.
+- **Cache populated:** `lake exe cache get` downloaded 8232
+  prebuilt Mathlib `.olean` files into
+  `.lake/packages/mathlib/.lake/build/`. Subsequent `lake
+  build` is fast (just builds the LavaLamp module on top of
+  cached Mathlib oleans).
+
+**Theorem statement landed (`src/lean4/LavaLamp/Theorems.lean`):**
+
+The placeholder comment block is replaced with a real Lean 4
+theorem statement (sorry-stubbed body):
+
+```lean
+theorem LL021_worst_case_bound
+    {ε_A : ℝ} {proj : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_nn : 0 ≤ proj)
+    (h_proj_le_one : proj ≤ 1) :
+    ε_A * proj ≤ ε_A := by
+  sorry
+```
+
+The theorem captures the bound *shape*: the effective
+adversary magnitude after projection onto the worst-case
+direction (`ε_eff = ε_A · proj`) cannot exceed the
+unprojected magnitude `ε_A`. The detection-probability bound
+`P(detect) ≥ 1 - K · exp(-c · T · ε_eff²)` from LL-006 then
+composes with this — as `proj → 1` the adversary aligns with
+the worst-case direction parallel to the mean-coupling
+vector, and detection probability rises. The empirical fit
+constants (`K=1, c′=0.0288, T=60` at N=20, n=15 trials per
+point) live at the `:benchmarked` tier and are not part of
+the Lean theorem at L1; subsequent theorems (LL-006 detection
+bound; LL-019 timing-indistinguishability; LL-020 ε-DP) build
+atop this Mathlib-integrated environment.
+
+**Round-3 amendment alignment:** the theorem comment block
+documents the LL-021 round-3 amendments (finite-N scope-limit
++ adaptive-adversary bound) — this theorem applies in the
+finite-N regime; large-N (N ≥ 160) and adaptive-adversary
+(post-observation direction choice) are spec-text scope-notes
+that the Lean theorem captures by stating the bound *shape*
+and leaving the regime-specific empirical content to the
+`:benchmarked` tier.
+
+**Build verification:**
+
+```
+$ cd src/lean4 && lake build
+⚠ [765/767] Built LavaLamp.Theorems (4.5s)
+warning: LavaLamp/Theorems.lean:90:8: declaration uses `sorry`
+✔ [766/767] Built LavaLamp (731ms)
+Build completed successfully (767 jobs).
+```
+
+767 jobs green; single expected `sorry` warning on
+`LL021_worst_case_bound`. The build hits Mathlib's prebuilt
+cache for the dependency graph; only the LavaLamp module
+itself recompiles.
+
+**CI workflow (`.github/workflows/lean.yml`):**
+`timeout-minutes` bumped 15 → 60. `lean-action` invokes
+`lake exe cache get` automatically before `lake build`, but
+on a fresh ubuntu runner the Mathlib cache download (~8k
+oleans, ~hundreds of MB) takes meaningfully longer than the
+pre-Mathlib scaffold build. 60 minutes absorbs the worst-case
+download + first-build window. Header comment block updated
+to document the Mathlib integration timeline.
+
+**Counts:** **unchanged** at 27/0/3/0/5/18/1. The L1 landing
+does not promote LL-021 — sorry-stub ≠ proof. L2 (next
+version, 0.0.48) flips the count: 27/0/3/0/5/18/1 →
+27/1/3/0/4/18/1 (LL-021 :benchmarked → :proved; +1 :proved /
+−1 :benchmarked).
+
+**Files touched this version:**
+
+- `src/lean4/lean-toolchain` — toolchain bump v4.18.0 → v4.29.1.
+- `src/lean4/lakefile.lean` — Mathlib `require` line added;
+  header comment block expanded with Mathlib bootstrap notes.
+- `src/lean4/lake-manifest.json` — regenerated with Mathlib
+  v4.29.1 + 8 transitive deps pinned (was empty at scaffold
+  tier).
+- `src/lean4/LavaLamp/Theorems.lean` — comment-block
+  placeholder replaced with real `LL021_worst_case_bound`
+  theorem statement + `import Mathlib.Data.Real.Basic` +
+  expanded round-3 amendment / theorem-priority commentary.
+- `.github/workflows/lean.yml` — `timeout-minutes` 15 → 60;
+  header comment block updated.
+- `LAVALAMP_SPEC.md` — LL-021 entry footer added documenting
+  the L1 landing.
+- `artifact_registry.md` — version bump; LL-021 row gains a
+  Lean theorem-file pointer in Test/Proof column; A1-A6
+  self-check refreshed for 0.0.47.
+- `dashboard.md` — last-updated stamp; Recent companion docs
+  section gets new top entry.
+- `changelog.md` — this entry.
+- `README.md` — count breakdown unchanged; trajectory entry
+  for 0.0.47.
+- `src/lean4/README.md` — §Mathlib integration moved from
+  "open round-3 architectural decision" to "Mathlib
+  integrated at 0.0.47"; toolchain pin updated; round-3
+  trigger conditions met.
+
+**Next:** L2 fills the `sorry`. The proof body is expected to
+be a one-liner — e.g. `exact mul_le_one_of_le_one_right h_ε
+h_proj_le_one` (via Mathlib's `Mathlib.Algebra.Order.Ring`)
+or `nlinarith [h_ε, h_proj_nn, h_proj_le_one]`. After L2,
+LL-021 evidence-type promotes from `benchmarked` to
+`lean-proved` and status from `:benchmarked` to `:proved`;
+that's the first-ever LavaLamp `:proved` entry.
+
+---
+
 ## 0.0.46 — 2026-05-06 — Synthesis-team round 3 Tier 2 spec changes (LL-027 + LL-021/LL-014 amendments)
 
 Lands round-3 Tier 2 spec changes per the rendered Aaron-

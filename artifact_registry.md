@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.46 (synthesis-team round 3 Tier 2 spec changes; LL-027 asymptotic-Lyapunov-density-invariant added (:benchmarked from 0.0.30); LL-021 round-3 scope-limit + adaptive-adversary amendment; LL-014 round-3 numerical-threshold non-fundamentality tie; 2026-05-06)
+Version: 0.0.47 (synthesis-team round 3 Lean L1; Mathlib v4.29.1 integrated at `src/lean4/`; toolchain bumped v4.18.0 → v4.29.1; LL-021 Lean theorem-statement landed sorry-stubbed at `LavaLamp/Theorems.lean` (status stays `:benchmarked` — a sorry-stub is not a proof); CI `.github/workflows/lean.yml` timeout-minutes 15 → 60 to absorb the Mathlib cache window; counts unchanged 27/0/3/0/5/18/1; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -86,7 +86,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 |---|---|---|---|---|---|---|
 | LL-019 | side-channel hardening (reseed timing + audit-on-verify) | Core | benchmarked | src/julia/test/runtests.jl + src/julia/benchmark/results/ll019_timing_distribution.txt + docs/ll019_benchmarked_companion.md + src/julia/benchmark/ll019_timing_distribution_high_res.jl + src/julia/benchmark/results/ll019_timing_distribution_high_res.txt + docs/ll019_high_res_companion.md (regime-boundary at α=0.01/n=2000) | src/julia/src/Audit.jl | :benchmarked |
 | LL-020 | calibration confidentiality (envelope sealed against observers) | Core | manual | docs/p_r2b_calibration_confidentiality_companion.md §2 + docs/ll020_strategy_2_epsilon_dp_companion.md (Strategy 2 example-tested) + docs/ll020_strategy_2_benchmarked_companion.md (Strategy 2 :benchmarked-tier; variance-convolution σ refinement) + src/julia/benchmark/results/ll020_strategy_2_detection_power_lorenz96.txt + docs/audit_2026-05-04.md | src/julia/src/Audit.jl (Strategy 2 only) | :argued |
-| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | benchmarked | src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md + src/julia/benchmark/p_r2c_structured_adversary_high_res.jl + src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt + docs/ll021_high_res_companion.md (n=15 refresh; c′=0.0288) | src/julia/src/Audit.jl | :benchmarked |
+| LL-021 | worst-case-adversary-bound (structured directions, not isotropic) | Core | benchmarked | src/julia/benchmark/p_r2c_structured_adversary.jl + src/julia/benchmark/results/p_r2c_structured_lorenz96.txt + docs/ll021_benchmarked_companion.md + src/julia/benchmark/p_r2c_structured_adversary_high_res.jl + src/julia/benchmark/results/p_r2c_structured_high_res_lorenz96.txt + docs/ll021_high_res_companion.md (n=15 refresh; c′=0.0288) + src/lean4/LavaLamp/Theorems.lean (0.0.47 L1 — sorry-stubbed `LL021_worst_case_bound`; does NOT promote evidence-type; proof body lands 0.0.48) | src/julia/src/Audit.jl | :benchmarked |
 
 ## Surfaced by P-OS OS-level scoping pass (0.0.26)
 
@@ -126,7 +126,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 18
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.46)
+## Cross-audit A1–A6 self-check (post-0.0.47)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (27 of 27).
@@ -159,12 +159,16 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   invariant). No entry has a status its evidence type cannot
   support.
 - **A5 — Stale counts.** Counts above (27 / 0 / 3 / 0 / 5 /
-  18 / 1) match `LAVALAMP_SPEC.md` 0.0.46 final-section counts
-  and `dashboard.md` 0.0.46 spec-status section. **LL-027
-  added** (round-3 Tier 2) so total 26 → 27 and
-  :benchmarked 4 → 5. Other counts unchanged. The LL-021 +
-  LL-014 round-3 amendments are notes-amendments to existing
-  entries; statuses unchanged.
+  18 / 1) match `LAVALAMP_SPEC.md` 0.0.47 final-section counts
+  and `dashboard.md` 0.0.47 spec-status section. Counts
+  **unchanged from 0.0.46** — the L1 Mathlib integration +
+  LL-021 sorry-stubbed theorem-statement landing does not
+  promote evidence-type or status (sorry-stub ≠ proof per
+  CLAUDE.md §Honest framing); LL-021 stays `:benchmarked`.
+  L2 (next version, 0.0.48) replaces `sorry` with a real
+  proof, at which point LL-021 evidence-type promotes to
+  `lean-proved` and status to `:proved` (counts shift
+  27/0/3/0/5/18/1 → 27/1/3/0/4/18/1).
 - **A6 — Test sync.** LL-002, LL-003, LL-004, LL-005 (part-
   (a) only), LL-006, LL-007 are exercised by
   `src/julia/test/runtests.jl`, runnable via `Pkg.test()`
@@ -176,6 +180,14 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
   test/proof file beyond the companions and attack-surface
   enumeration (deferred operational-tooling work). LL-026 is
   governance discipline; no runtime test artifact applies.
+  **0.0.47:** the Lean track at `src/lean4/` enters CI via
+  `.github/workflows/lean.yml` (`lake build` on every push;
+  Mathlib v4.29.1 cache via `lake exe cache get`; timeout
+  bumped 15 → 60 minutes for first-build-on-fresh-runner).
+  At L1 the build is "clean modulo a single expected `sorry`
+  warning on `LL021_worst_case_bound`"; once L2 lands the
+  warning disappears and `lake build` becomes a real
+  correctness check.
 
 ## Test-coverage notes
 

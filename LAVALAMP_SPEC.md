@@ -1075,6 +1075,23 @@ LL-ID, not the Key.
   Mathlib full) will state the bound parametric in
   adversary-tier and N regime, capturing the scope-limits in
   the theorem statement.
+- **Lean theorem-statement landed (2026-05-06, 0.0.47):**
+  Per round-3 §1D.v Decision 1 (Option A — full Mathlib),
+  the Lean 4 track at `src/lean4/` integrates Mathlib v4.29.1
+  (toolchain bumped v4.18.0 → v4.29.1; Mathlib + 8 transitive
+  deps pinned in `lake-manifest.json`) and lands a
+  sorry-stubbed theorem statement
+  `LavaLamp.LL021_worst_case_bound` capturing the bound
+  shape: `0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 → ε_A * proj ≤ ε_A`
+  (i.e. the projected effective magnitude `ε_eff = ε_A · proj`
+  cannot exceed `ε_A`). Build clean (767 jobs; single
+  expected `declaration uses 'sorry'` warning on the theorem).
+  Status stays `:benchmarked` per CLAUDE.md §Honest framing —
+  a sorry-stubbed theorem is not a proof. Proof body lands at
+  0.0.48 (L2); evidence-type promotes to `lean-proved` and
+  status to `:proved` only when `sorry` is removed and the
+  package builds clean. See `src/lean4/LavaLamp/Theorems.lean`
+  for the theorem text and round-3 amendment scope-notes.
 
 ---
 

@@ -134,7 +134,22 @@ round-3 finite-N scope-limit + adaptive-adversary amendment;
 LL-014 round-3 numerical-threshold non-fundamentality tie;
 first Lean theorem deferred to a separate version pass for
 session-focus reasons — adding Mathlib + writing measure-
-theoretic proofs warrants its own session).
+theoretic proofs warrants its own session) → 0.0.47
+(round-3 Lean L1; toolchain bumped `leanprover/lean4:v4.18.0`
+→ `v4.29.1` to resolve a Darwin 25 dyld linker error on the
+v4.18.0 cache binary; Mathlib v4.29.1 integrated at
+`src/lean4/lakefile.lean` per round-3 §1D.v Decision 1
+Option A — full Mathlib; `lake-manifest.json` pins Mathlib
++ 8 transitive deps; `LavaLamp/Theorems.lean` comment-block
+placeholder replaced with real theorem statement
+`LL021_worst_case_bound : 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 →
+ε_A * proj ≤ ε_A := by sorry` capturing the bound shape;
+`lake build` clean with single expected sorry warning;
+`.github/workflows/lean.yml` `timeout-minutes` 15 → 60 to
+absorb Mathlib first-build window; LL-021 stays
+`:benchmarked` per CLAUDE.md §Honest framing — sorry-stub is
+not a proof; L2 fills the sorry next version with a
+one-liner real proof).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new
@@ -219,12 +234,12 @@ lavalamp/
 │   ├── style.css                               ← lamp-frame styling
 │   └── README.md                               ← decoupling discipline
 └── src/
-    ├── lean4/                                   ← Lean 4 formal-verification scaffold (0.0.36)
-    │   ├── lakefile.lean                       ← Lake build config (no deps at scaffold tier)
-    │   ├── lean-toolchain                      ← Lean version pin (v4.18.0)
-    │   ├── lake-manifest.json                  ← Lockfile (empty packages at scaffold)
+    ├── lean4/                                   ← Lean 4 formal-verification track (Mathlib v4.29.1; 0.0.47)
+    │   ├── lakefile.lean                       ← Lake build config (Mathlib v4.29.1 require)
+    │   ├── lean-toolchain                      ← Lean version pin (v4.29.1; bumped 0.0.47)
+    │   ├── lake-manifest.json                  ← Lockfile (Mathlib + 8 transitive deps pinned)
     │   ├── LavaLamp.lean                       ← root module
-    │   ├── LavaLamp/Theorems.lean              ← round-3 theorem placeholders
+    │   ├── LavaLamp/Theorems.lean              ← round-3 theorems (LL021_worst_case_bound sorry-stubbed at 0.0.47; L2 0.0.48)
     │   └── README.md                           ← discipline + theorem plan
     └── julia/                                   ← prototype core (P3)
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps

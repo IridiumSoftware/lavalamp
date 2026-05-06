@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.46 — synthesis-team round 3 Tier 2 spec changes; LL-027 asymptotic-Lyapunov-density-invariant added :benchmarked; LL-021 round-3 finite-N scope-limit + adaptive-adversary amendment; LL-014 round-3 numerical-threshold non-fundamentality tie).
+Last updated: 2026-05-06 (0.0.47 — synthesis-team round 3 Lean L1; Mathlib v4.29.1 integrated at `src/lean4/`; LL-021 worst-case bound theorem-statement landed sorry-stubbed at `LavaLamp/Theorems.lean`; CI Lean workflow timeout-minutes 15 → 60; counts unchanged 27/0/3/0/5/18/1).
 
 ## Status summary
 
@@ -589,6 +589,43 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **Round-3 Lean L1 — Mathlib integration + LL-021 theorem-
+  statement landed** (0.0.47, 2026-05-06) — Per round-3 §1D.v
+  Decision 1 (Option A — full Mathlib), the Lean 4 track at
+  `src/lean4/` integrates Mathlib v4.29.1 and lands the first
+  theorem statement (sorry-stubbed). **Toolchain bumped**
+  `leanprover/lean4:v4.18.0` → `v4.29.1` to resolve a Darwin
+  25 (macOS 25+) dyld error on the v4.18.0 cache binary
+  (`__DATA_CONST segment missing SG_READ_ONLY flag`); v4.29.1
+  ships with the fix and matches the Mathlib v4.29.1 release.
+  **`lakefile.lean` adds** `require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git" @
+  "v4.29.1"`; **`lake-manifest.json`** regenerated with
+  Mathlib + 8 transitive deps pinned (plausible, LeanSearchClient,
+  importGraph, proofwidgets, aesop, Qq, batteries, Cli).
+  `lake exe cache get` populated 8232 prebuilt `.olean` files.
+  **`LavaLamp/Theorems.lean`** rewritten from comment-block
+  placeholder to a real theorem statement: `theorem
+  LL021_worst_case_bound {ε_A proj : ℝ} (h_ε : 0 ≤ ε_A)
+  (h_proj_nn : 0 ≤ proj) (h_proj_le_one : proj ≤ 1) : ε_A *
+  proj ≤ ε_A := by sorry`. The theorem captures the bound
+  *shape* — the projected effective magnitude `ε_eff = ε_A ·
+  proj` cannot exceed `ε_A` — leaving the empirical
+  fit-constant content (`K=1, c′=0.0288, T=60` at N=20) at
+  the `:benchmarked` tier where it lives. **`lake build`
+  clean** (767 jobs; single expected `declaration uses
+  'sorry'` warning on `LL021_worst_case_bound`). **CI
+  workflow** `.github/workflows/lean.yml` timeout-minutes
+  15 → 60 to absorb Mathlib first-build + cache-download
+  window on a fresh ubuntu runner. **Status discipline:**
+  LL-021 stays `:benchmarked` per CLAUDE.md §Honest framing
+  — a sorry-stubbed theorem is not a proof. **L2 (next
+  version, 0.0.48):** replace `sorry` with a real proof
+  (likely `mul_le_one_of_le_one_right` one-liner or
+  `nlinarith`); LL-021 evidence-type promotes to
+  `lean-proved` and status to `:proved`; counts shift
+  27/0/3/0/5/18/1 → 27/1/3/0/4/18/1. Counts unchanged this
+  version.
 - **Round-3 Tier 2 spec pass** (0.0.46, 2026-05-06) —
   paper-grounded spec evolution per round-3 §1D.vii rendered
   sequencing. Three changes:
