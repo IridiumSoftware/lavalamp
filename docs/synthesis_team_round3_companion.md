@@ -553,58 +553,135 @@ Spec growth: **24 → 29 entries.**
      for all SDEs in the candidate set; this is a structural
      consequence, not a contingent one. (ChatGPT A4)
 
-#### §1D.v — Lean target updates
+#### §1D.v — Lean target updates (rendered 2026-05-06)
 
-**Open: depends on §1D.vi decision 1.** Two candidate first
-theorems:
+**Decision rendered (2026-05-06): Option A — LL-021 worst-
+case bound, Mathlib full.** First theorem:
 
-1. **(Grok)** LL-021 worst-case bound. Mathlib option A
-   (full Mathlib). Statement form:
-   `theorem ll021_worst_case_bound : ε_eff ≤ ε_A · proj`.
-   Subsequent: LL-019 KS-test + LL-020 ε-DP envelope.
-2. **(ChatGPT)** Closure Detection Soundness over LL-007 +
-   LL-014 + LL-021 interplay. Mathlib option B (custom local
-   library; Mathlib lacks dynamical-systems / spectral
-   theory). Statement form: *"For trajectory x(t), if
-   deviation exceeds threshold τ under all Lyapunov
-   exponents, then it does not belong to the closure-fixed-
-   point attractor."*
+```
+theorem ll021_worst_case_bound
+  (ε_A : ℝ) (proj : ℝ) (h_proj : 0 ≤ proj ∧ proj ≤ 1) :
+  ∀ adversary, ε_eff adversary ≤ ε_A * proj := ...
+```
 
-The Mathlib decision is *consequent* to the first-theorem
-decision: theorem 1 picks the library tier.
+Subsequent theorems: LL-019 KS-test (timing
+indistinguishability) → LL-020 ε-DP envelope. Theorem 2 is
+**Closure Detection Soundness** over LL-007 + LL-014 +
+LL-021 interplay (originally ChatGPT's option B); the
+dynamical-systems machinery built for theorem 2 amortizes
+across subsequent theorems.
 
-#### §1D.vi — Decision points (open — Aaron's call)
+Original alternatives preserved for record:
+
+1. **(Chosen — Grok)** LL-021 worst-case bound. Mathlib
+   option A (full Mathlib). Probability/measure-theoretic
+   flavour.
+2. **(Deferred to theorem 2 — ChatGPT)** Closure Detection
+   Soundness over LL-007 + LL-014 + LL-021 interplay.
+   Originally proposed with Mathlib option B (custom local
+   library); now lands as theorem 2 atop theorem 1's Mathlib
+   environment, with custom DS-machinery introduced as
+   needed.
+
+**Reasoning.** Mathlib's measure theory + probability
+libraries are mature; Option A's first-theorem cost is low.
+Option B's custom DS-machinery is a multi-session research
+investment before the first theorem lands; landing it as
+theorem 2 instead lets the proof track demonstrate viability
+sooner. The engine project's option-B precedent (project-
+local Category typeclass; no Mathlib) was for category
+theory, not measure theory — different ecosystem maturity.
+ChatGPT's adaptive-adversary critique (A4) lands in spec
+text via the LL-021 amendment in Tier 2; the Lean theorem
+proves the bound shape, with the spec articulating what the
+bound does and doesn't close.
+
+#### §1D.vi — Decision points (rendered 2026-05-06)
+
+Aaron rendered all three decisions on 2026-05-06 in the
+order `2 → 3 → 1` (V-merge first, sequencing second, Lean
+third — dependency-ordered: decision 2 affects V-NNN list
+size for Tier 1; decision 3 sets implementation order;
+decision 1 only blocks Tier 2). Original framings preserved;
+rendered calls follow each.
 
 1. **Lean first theorem + Mathlib option.** LL-021 worst-
    case bound (Grok, Mathlib A) vs. Closure Detection
    Soundness (ChatGPT, Mathlib B). Picks the Lean ecosystem
    for round 3 onward.
+   - **Decision rendered: Option A** — LL-021 worst-case
+     bound, Mathlib full. Theorem 2 will be Closure
+     Detection Soundness atop theorem 1's environment. See
+     §1D.v for theorem statement target and reasoning.
+
 2. **V-021 / V-022 disposition.** Merge into V-015 / V-016
    (cleaner spec; integrator default) vs. keep separate
    (preserves edge-witness attribution; sharper attack
    taxonomy).
+   - **Decision rendered: Merge.** V-021 absorbs into V-015
+     as the attack-mechanism axis (early-stage prefix mimicry
+     before LL-007 reseed); V-022 absorbs into V-016 as the
+     language axis (LL-014's 10% FPR ≡ paper §13.6's 5-12%
+     spurious-merge zone). Full ChatGPT framings preserved
+     in §1C.A6 with attribution; merge keeps the V-NNN
+     roster clean without losing information. **Net new
+     V-IDs after merge: 7** (V-014 through V-020).
+
 3. **Sequencing across the five new LL-IDs.** Default tiers
    below; Aaron may reorder.
+   - **Decision rendered: Confirm default.** Tier 1 → Tier 2
+     → Tier 3 as proposed in §1D.vii. Internal ordering
+     within each tier specified in §1D.vii (rendered
+     version).
 
-#### §1D.vii — Sequencing recommendation (provisional default)
+#### §1D.vii — Sequencing recommendation (rendered 2026-05-06)
 
-- **Tier 1 — Consensus / framing fixes (one version bump).**
-  LL-025 (A7 Boundary) + LL-026 (logic-tier annotation
-  discipline) + LL-008 cost-asymmetry footer + V-014..V-020
-  enumerated in `attack_surface_enumeration.md`. Low engineering
-  cost; both seats converge.
-- **Tier 2 — Paper-grounded spec evolution (one version
-  bump).** LL-027 (asymptotic chaos density invariant) +
-  LL-021 scope-limit + adaptive-adversary text + LL-014
-  numerical-threshold non-fundamentality tie. Paper §13.6 +
-  §10.1-10.2 + §1.2 -derived claims; can land alongside
-  first Lean theorem.
-- **Tier 3 — Engineering / composability gaps (multiple
-  version bumps).** LL-028 (runtime conformance
-  verification) + LL-029 (multi-channel entropy
-  independence) + LL-019 deployment-context expansion. Real
-  engineering work; sequenced by P-RS prototype availability
-  and PharOS scope.
+**Tier 1 — Consensus / framing fixes (one version bump,
+likely 0.0.45).** Internal ordering:
+
+1. `attack_surface_enumeration.md` — V-014..V-020 enumerated
+   (attack vectors first because they motivate the new
+   LL-IDs).
+2. `LAVALAMP_SPEC.md` — LL-025 (A7 Boundary) + LL-026
+   (logic-tier annotation discipline) + LL-008 cost-
+   asymmetry footer.
+3. `artifact_registry.md` — new rows for LL-025 / LL-026.
+4. `dashboard.md` — status update (24 → 26 entries; 7 with
+   evidence; 19 `:argued`).
+5. `changelog.md` — versioned entry.
+6. README count refresh.
+7. Single commit, push.
+
+Low engineering cost; both seats converge.
+
+**Tier 2 — Paper-grounded spec evolution (one version bump,
+likely 0.0.46) paired with first Lean theorem.** Internal
+ordering:
+
+1. `LAVALAMP_SPEC.md` — LL-027 (asymptotic chaos density
+   invariant) + LL-021 scope-limit + adaptive-adversary
+   amendment + LL-014 numerical-threshold non-fundamentality
+   tie.
+2. First Lean theorem landed in `src/lean4/` (LL-021 worst-
+   case bound; Mathlib option A per §1D.v).
+3. `artifact_registry.md` — LL-027 row + LL-021 evidence-
+   type promotion to `:lean-proved` once theorem builds.
+4. `dashboard.md` + `changelog.md` + README + commit + push.
+
+Paper §13.6 + §10.1-10.2 + §1.2 -derived claims.
+
+**Tier 3 — Engineering / composability gaps (multiple
+version bumps).** Sequenced by P-RS prototype availability
+and PharOS scope.
+
+1. LL-028 (runtime conformance verification) — engineering.
+2. LL-029 (multi-channel entropy independence) —
+   engineering.
+3. LL-019 deployment-context expansion — engineering.
+4. P-RS Level 2 prototype implementation.
+
+Real engineering work; per-entry version bumps as
+engineering completes.
 
 #### §1D.viii — Decision: integrate before next prototype slice
 
