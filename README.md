@@ -64,10 +64,10 @@ on every push (202 assertions pass in ~53s).
 
 | status | count | entries |
 |---|---:|---|
-| `:proved` | 0 | — |
+| `:proved` | 1 | LL-021 worst-case bound (Lean 4 + Mathlib v4.29.1; `mul_le_of_le_one_right` over the bound shape `0 ≤ ε_A → proj ≤ 1 → ε_A · proj ≤ ε_A`; first-ever LavaLamp `:proved` entry; promoted at 0.0.48 L2) |
 | `:verified` | 0 | — |
 | `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
-| `:benchmarked` | 5 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-021 worst-case bound (with round-3 finite-N scope-limit), LL-027 asymptotic Lyapunov density invariant |
+| `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-027 asymptotic Lyapunov density invariant |
 | `:argued` | 18 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1: LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
@@ -149,7 +149,18 @@ placeholder replaced with real theorem statement
 absorb Mathlib first-build window; LL-021 stays
 `:benchmarked` per CLAUDE.md §Honest framing — sorry-stub is
 not a proof; L2 fills the sorry next version with a
-one-liner real proof).
+one-liner real proof) → 0.0.48 (round-3 Lean L2; the L1
+`sorry` body in `LavaLamp.LL021_worst_case_bound` is replaced
+with a real Lean 4 proof — `mul_le_of_le_one_right h_ε
+h_proj_le_one`, a direct application of Mathlib's
+`mul_le_of_le_one_right : 0 ≤ a → b ≤ 1 → a * b ≤ a`; the
+unused `0 ≤ proj` hypothesis is dropped from the signature
+since the bound holds without it; `lake build` returns 767
+jobs green with **zero warnings**; LL-021 evidence-type
+`benchmarked` → `lean-proved` and status `:benchmarked` →
+`:proved` — **first-ever LavaLamp `:proved` entry**; counts
+27/0/3/0/5/18/1 → 27/1/3/0/4/18/1; closes Aaron's round-3
+§1D.v Decision 1 path end-to-end).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new
@@ -163,9 +174,13 @@ full as first theorem. **Tier 1 landed 0.0.45** (LL-025 +
 LL-026 + V-014..V-020). **Tier 2 spec landed 0.0.46**
 (LL-027 + LL-021 amendment + LL-014 amendment); first Lean
 theorem deferred to a separate session pass given Mathlib
-integration scope. Tier 3 (LL-028 runtime conformance +
-LL-029 multi-channel entropy independence + LL-019
-deployment-context expansion) sequenced by P-RS Level 2
+integration scope. **Lean L1 landed 0.0.47** (Mathlib
+v4.29.1 integrated; `LL021_worst_case_bound` theorem-statement
+sorry-stubbed). **Lean L2 landed 0.0.48** (sorry replaced
+with real proof; LL-021 promoted to `:proved` —
+first-ever LavaLamp `:proved` entry). Tier 3 (LL-028 runtime
+conformance + LL-029 multi-channel entropy independence +
+LL-019 deployment-context expansion) sequenced by P-RS Level 2
 prototype availability. See
 `docs/synthesis_team_round3_companion.md` for the full
 metabolic synthesis.

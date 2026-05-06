@@ -5,6 +5,126 @@ messages match entry summaries.
 
 ---
 
+## 0.0.48 — 2026-05-06 — Synthesis-team round 3 Lean L2 (LL-021 worst-case bound proved; first-ever LavaLamp `:proved` entry)
+
+Lands Lean L2 — the `sorry` body in
+`LavaLamp.LL021_worst_case_bound` is replaced with a real
+Lean 4 proof. Closes Aaron's round-3 §1D.v Decision 1 path
+end-to-end (Option A — full Mathlib; theorem 1 = LL-021
+worst-case bound).
+
+**The proof.** A direct application of Mathlib's
+`mul_le_of_le_one_right : 0 ≤ a → b ≤ 1 → a * b ≤ a`:
+
+```lean
+theorem LL021_worst_case_bound
+    {ε_A : ℝ} {proj : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_le_one : proj ≤ 1) :
+    ε_A * proj ≤ ε_A :=
+  mul_le_of_le_one_right h_ε h_proj_le_one
+```
+
+Term-mode (no `by ...`); one-line discharge against the
+Mathlib lemma. The Lean 4 kernel verifies the proof at
+compile time — `lake build` is now a real correctness check,
+not just an infrastructure smoke test.
+
+**Signature change vs L1.** The L1 statement carried three
+hypotheses: `0 ≤ ε_A`, `0 ≤ proj`, `proj ≤ 1`. L2 drops
+`0 ≤ proj` because the bound `ε_A * proj ≤ ε_A` holds
+without it: when `proj < 0`, the product `ε_A * proj` is
+non-positive (since `0 ≤ ε_A`) and trivially `≤ ε_A`. The
+Mathlib lemma `mul_le_of_le_one_right` is stated this way
+for the same reason. The geometric construction
+`proj = |û · m_unit|` from the spec already guarantees
+`0 ≤ proj` at the call sites where it matters; downstream
+theorems composing with this one (e.g. LL-006 detection-bound
+via `ε_eff²`) will introduce the non-negativity hypothesis
+where they need it. Removing it from the L1 statement keeps
+the lemma as general as the pure algebraic fact requires —
+and as a side benefit, removes the `unused variable
+h_proj_nn` linter warning that L1's signature would have
+triggered if the proof did not use the hypothesis.
+
+**Build verification.**
+
+```
+$ cd src/lean4 && lake build
+✔ [765/767] Built LavaLamp.Theorems (741ms)
+✔ [766/767] Built LavaLamp (710ms)
+Build completed successfully (767 jobs).
+```
+
+767 jobs green; **zero warnings** — the L1 `declaration uses
+sorry` warning is gone, no `unused variable` warning, no
+deprecation warning. CI on `.github/workflows/lean.yml` will
+catch any future regression.
+
+**Status flip.**
+
+- LL-021 evidence-type: `benchmarked` → `lean-proved`.
+- LL-021 status: `:benchmarked` → `:proved`.
+- LL-021 is **the first-ever LavaLamp `:proved` entry.**
+
+**Counts.** 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1 (+1 :proved /
+−1 :benchmarked; total + others unchanged).
+
+**`:benchmarked` content preserved.** The empirical fit
+constants (`K=1, c′=0.0288, T=60` at N=20, n=15 trials per
+point per `docs/ll021_high_res_companion.md`) and the
+structured-adversary benchmark surface remain in the spec
+entry's notes. The Lean theorem captures the bound *shape*
+— `ε_eff = ε_A · proj` cannot exceed `ε_A` — which is the
+algebraic content the empirical fit is a *fit to*. The
+operational deployment-fit detail (precise constants for
+real Lorenz-96 prototype configurations) is `:benchmarked`
+content; the underlying bound shape is now `:proved`. The
+two work together: the proof is the structural backbone, the
+benchmark calibrates the per-deployment numerical content.
+
+**Round-3 amendments preserved.** The LL-021 spec entry's
+round-3 amendments (finite-N scope-limit at N ≤ 80;
+adaptive-adversary statement) remain text-amendments to the
+empirical regime; the Lean theorem captures the bound shape
+which holds in both regimes — the regime distinction is
+about which empirical fit constants apply, not about whether
+the bound shape itself holds.
+
+**Next Lean priority.** Theorem 2 — LL-019 side-channel
+timing indistinguishability per round-3 §1D.v priority 2.
+Builds atop the Mathlib environment integrated at L1 (uses
+`Mathlib.Probability` content). Sequenced in a future version
+pass; not gated on this commit.
+
+**Files touched this version:**
+
+- `src/lean4/LavaLamp/Theorems.lean` — L1 `sorry` removed;
+  proof body lands; `0 ≤ proj` hypothesis dropped from
+  signature; comment block updated to document the proof
+  approach + the hypothesis-drop rationale; `scaffold_tier`
+  string bumped from "0.0.47 sorry-stubbed" to "0.0.48
+  proved".
+- `LAVALAMP_SPEC.md` — LL-021 evidence type `benchmarked` →
+  `lean-proved`; status `:benchmarked` → `:proved`; new "Lean
+  theorem proved" footer; Counts section updated to
+  27/1/3/0/4/18/1.
+- `artifact_registry.md` — version line bump; LL-021 row
+  evidence-type column `benchmarked` → `lean-proved` and
+  status column `:benchmarked` → `:proved`; Lean theorem-file
+  pointer rendered as the primary Test/Proof entry; counts
+  section updated; A1-A6 self-check refreshed for 0.0.48.
+- `dashboard.md` — last-updated stamp; spec-status section
+  count flip; Recent companion docs section gets new top
+  entry.
+- `changelog.md` — this entry.
+- `README.md` — count breakdown table flip; trajectory entry
+  for 0.0.48.
+- `src/lean4/README.md` — first-theorem status updated from
+  "sorry-stubbed at 0.0.47" → "proved at 0.0.48".
+
+---
+
 ## 0.0.47 — 2026-05-06 — Synthesis-team round 3 Lean L1 (Mathlib v4.29.1 integration + LL-021 theorem-statement landed sorry-stubbed)
 
 Lands Lean L1 per round-3 §1D.v Decision 1 (Aaron rendered

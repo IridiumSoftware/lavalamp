@@ -85,20 +85,33 @@ namespace LavaLamp
 
     Status: theorem statement landed at 0.0.47 (L1 — Mathlib
     integration + sorry-stub). Proof body lands at 0.0.48 (L2);
-    until then LL-021 stays at `:benchmarked` per honest framing
-    (a sorry-stubbed theorem is not a proof). -/
+    LL-021 promotes to `:proved` with `lean-proved` evidence
+    when `lake build` returns no `sorry` warnings.
+
+    Proof: direct application of Mathlib's
+    `mul_le_of_le_one_right : 0 ≤ a → b ≤ 1 → a * b ≤ a`,
+    discharged with the non-negativity hypothesis on `ε_A`
+    and the upper-bound hypothesis on `proj`. The bound also
+    holds when `proj < 0` (the product becomes non-positive,
+    which is trivially `≤ ε_A` for non-negative `ε_A`), so
+    `0 ≤ proj` is not part of the theorem signature here even
+    though `proj = |û · m_unit|` is non-negative by
+    construction in the geometric interpretation. Downstream
+    theorems composing with this one (e.g. LL-006 detection-
+    bound via `ε_eff²`) will introduce `0 ≤ proj` where they
+    need it; leaving it out here keeps the lemma as general
+    as the pure algebraic fact requires. -/
 theorem LL021_worst_case_bound
     {ε_A : ℝ} {proj : ℝ}
     (h_ε : 0 ≤ ε_A)
-    (h_proj_nn : 0 ≤ proj)
     (h_proj_le_one : proj ≤ 1) :
-    ε_A * proj ≤ ε_A := by
-  sorry
+    ε_A * proj ≤ ε_A :=
+  mul_le_of_le_one_right h_ε h_proj_le_one
 
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.47 — Mathlib integrated; LL-021 statement landed (sorry-stubbed); L2 fills proof body"
+  "0.0.48 — LL-021 worst-case bound proved (lean-proved; promotes :benchmarked → :proved)"
 
 end LavaLamp

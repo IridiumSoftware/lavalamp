@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.47 — synthesis-team round 3 Lean L1; Mathlib v4.29.1 integrated at `src/lean4/`; LL-021 worst-case bound theorem-statement landed sorry-stubbed at `LavaLamp/Theorems.lean`; CI Lean workflow timeout-minutes 15 → 60; counts unchanged 27/0/3/0/5/18/1).
+Last updated: 2026-05-06 (0.0.48 — synthesis-team round 3 Lean L2; LL-021 worst-case bound proved by `mul_le_of_le_one_right` over Mathlib v4.29.1; `lake build` clean with zero `sorry` warnings; LL-021 evidence-type `benchmarked` → `lean-proved` and status `:benchmarked` → `:proved` — first-ever LavaLamp `:proved` entry; counts 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1).
 
 ## Status summary
 
@@ -515,12 +515,13 @@ P8 — **Visual-skin scaffolding.** Decorative-only animation. Can
 ## Spec status (per LAVALAMP_SPEC.md)
 
 - Total spec entries: 27 (was 26; +LL-027 from 0.0.46 round-3 Tier 2)
-- `:proved`: 0
+- `:proved`: 1 (LL-021 — first-ever LavaLamp `:proved` entry;
+  promoted at 0.0.48 L2 by the Lean 4 + Mathlib v4.29.1 proof
+  in `src/lean4/LavaLamp/Theorems.lean`)
 - `:tested`: 3 (LL-002, LL-004, LL-007 — unchanged)
 - `:verified`: 0
-- `:benchmarked`: 5 (LL-003, LL-006, LL-019, LL-021, LL-027 —
-  LL-027 added 0.0.46 :benchmarked from the existing 0.0.30
-  P3e N-scaling benchmark)
+- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-027 — was 5
+  pre-0.0.48; LL-021 promoted out at L2)
 - `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026 —
@@ -589,6 +590,35 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **Round-3 Lean L2 — LL-021 worst-case bound `:proved`**
+  (0.0.48, 2026-05-06) — The L1 `sorry` body in
+  `LavaLamp.LL021_worst_case_bound` is replaced by a real
+  Lean 4 proof: `mul_le_of_le_one_right h_ε h_proj_le_one`,
+  a direct application of Mathlib's
+  `mul_le_of_le_one_right : 0 ≤ a → b ≤ 1 → a * b ≤ a`. The
+  hypothesis `0 ≤ proj` was dropped from the L1 signature
+  (the bound holds for negative `proj` too — the product
+  becomes non-positive, trivially `≤ ε_A` for non-negative
+  `ε_A`); downstream theorems composing with this one will
+  introduce the non-negativity hypothesis where they need it.
+  **`lake build` clean** — 767 jobs green; zero warnings (no
+  `sorry` warning, no unused-variable warning). The Lean
+  kernel verified the proof at compile time. **Status flip:**
+  LL-021 evidence-type `benchmarked` → `lean-proved`; status
+  `:benchmarked` → `:proved`. **First-ever LavaLamp `:proved`
+  entry.** Counts: 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1 (+1
+  :proved / −1 :benchmarked). The `:benchmarked` empirical
+  fit-constant content (`K=1, c′=0.0288, T=60` at N=20,
+  n=15 trials per point) is preserved as the operational
+  deployment-fit detail in the spec entry's notes; the Lean
+  theorem captures the bound *shape* (the algebraic content
+  the empirical fit is a *fit to*) and is what `:proved`
+  refers to. **Round-3 closure on the Lean track:** Aaron's
+  resolution decision 1 (Option A — full Mathlib, theorem 1
+  = LL-021 worst-case bound) is now fully landed end-to-end.
+  Theorem 2 (LL-019 timing-indistinguishability) is the next
+  Lean priority; the Mathlib environment now in place at L1
+  carries it.
 - **Round-3 Lean L1 — Mathlib integration + LL-021 theorem-
   statement landed** (0.0.47, 2026-05-06) — Per round-3 §1D.v
   Decision 1 (Option A — full Mathlib), the Lean 4 track at

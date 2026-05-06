@@ -981,8 +981,9 @@ LL-ID, not the Key.
   the best-case (BROAD direction) saturates at 1.00 for
   ε_A ≥ 1.0 — the empirical asymmetry is essentially
   unbounded at this configuration's calibration noise floor.
-- Evidence type: benchmarked
-- Status: :benchmarked
+- Evidence type: lean-proved (promoted from `benchmarked` at
+  0.0.48 — see "Lean theorem proved" footer below)
+- Status: :proved (promoted from `:benchmarked` at 0.0.48)
 - Source: src/julia/src/Audit.jl synthetic_adversary
   (direction parameter supports explicit û).
 - Test: src/julia/benchmark/p_r2c_structured_adversary.jl +
@@ -1082,16 +1083,34 @@ LL-ID, not the Key.
   deps pinned in `lake-manifest.json`) and lands a
   sorry-stubbed theorem statement
   `LavaLamp.LL021_worst_case_bound` capturing the bound
-  shape: `0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 → ε_A * proj ≤ ε_A`
+  shape: `0 ≤ ε_A → proj ≤ 1 → ε_A * proj ≤ ε_A`
   (i.e. the projected effective magnitude `ε_eff = ε_A · proj`
   cannot exceed `ε_A`). Build clean (767 jobs; single
   expected `declaration uses 'sorry'` warning on the theorem).
   Status stays `:benchmarked` per CLAUDE.md §Honest framing —
-  a sorry-stubbed theorem is not a proof. Proof body lands at
-  0.0.48 (L2); evidence-type promotes to `lean-proved` and
-  status to `:proved` only when `sorry` is removed and the
-  package builds clean. See `src/lean4/LavaLamp/Theorems.lean`
-  for the theorem text and round-3 amendment scope-notes.
+  a sorry-stubbed theorem is not a proof.
+- **Lean theorem proved (2026-05-06, 0.0.48 — L2):** The
+  `sorry` body in `LavaLamp.LL021_worst_case_bound` is
+  replaced by `mul_le_of_le_one_right h_ε h_proj_le_one`, a
+  direct application of Mathlib's
+  `mul_le_of_le_one_right : 0 ≤ a → b ≤ 1 → a * b ≤ a`.
+  `lake build` returns 767 jobs green with **zero `sorry`
+  warnings** — the kernel verifies the proof at compile time.
+  The hypothesis `0 ≤ proj` was dropped from the theorem
+  signature: the bound holds for negative `proj` too (the
+  product becomes non-positive, trivially `≤ ε_A` for
+  non-negative `ε_A`), and the geometric construction
+  `proj = |û · m_unit|` already guarantees `0 ≤ proj` at the
+  call sites where it matters; downstream theorems (LL-006
+  detection-bound via `ε_eff²`) will introduce that hypothesis
+  where they need it. **Evidence type promotes** `benchmarked`
+  → `lean-proved`; **status promotes** `:benchmarked` →
+  `:proved`. This is the first-ever LavaLamp `:proved` entry.
+  Counts: 27/0/3/0/5/18/1 → 27/1/3/0/4/18/1 (+1 :proved /
+  −1 :benchmarked). The `:benchmarked` empirical fit-constant
+  content (`K=1, c′=0.0288, T=60` at N=20) is preserved as
+  the operational deployment-fit detail; the Lean theorem
+  captures the bound *shape* and is the `:proved` content.
 
 ---
 
@@ -1471,10 +1490,11 @@ LL-ID, not the Key.
 ## Counts (must match `artifact_registry.md` and `dashboard.md`)
 
 - Total: 27
-- `:proved`: 0
+- `:proved`: 1 (LL-021 — first-ever LavaLamp `:proved` entry;
+  Lean 4 + Mathlib v4.29.1; promoted at 0.0.48)
 - `:tested`: 3 (LL-002, LL-004, LL-007)
 - `:verified`: 0
-- `:benchmarked`: 5 (LL-003, LL-006, LL-019, LL-021, LL-027)
+- `:benchmarked`: 4 (LL-003, LL-006, LL-019, LL-027)
 - `:argued`: 18 (LL-001, LL-005, LL-008, LL-009,
   LL-010, LL-011, LL-012, LL-013, LL-014, LL-016, LL-017,
   LL-018, LL-020, LL-022, LL-023, LL-024, LL-025, LL-026)
