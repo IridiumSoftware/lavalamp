@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.42 (threat-landscape companion §2.6/§2.7 added — metabolic-value / predator-prey ecology axis; LL-008 cost-asymmetry footer, 2026-05-05)
+Version: 0.0.43 (round-3 brief paper-side blanks filled; closure_forces_structure v1.0 paper-grounded; engine-side pending, 2026-05-05)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

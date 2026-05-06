@@ -19,6 +19,24 @@ scoping. Q7 / A7 ask the synthesis + edge-witness seats
 whether this is a load-bearing addition to the spec or a
 deployment-context recommendation.
 
+**Update 2026-05-05 (0.0.43):** Paper-side blanks filled.
+The `closure_forces_structure` paper at **v1.0 2026-04-01**
+is canonical and settled; what's new for round-3 is corpus-
+stability, not paper revisions. The fill captures three
+load-bearing section clusters in the paper (§10.5 C-Closure
+operation; §11.13 Self-Reproducing Fixed Point —
+*"the daughter IS the parent"*; §13.6 Evidence Classification
+— same honest-framing discipline as LavaLamp's CLAUDE.md
+§Evidence types) and surfaces three V-NNN candidates from
+the paper's framing (V-014 cross-sector autopoiesis
+spoofing; V-015 numerical-threshold calibration gaming;
+V-016 three-layer logical-tier confusion). Synthesis seat
+Q1 reframed with sub-questions on structural-transfer-vs-
+vocabulary, "daughter IS the parent" mapping, and threshold
+robustness. Edge-witness A6 reframed with paper-derived
+attack-vector candidates. Engine-side blanks remain pending
+engine completion.
+
 This is a **brief** — the document Aaron forwards to each seat
 to set up Round 3. The dialogue itself lives in
 `docs/synthesis_team_round3_companion.md` (to be written *after*
@@ -103,11 +121,82 @@ LL-012, LL-013, LL-014, LL-016, LL-017, LL-018, LL-020,
 LL-022, LL-023, LL-024) / 1 `:open` (LL-015). Test suite
 202/202 in ~53s.
 
-**Paper-side changes since round 2:**
-**`[FILL: closure_forces_structure paper update — what changed in
-the C-conjugate adversary structure / Q₅₁-tier identity claim /
-0/5202 cross-sector autopoiesis result. Reading-list pointer to
-the updated paper artifact.]`**
+**Paper-side status since round 2:**
+
+The `closure_forces_structure` paper is at **v1.0
+(2026-04-01 release tag)** — *"Closure Forces Structure: The
+Standard Model from Rosen Closure on Ternary Causal
+Hypergraphs"* (Aaron Green, April 2026). The paper has been
+canonically published since round 2; what's new for round 3
+is **stability-of-corpus**, not paper revisions. LavaLamp
+inherits structural priors from a settled v1.0 paper rather
+than a moving target.
+
+The LavaLamp-relevant content lives at three section
+clusters:
+
+1. **§10.5 The C-Closure and Q_48** — formal definition of
+   the C-closure operation: `Q_C = Q ∪ C(Q)` where `C(Q)`
+   is the charge-conjugate copy. `Q_48 = Q_24 ∪ C(Q_24)`
+   has 48 vertices, **zero overlap between original and
+   conjugate sectors**, perfect fixed-point-free real
+   structure `J`. This is the formal mathematical operation
+   behind LavaLamp's "C-conjugate adversary inheritance"
+   claim — an adversary that structurally co-occurs with the
+   genuine system (lives in `C(Q)`) is sector-disjoint from
+   the genuine.
+2. **§11.13 The Self-Reproducing Fixed Point** — `Q_102 =
+   Q_51 ∪ C(Q_51)` is a self-reproducing fixed point under
+   DPO composition: **all 420 composition products map back
+   to existing Q_102 vertices (100%)**, depth-independent
+   at depths 2-4 (Theorem S130). Quote: *"The daughter IS
+   the parent. Q_102 does not produce offspring that inherit
+   its properties; it produces itself."* This is the
+   structural anchor for LavaLamp's substrate-bound identity
+   (LL-001) — identity is the ongoing pattern of self-
+   reproduction, not a stored credential.
+3. **§13.6 Evidence Classification and Honest Framing** —
+   5 evidence types: `proof` (deductive from axioms — 130
+   entries), `algebraic` (symbolic computation = proof),
+   `standard` (established results invoked), `catlab` (CatLab
+   machine proofs — 9 entries), `computational` (numerical
+   simulation — 21 entries; reported as "verified" not
+   "proved"). **Quote: *"A Julia computation using
+   `Rational{BigInt}` is a proof; the same computation
+   using `Float64` is evidence."* — this is exactly the same
+   honest-framing discipline LavaLamp's evidence taxonomy
+   articulates** (lean-proved / type-checked / algebraic /
+   property-tested / example-tested / benchmarked / manual /
+   none) per CLAUDE.md §Evidence types.
+
+The 0/5202 cross-sector autopoiesis result referenced in
+LavaLamp's `qkd_pqc_complementarity_companion.md` §2.5 lives
+in the Closure v5 corpus's `catlab_spec.jl` (not in the
+paper itself); the paper's §11.13 self-reproducing-fixed-
+point theorem provides the structural reason for the
+empirical 0/5202 result — `Q_102` is closed under
+composition + C-closure + quotient *from within itself*; an
+adversary attempting cross-sector autopoiesis would need
+elements from `C(Q_51)` to autopoise elements of `Q_51`,
+which §11.13 forbids structurally.
+
+The paper also articulates a **three-layer logical structure**
+(§1.2): Possibilistic Layer (forced/forbidden/compatible —
+LavaLamp's adversary model lives here), Probabilistic Layer
+(Born rule + Gleason — measurement), Bridge Layer (NCG-derived
+unconditional). LavaLamp's claims should be reviewed for which
+layer they sit in; the resolution-bounded security claim
+(LL-008) is Possibilistic-Layer (cost-asymmetry; what's
+*forbidden* under the constraint surface), per the
+`threat_landscape_companion.md` §2.7 cost-asymmetry framing.
+
+**Numerical-threshold note (§13.6 Remark):** at threshold
+`0.999`, spurious merges occur for ~5% (Q_48) to ~12% (Q_102)
+of Haar-random initial conditions; at threshold `1 − 10⁻¹²`,
+200/200 seeds give the canonical vertex counts. This maps
+directly onto LavaLamp's residue-audit threshold-calibration
+discipline (LL-014) — the threshold is *numerical
+convenience*, not part of the mathematical definition.
 
 **Engine-side changes since round 2:**
 **`[FILL: triadic-coordination-engine updates that landed —
@@ -126,9 +215,21 @@ does the paper update revise?**
 
 The minimum set for a round-3 review:
 
-1. **Paper update**:
-   **`[FILL: closure_forces_structure.tex / .pdf, focused on the
-   C-conjugate / Q₅₁ / 0/5202 sections + any new sections.]`**
+1. **Paper (v1.0, 2026-04-01)**:
+   - Source `.tex`: `/Users/aarongreen/Library/Mobile Documents/com~apple~CloudDocs/Desktop/paper/closure_forces_structure.tex`
+   - Public release: `/Users/aarongreen/Desktop/paper/closure_forces_structure.pdf` (tagged `v1.0-2026-04-01`).
+   - LavaLamp-relevant sections: **§1.2** (three-layer logic
+     structure: Possibilistic / Probabilistic / Bridge);
+     **§10.5** (C-closure operation `Q_C = Q ∪ C(Q)`); **§10.6**
+     (CCM classification → B1 derivation; anomaly cancellation);
+     **§11** (Q_102 spectral triple; gauge-spacetime unification);
+     **§11.3** (discrete Coleman-Mandula theorem); **§11.13**
+     (self-reproducing fixed point — *the daughter IS the
+     parent*); **§13.6** (evidence classification — same
+     framing as LavaLamp's CLAUDE.md §Evidence types).
+   - The 0/5202 cross-sector autopoiesis result lives in
+     Closure v5's `catlab_spec.jl` (not in this paper); the
+     paper's §11.13 provides the structural reason.
 2. **`docs/synthesis_team_round2_companion.md`** — round-2
    dialogue arc + AI-integrator resolution. Round 3 builds on
    round 2's verdicts; the companion is the canonical reference
@@ -219,14 +320,57 @@ has α; adversary has α + ε·û; spectrum gap δ_A > 0 by ∂λ/∂α
 non-degeneracy. LL-021 (worst-case bound) sharpens the
 claim by parameterising on direction projection.
 
-**Question:** does the paper's revised treatment of the
-C-conjugate adversary preserve the structural transfer to
-LavaLamp, or does it require LL-001/LL-006/LL-018/LL-021 to be
-restated?
+**Question (revised post-paper-read):** the paper at v1.0
+2026-04-01 articulates the C-closure as a *fully-derived
+structural operation* (§10.5 Definition C-closure: `Q_C =
+Q ∪ C(Q)`), with the conjugate sector being charge-
+conjugated and zero-overlap with the original. LavaLamp's
+"C-conjugate adversary" claim transfers this structural
+disjointness to the security setting: an adversary that
+co-occurs structurally with the genuine system lives in the
+conjugate sector and is autopoietically disjoint per §11.13's
+self-reproducing-fixed-point theorem.
 
-**`[FILL: paper-specific framing — what changed in the
-C-conjugate construction; how the structural-transfer
-argument should be re-checked.]`**
+**Is the structural-transfer argument load-bearing or
+aesthetic?** Specifically:
+
+(a) The paper's §10.5 C-closure is defined for *charge-
+conjugate* sectors of a hypergraph spectral triple. LavaLamp's
+adversary is in *coupling-strength α-space*, not a charge-
+conjugate sector in the paper's formal sense. Is the
+"C-conjugate" terminology in `qkd_pqc_complementarity_companion.md`
+§2.5 a structural inheritance or a vocabulary borrow? If the
+former, what's the precise functor / construction that maps
+α-space adversaries to the paper's `C(Q)` sector? If the
+latter, what's the right corpus-faithful framing for
+LavaLamp's structural-mimic adversary?
+
+(b) The paper's §11.13 quote *"the daughter IS the parent"*
+is the strongest possible autopoiesis statement: `Q_102` is
+its own fixed point. LavaLamp's substrate-bound identity
+(LL-001) claims the SDE trajectory is the device's identity.
+Is this the *same* claim transposed (the trajectory IS the
+device — substrate identity = ongoing autopoietic activity)?
+Or a weaker analog (the trajectory tags the device, but the
+device persists across trajectory restarts)? The chaos-guard
+reseed flow (LL-007) deliberately restarts the trajectory
+when λ̂_1 < τ_λ — does this break the "daughter IS the
+parent" claim or instantiate it (re-establishing self-
+reproduction at each chaos-guard re-cohering event)?
+
+(c) The 0/5202 result is empirical evidence at threshold
+0.999; per §13.6's numerical-threshold remark, that
+threshold's spurious-merge rate is ~12% on Haar-random ICs.
+Is the 0/5202 result robust under the tighter threshold
+1 − 10⁻¹² that gives 200/200 canonical-vertex-count seeds?
+LL-006's residue audit operates on Lyapunov spectra, not on
+hypergraph fidelities — what's the analog of "tighter
+numerical threshold" in LavaLamp's spectrum-residue setting?
+
+The synthesis seat's call: which of (a)/(b)/(c) is the
+load-bearing inheritance, which is aesthetic vocabulary, and
+which is empirical-evidence-at-prototype's-threshold? The
+honest framing for round-3 should distinguish.
 
 ### Q2 — Does the deployment-stack triple (LL-022 + LL-023 + LL-024) match the paper's closure-of-three framing?
 
@@ -473,10 +617,57 @@ The closure_forces_structure paper update may revise the
 C-conjugate adversary structure or surface new structural
 content.
 
-**Question:** **`[FILL: paper-specific stress questions —
-what attack-vector enumeration does the paper's revised
-treatment imply? Are V-011/012/013 still adequate? Are
-there new V-NNN candidates the paper's framing surfaces?]`**
+**Question (revised post-paper-read):** with the paper at
+v1.0 2026-04-01 settled and LavaLamp inheriting from a
+canonical published corpus, what attack vectors does the
+paper's framing imply that V-001..V-013 don't capture?
+
+Three candidate V-NNN entries the paper surfaces:
+
+(a) **V-014 — Cross-sector autopoiesis spoofing.** The 0/5202
+empirical result (Closure v5 `catlab_spec.jl` Thm_Q51_autopoietic)
+shows cross-sector autopoiesis fails at threshold 0.999. **But
+the result is a *negative* — the adversary's autopoietic
+attempt fails; can the residue audit *detect* the failed
+attempt?** LavaLamp's chaos-guard responds to λ̂_1 collapsing
+(LL-007); does it respond to a *partial* autopoiesis attempt
+that produces some genuine-looking trajectory before
+diverging? This is the analog of V-005 (slow-drift threshold
+gaming) at the autopoietic-tier rather than the spectrum-tier.
+
+(b) **V-015 — Numerical-threshold calibration gaming.** The
+paper's §13.6 remark says spurious merges occur 5%-12% at
+threshold 0.999; LL-014 (threshold calibration) sets per-
+exponent τ_i = 3·σ(λ̂_i | T) baseline. Can an adversary
+craft a trajectory that lies in the LavaLamp-equivalent of
+the "spurious merge" zone — within the audit threshold but
+not actually a genuine trajectory? The paper's tight
+threshold 1-10⁻¹² gives 200/200 canonical seeds; LL-014's
+analog (k=5 with n_trials=10) has 10% baseline FPR per the
+P3-bound benchmark. Is the FPR-to-spurious-merge mapping
+exact, and does the calibration discipline transfer?
+
+(c) **V-016 — Three-layer logical-tier confusion attack.**
+The paper's §1.2 explicit warning: *"these are not
+interchangeable; conflating them produces category errors."*
+LavaLamp's spec entries cluster across the three layers:
+LL-001/006/008/018 are Possibilistic; LL-019/020/021 touch
+Probabilistic; LL-011/012/013/017 are Bridge-tier
+(deployment protocols). **Could an adversary deliberately
+exploit a category error in LavaLamp's spec — e.g., apply a
+Probabilistic-tier attack against a claim that's only
+defended at the Possibilistic tier?** Round-3 should weigh
+whether LL-018 (per-class quantification) needs explicit
+layer-tagging.
+
+**Edge-witness call:** which of V-014/015/016 is real, which
+is theoretical, and which is already covered implicitly by
+existing LL-IDs? Are there V-NNN candidates beyond these
+three that the paper's structural priors imply? The
+deployment-stack triple LL-022/023/024 + the candidate
+LL-025 (A7 emanation per Q7/A7) cover four sub-domains;
+V-014/015/016 might cluster into a fifth (autopoiesis-tier
+attacks), warranting a fifth Boundary entry.
 
 ### A7 — A7 / V-014: is passive-emanation reconstruction realistic?
 
@@ -608,46 +799,59 @@ other (same convention as round 2).
 
 ---
 
-## Internal note: skeleton status at 0.0.40
+## Internal note: brief status at 0.0.43
 
-This brief is at **skeleton tier**. Substantively complete:
-- §1 (LavaLamp side; paper / engine paragraphs blank)
-- §2 (LavaLamp companions cited; paper / engine entries
-  blank)
-- §3 Q1-Q7 (LavaLamp-derived; Q1 has paper-specific blank;
-  Q3/Q4 are answer-pending pending paper insight; Q7 added
-  2026-05-05 covering EMF / A7 / LL-025 gap)
-- §4 A1-A7 (LavaLamp-derived; A6 is paper-specific blank;
-  A7 added 2026-05-05 covering passive-emanation V-014
-  candidate)
-- §5 (response format; updated to seven-point evaluation;
-  word cap 2500 → 2800)
-- §6 (followups; complete)
+This brief is **paper-side substantively complete; engine-side
+pending.** Status of each section:
 
-When the closure_forces_structure paper update lands and
-round-3 actually triggers, the **`[FILL: ...]`** blanks
-get filled in with paper-side content (~30-60 minutes of
-focused work post-trigger), then the brief gets forwarded to
-Gemini and Grok per §Aaron's instructions.
+- **§1** — LavaLamp side complete; paper-side fill-in landed
+  at 0.0.43 (paper at v1.0 2026-04-01 settled; LavaLamp
+  inherits from canonical published corpus rather than a
+  moving target; three load-bearing section clusters cited
+  with content); engine-side paragraph still
+  `[FILL: ...]` pending engine completion.
+- **§2** — LavaLamp companions cited; paper item 1 filled at
+  0.0.43 with file paths + LavaLamp-relevant section
+  pointers; engine item 8 still `[FILL: ...]`.
+- **§3 Q1** — paper-specific reframing landed at 0.0.43 with
+  three sub-questions (a/b/c) on structural-transfer load-
+  bearing-vs-aesthetic, "daughter IS the parent" mapping,
+  numerical-threshold robustness.
+- **§3 Q2-Q6** — LavaLamp-derived (skeleton tier), unchanged.
+- **§3 Q7** — EMF / A7 / LL-025 gap (added 0.0.40); paper-
+  independent.
+- **§4 A1-A5** — LavaLamp-derived, unchanged.
+- **§4 A6** — paper-specific stress questions landed at 0.0.43
+  with three V-NNN candidates: V-014 cross-sector autopoiesis
+  spoofing, V-015 numerical-threshold calibration gaming,
+  V-016 three-layer logical-tier confusion.
+- **§4 A7** — passive-emanation V-014 candidate (added 0.0.40);
+  paper-independent. Note: this V-numbering predates the
+  V-014/015/016 above; integration on round-3 close will
+  rationalize the V-NNN allocation.
+- **§5** — response format complete; seven-point evaluation;
+  word cap 2800.
+- **§6** — followups complete (8 questions including the 0.0.42
+  Q8 cost-asymmetry one).
 
-The skeleton's value: round-3 trigger response time drops from
-"several hours of brief composition" to "fill in the paper-
-specific blanks then forward." Pre-trigger preparation that's
-parallel-safe to the round-3-blocked content (C-conjugate /
-Q₅₁ / 0/5202 specifics live in the paper, not the brief
-skeleton).
+**Remaining `[FILL: ...]` blanks at 0.0.43:**
 
-**0.0.40 update note:** Q7 + A7 add ~1500 words covering the
-EMF / passive-emanation gap surfaced in conversation
-2026-05-05. The Triadic Watchmen (Lazarus / LavaLamp /
-PharOS) cover the software stack but miss the physical-
-emanation layer; A7 is the candidate new adversary class and
-LL-025 is the candidate new Boundary entry. Round-3
-synthesis + edge-witness seats are positioned to weigh in on
-whether this is a load-bearing spec addition (option a:
-new entry; option b: sub-claim of LL-022; option c: defer to
-deployment-time documentation). The closure-of-three
-philosophy may need to extend to closure-of-four at the
-deployment-stack level — or LL-025 may form a parallel
-boundary triple with LL-015 + LL-024 covering the substrate.
-The synthesis seat's Q7 framing surfaces both options.
+- §1 engine-side paragraph (waits on engine completion)
+- §2 reading-list item 8 (engine update; waits on engine
+  completion)
+
+**Round-3 trigger response time at 0.0.43:** when engine
+completes, ~15-30 minutes to fill the two engine-side blanks
++ rationalize the V-NNN tags (V-014 candidate from §4 A7
+collides with V-014 candidate from §4 A6's autopoiesis
+spoofing; the integration commit reassigns numbers).
+
+**Paper-side fill summary:** the paper at v1.0 2026-04-01 is
+*stable*, not in flux. The fill captures three load-bearing
+section clusters (§10.5 C-closure; §11.13 Self-Reproducing
+Fixed Point; §13.6 Evidence Classification) and surfaces
+three V-NNN candidates (V-014/015/016). The synthesis-seat's
+Q1 weighs structural-transfer-vs-vocabulary; the edge-
+witness's A6 weighs which V-NNN candidates are real attacks
+vs theoretical concerns. Both seats' work is now paper-
+grounded rather than paper-pending.

@@ -5,6 +5,128 @@ messages match entry summaries.
 
 ---
 
+## 0.0.43 — 2026-05-05 — Round-3 brief paper-side blanks filled (closure_forces_structure v1.0 paper-grounded)
+
+Fills the paper-side `[FILL: ...]` blanks in the round-3 brief
+landed at 0.0.39 (skeleton) + 0.0.40 (Q7/A7 EMF). Aaron
+2026-05-05: *"paper done. almost done with engine."*
+
+The `closure_forces_structure` paper is at **v1.0 2026-04-01**
+(public release tag; *"Closure Forces Structure: The Standard
+Model from Rosen Closure on Ternary Causal Hypergraphs"*).
+What's new for round-3 is **stability-of-corpus**, not paper
+revisions — LavaLamp inherits structural priors from a *settled*
+canonical paper rather than a moving target. This is *better*
+news than the skeleton's "post-paper-update" framing assumed.
+
+**Three load-bearing paper section clusters** captured in the
+fill:
+
+1. **§10.5 The C-Closure and Q_48** — formal definition:
+   `Q_C = Q ∪ C(Q)` where `C(Q)` is the charge-conjugate
+   copy. `Q_48 = Q_24 ∪ C(Q_24)` has 48 vertices, **zero
+   overlap between original and conjugate sectors**, perfect
+   fixed-point-free real structure J. This is the formal
+   mathematical operation behind LavaLamp's "C-conjugate
+   adversary inheritance" claim.
+2. **§11.13 The Self-Reproducing Fixed Point** — `Q_102 =
+   Q_51 ∪ C(Q_51)` is autopoietic in the strong sense: all
+   420 composition products map back to existing Q_102
+   vertices (100%); 5/5 ICs; depth-independent at depths
+   2-4. Quote: *"The daughter IS the parent. Q_102 does not
+   produce offspring that inherit its properties; it
+   produces itself."* This is the structural anchor for
+   LavaLamp's substrate-bound identity claim.
+3. **§13.6 Evidence Classification and Honest Framing** —
+   five evidence types (proof / algebraic / standard /
+   catlab / computational) directly parallel to LavaLamp's
+   CLAUDE.md §Evidence types. Quote: *"A Julia computation
+   using `Rational{BigInt}` is a proof; the same computation
+   using `Float64` is evidence."* — same discipline as
+   LavaLamp's "Float64 is computational evidence" rule.
+
+Plus §1.2 three-layer logic structure (Possibilistic /
+Probabilistic / Bridge) for LavaLamp claim-tier review, and
+§13.6 numerical-threshold remark (5%-12% spurious merges at
+0.999 vs 200/200 canonical at 1-10⁻¹²) mapping onto LL-014
+threshold calibration discipline.
+
+**Three V-NNN candidates surfaced from the paper's framing:**
+
+(a) V-014 — Cross-sector autopoiesis spoofing. Edge-witness
+    A6 question.
+(b) V-015 — Numerical-threshold calibration gaming
+    (LL-014 analog of paper's 5%-12% spurious merges).
+(c) V-016 — Three-layer logical-tier confusion attack
+    (paper's §1.2 *"category errors"* warning applied to
+    LavaLamp's claim-tier mix).
+
+Synthesis seat Q1 reframed post-paper-read into three sub-
+questions on structural-transfer-vs-vocabulary, "daughter
+IS the parent" mapping, threshold robustness. Edge-witness
+A6 reframed with paper-derived attack-vector candidates.
+
+**Engine-side blanks remain pending engine completion.**
+When engine lands, ~15-30 min fills §1 engine paragraph + §2
+reading-list item 8 + rationalizes V-NNN tags (the §4 A7
+V-014 EMF candidate collides with the §4 A6 V-014 cross-
+sector candidate; integration commit reassigns).
+
+Counts unchanged at 24 / 0 / 3 / 0 / 4 / 16 / 1. Test suite
+202/202 unchanged.
+
+### Changed
+
+- **`docs/synthesis_team_round3_brief.md`** — paper-side fill:
+  - §1 paper-side paragraph (~1500 words; three section
+    clusters + three-layer logic + numerical-threshold remark).
+  - §2 reading-list item 1 (file paths + section pointers).
+  - §3 Q1 reframed (sub-questions a/b/c).
+  - §4 A6 reframed (three V-NNN candidates).
+  - Top-of-doc 2026-05-05 update note documenting the 0.0.43
+    fill.
+  - Internal note at bottom reflecting paper-side substantively
+    complete; engine-side pending.
+- **`LAVALAMP_SPEC.md`** — version 0.0.42 → 0.0.43 (no entry
+  changes).
+- **`artifact_registry.md`** — version 0.0.42 → 0.0.43.
+- **`dashboard.md`** — version 0.0.42 → 0.0.43. Recent
+  companion docs prepended with substantive description of
+  the fill.
+- **`README.md`** — version trajectory extended.
+
+### Why
+
+1. **Paper is at v1.0 (settled).** The skeleton's framing
+   assumed a paper update was pending; in fact the paper has
+   been canonically published since April. The fill captures
+   the published-corpus content, not anticipated revisions.
+   Better news than expected.
+2. **Honest-framing discipline confirmed corpus-faithful.**
+   The paper's §13.6 evidence taxonomy directly mirrors
+   LavaLamp's CLAUDE.md §Evidence types. The "Float64 is
+   evidence; Rational{BigInt} is a proof" principle
+   transfers to LavaLamp's own discipline (manual / property-
+   tested / example-tested / benchmarked / lean-proved /
+   type-checked / algebraic / none).
+3. **V-NNN candidates surfaced.** Three new attack-vector
+   candidates emerged from the paper's framing (V-014/015/016)
+   that V-001..V-013 didn't capture. The edge-witness seat
+   weighs which are real vs theoretical.
+4. **Round-3 readiness improved.** With paper-side filled,
+   the brief is now ~85% complete; only engine-side blanks
+   remain. Round-3 trigger response time drops further from
+   "30-60 min of paper + engine work" to "~15-30 min of
+   engine-only work."
+
+### Counts
+
+- Total: 24 (unchanged)
+- All status counts unchanged.
+- Test suite: 202/202 (unchanged).
+
+---
+
 ## 0.0.42 — 2026-05-05 — Threat-landscape companion §2.6/§2.7 (metabolic-value / predator-prey ecology axis)
 
 Adds the **metabolic-value / predator-prey ecology axis** to

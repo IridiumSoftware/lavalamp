@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-05 (0.0.42 — threat-landscape companion §2.6/§2.7 added; metabolic-value / predator-prey ecology axis; LL-008 cost-asymmetry footer).
+Last updated: 2026-05-05 (0.0.43 — round-3 brief paper-side blanks filled; closure_forces_structure v1.0 paper-grounded; engine-side pending).
 
 ## Status summary
 
@@ -586,6 +586,40 @@ Remaining `:open` entries fall into two classes:
 
 ## Recent companion docs / formal artefacts
 
+- **`docs/synthesis_team_round3_brief.md` paper-side fill**
+  (0.0.43, 2026-05-05) — round-3 brief paper-side blanks
+  filled. Aaron 2026-05-05: *"paper done. almost done with
+  engine."* The `closure_forces_structure` paper is at v1.0
+  2026-04-01 (canonical public release; tagged); LavaLamp
+  inherits structural priors from a *settled* corpus rather
+  than a moving target. §1 paper-side paragraph captures
+  three load-bearing section clusters: §10.5 (C-closure
+  operation `Q_C = Q ∪ C(Q)`; structural disjointness of
+  original + conjugate sectors); §11.13 (Q_102 self-
+  reproducing fixed point — *"the daughter IS the parent"*;
+  100% closure of 420 composition products); §13.6 (evidence
+  classification — same honest-framing discipline as
+  LavaLamp's CLAUDE.md §Evidence types: `proof` /
+  `algebraic` / `standard` / `catlab` / `computational`;
+  *"Float64 is evidence; Rational{BigInt} is a proof"*).
+  Plus the §1.2 three-layer logical structure framing
+  (Possibilistic / Probabilistic / Bridge — LavaLamp's
+  adversary model lives in Possibilistic) and the §13.6
+  numerical-threshold remark (5%-12% spurious merges at
+  threshold 0.999; 200/200 canonical at 1−10⁻¹²) mapping
+  onto LL-014 threshold calibration. §2 reading list item 1
+  fills with concrete file paths + section pointers. §3 Q1
+  reframed with three sub-questions
+  (structural-transfer-vs-vocabulary; "daughter IS the
+  parent" mapping; threshold robustness). §4 A6 reframed
+  with three V-NNN candidates: V-014 cross-sector autopoiesis
+  spoofing; V-015 numerical-threshold calibration gaming;
+  V-016 three-layer logical-tier confusion. Engine-side
+  blanks (§1 engine paragraph; §2 reading-list item 8)
+  remain pending engine completion. Round-3 trigger response
+  time at 0.0.43: ~15-30 min when engine completes, to fill
+  engine-side and rationalize the V-NNN tags. Counts unchanged
+  at 24/0/3/0/4/16/1.
 - **`docs/threat_landscape_companion.md` §2.6/§2.7 + §6Q8 +
   §7.6 update** (0.0.42, 2026-05-05) — adds the **metabolic-
   value / predator-prey ecology axis** to the threat-landscape

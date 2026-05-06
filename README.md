@@ -113,7 +113,10 @@ the same 2026-05-05 conversation) → 0.0.42 (threat-landscape
 companion §2.6/§2.7 added — metabolic-value / predator-prey
 ecology axis; LavaLamp's claim reframed explicitly as
 cost-asymmetry; symbiosis-as-equilibrium-not-victory; LL-008
-gains cost-asymmetry footer).
+gains cost-asymmetry footer) → 0.0.43 (round-3 brief paper-
+side blanks filled; closure_forces_structure v1.0 2026-04-01
+paper-grounded; three load-bearing section clusters captured;
+three V-NNN candidates surfaced; engine-side blanks pending).
 
 **Round 3** (next synthesis-team review) is gated on the
 `closure_forces_structure` physics-paper update. Brief
