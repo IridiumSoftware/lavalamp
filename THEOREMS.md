@@ -18,12 +18,12 @@ Expected: `Build completed successfully (1901 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
 Lean kernel verifies every proof at compile time.
 
-**Status.** All five theorems below are kernel-verified
+**Status.** All seven theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
 evidence-type discipline).
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
-theorem 1 below. Theorems 2–5 are composition lemmas building
+theorem 1 below. Theorems 2–7 are composition lemmas building
 toward a future LL-006 `:proved` status; they currently land as
 `lean-proved` content supporting LL-021 + LL-006 entries without
 themselves being entry-promoting.
@@ -39,6 +39,8 @@ themselves being entry-promoting.
 | 3 | `LL006_worst_case_lower_than_isotropic` | composition | — (supports LL-006) |
 | 4 | `LL006_bound_le_one` | range | — (supports LL-006) |
 | 5 | `LL006_bound_nonneg` | range | — (supports LL-006) |
+| 6 | `LL006_bound_monotone_in_squared_magnitude` | monotonicity | — (supports LL-006) |
+| 7 | `LL006_bound_monotone_in_T` | monotonicity | — (supports LL-006) |
 
 ---
 
@@ -237,9 +239,103 @@ well-typed as a lower-bound-on-probability.
 
 ---
 
+## 6 — `LL006_bound_monotone_in_squared_magnitude` (monotonicity, δ²-axis)
+
+**Statement.** Stronger adversary makes detection easier:
+the bound value is monotone non-decreasing in the squared
+magnitude argument.
+
+```lean
+theorem LL006_bound_monotone_in_squared_magnitude
+    {s₁ s₂ K c T : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_cT_nn : 0 ≤ c * T)
+    (h_s_le : s₁ ≤ s₂) :
+    1 - K * Real.exp (-(c * T) * s₁)
+      ≤ 1 - K * Real.exp (-(c * T) * s₂) := by
+  have h_neg_cT : -(c * T) ≤ 0 := neg_nonpos.mpr h_cT_nn
+  have h_inner : -(c * T) * s₂ ≤ -(c * T) * s₁ :=
+    mul_le_mul_of_nonpos_left h_s_le h_neg_cT
+  have h_exp : Real.exp (-(c * T) * s₂) ≤ Real.exp (-(c * T) * s₁) :=
+    Real.exp_le_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T) * s₂) ≤ K * Real.exp (-(c * T) * s₁) :=
+    mul_le_mul_of_nonneg_left h_exp h_K_nn
+  linarith
+```
+
+**Proof.** Five-step composition mirroring theorem 3:
+multiply `s₁ ≤ s₂` by the non-positive scalar `-(c · T)` to
+flip; lift through `Real.exp`; multiply by `K ≥ 0` to
+preserve direction; subtract from `1`; `linarith`.
+
+**Statement uses `s` directly** rather than `δ^2` because the
+monotonicity holds for any reals `s₁ ≤ s₂` — the sign of `s`
+is not part of the monotonicity claim. For the LL-006 default
+case `s = δ²`, theorems 5 + 6 together say "the bound is in
+`[0, 1]` *and* monotone in `δ²`."
+
+**Spec connection.** The LL-006 statement
+"P(detect) ≥ 1 - K · exp(-c · T · δ²)" implicitly claims that
+larger adversary magnitudes give tighter detection bounds.
+Theorem 6 makes that implicit claim formal on the bound shape
+itself. The probability claim — that `P(detect)` actually
+satisfies the inequality — still requires the probability-
+space formalization (multi-session work).
+
+---
+
+## 7 — `LL006_bound_monotone_in_T` (monotonicity, T-axis)
+
+**Statement.** Longer observation makes detection easier: the
+bound value is monotone non-decreasing in the observation
+window `T`.
+
+```lean
+theorem LL006_bound_monotone_in_T
+    {s K c T₁ T₂ : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_c_nn : 0 ≤ c)
+    (h_s_nn : 0 ≤ s)
+    (h_T_le : T₁ ≤ T₂) :
+    1 - K * Real.exp (-(c * T₁) * s)
+      ≤ 1 - K * Real.exp (-(c * T₂) * s) := by
+  have h_cT_le : c * T₁ ≤ c * T₂ := mul_le_mul_of_nonneg_left h_T_le h_c_nn
+  have h_inner_pos : c * T₁ * s ≤ c * T₂ * s :=
+    mul_le_mul_of_nonneg_right h_cT_le h_s_nn
+  have h_inner : -(c * T₂) * s ≤ -(c * T₁) * s := by nlinarith [h_inner_pos]
+  have h_exp : Real.exp (-(c * T₂) * s) ≤ Real.exp (-(c * T₁) * s) :=
+    Real.exp_le_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T₂) * s) ≤ K * Real.exp (-(c * T₁) * s) :=
+    mul_le_mul_of_nonneg_left h_exp h_K_nn
+  linarith
+```
+
+**Proof.** Five-step composition: chain `T₁ ≤ T₂` by `c ≥ 0`
+and `s ≥ 0` to get `c·T₁·s ≤ c·T₂·s`; flip via `nlinarith` for
+the negation step (handles the product rearrangement
+automatically); lift through `Real.exp`; multiply by `K ≥ 0`;
+subtract from `1`; `linarith` closes.
+
+**Hypotheses unpacked.** `0 ≤ K` (prefactor non-negative;
+fitted constant `K = 1`). `0 ≤ c` (exponent rate; bound
+calibration gives `c′ > 0`). `0 ≤ s` (squared-magnitude
+non-negative; for the LL-006 default `s = δ²` automatic via
+`sq_nonneg`). `T₁ ≤ T₂` is the monotonicity claim itself.
+
+**Spec connection.** Pairs with theorem 6 to give the LL-006
+detection bound a complete shape characterisation: the bound
+is **monotone in both axes** — larger T tightens detection,
+larger δ² tightens detection. Composing this with the LL-021
+worst-case bound (`ε_eff ≤ ε_A`) and the squared form
+(`ε_eff² ≤ ε_A²`) yields theorem 3's asymmetry conclusion as
+a direct consequence: the worst-case bound *value* sits below
+the isotropic bound *value* on the same `(K, c, T)` calibration.
+
+---
+
 ## What this collectively proves
 
-The five theorems chain to give:
+The seven theorems chain to give:
 
 - **LL-021 worst-case bound** (theorem 1) — projected adversary
   magnitude is bounded by unprojected magnitude.
@@ -249,6 +345,10 @@ The five theorems chain to give:
   *value* is less than isotropic detection bound *value*.
 - **Well-typedness** (theorems 4 + 5) — the bound *value* is in
   `[0, 1]`, making it a valid lower bound on a probability.
+- **Monotonicity in adversary magnitude** (theorem 6) — larger
+  `δ²` tightens the detection bound.
+- **Monotonicity in observation window** (theorem 7) — larger
+  `T` tightens the detection bound.
 
 ## What this does NOT prove
 
@@ -263,10 +363,10 @@ requires:
 - The lower-bound proof itself (probabilistic concentration
   inequality on the spectrum residue).
 
-Each is a multi-session research investment. The five theorems
-above prove every *algebraic* and *real-analysis* property the
-eventual `:proved` proof will compose with — the missing piece
-is the probability-space side.
+Each is a multi-session research investment. The seven
+theorems above prove every *algebraic* and *real-analysis*
+property the eventual `:proved` proof will compose with —
+the missing piece is the probability-space side.
 
 ## Source
 
@@ -276,7 +376,7 @@ top-level README §"Try it" or in `src/lean4/README.md`.
 ## Honest framing reminder
 
 Per the project's evidence-type discipline: a theorem with
-`sorry` in its body is **not** a proof. All five theorems
+`sorry` in its body is **not** a proof. All seven theorems
 above are kernel-verified with no `sorry`. The build is configured so any `sorry` regression
 would surface as a `declaration uses 'sorry'` linter warning —
 the current build returns zero warnings, so the proofs are

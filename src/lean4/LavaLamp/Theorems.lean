@@ -292,10 +292,104 @@ theorem LL006_bound_nonneg
     mul_le_mul_of_nonneg_left h_exp_le_one h_K_nn
   linarith
 
+/-- LL-006 detection-bound monotonicity in squared adversary
+    magnitude — stronger adversary makes detection easier.
+
+    For fixed `K ≥ 0`, `c · T ≥ 0`, the bound value
+    `1 - K · exp(-(c · T) · s)` is monotone non-decreasing in
+    the squared-magnitude argument `s`. Operationally: a larger
+    adversary perturbation (larger `δ²`) produces a higher
+    detection-probability lower bound — the LL-006 statement's
+    "stronger adversary → tighter detection bound" structural
+    claim made formal.
+
+    Statement uses `s` directly rather than `δ^2` because the
+    monotonicity holds for any reals `s₁ ≤ s₂` (the sign of `s`
+    isn't part of the monotonicity claim). The
+    `LL006_bound_nonneg` theorem above takes `s = δ^2 ≥ 0` as
+    its case where the bound is also `≥ 0`; this monotonicity
+    theorem is the orthogonal axis.
+
+    Proof structure (mirrors `LL006_worst_case_lower_than_isotropic`):
+    1. `-(c · T) ≤ 0` from `0 ≤ c·T`.
+    2. Multiplying `s₁ ≤ s₂` by the non-positive scalar
+       `-(c · T)` flips: `-(c·T) · s₂ ≤ -(c·T) · s₁`
+       (`mul_le_mul_of_nonpos_left`).
+    3. `Real.exp` monotonicity lifts step 2.
+    4. Multiplying by `K ≥ 0` preserves direction.
+    5. Subtract from `1` (flips once); `linarith` closes. -/
+theorem LL006_bound_monotone_in_squared_magnitude
+    {s₁ s₂ K c T : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_cT_nn : 0 ≤ c * T)
+    (h_s_le : s₁ ≤ s₂) :
+    1 - K * Real.exp (-(c * T) * s₁)
+      ≤ 1 - K * Real.exp (-(c * T) * s₂) := by
+  have h_neg_cT : -(c * T) ≤ 0 := neg_nonpos.mpr h_cT_nn
+  have h_inner : -(c * T) * s₂ ≤ -(c * T) * s₁ :=
+    mul_le_mul_of_nonpos_left h_s_le h_neg_cT
+  have h_exp : Real.exp (-(c * T) * s₂) ≤ Real.exp (-(c * T) * s₁) :=
+    Real.exp_le_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T) * s₂) ≤ K * Real.exp (-(c * T) * s₁) :=
+    mul_le_mul_of_nonneg_left h_exp h_K_nn
+  linarith
+
+/-- LL-006 detection-bound monotonicity in observation window T —
+    longer observation makes detection easier.
+
+    For fixed `K ≥ 0`, `c ≥ 0`, and any squared-magnitude
+    argument `s ≥ 0` (default LL-006 statement uses `s = δ^2`,
+    automatically non-negative), the bound value
+    `1 - K · exp(-(c · T) · s)` is monotone non-decreasing in
+    the observation window `T`. Operationally: doubling the
+    observation duration tightens the detection bound — the
+    LL-006 statement's "longer observation → tighter detection
+    bound" structural claim made formal.
+
+    Hypotheses:
+    - `0 ≤ K` (prefactor non-negative).
+    - `0 ≤ c` (exponent rate non-negative; bound calibration
+      gives `c′ > 0`).
+    - `0 ≤ s` (squared-magnitude argument non-negative; for
+      the default `s = δ²` case this is automatic via
+      `sq_nonneg`).
+    - `T₁ ≤ T₂` (the monotonicity claim's argument).
+
+    Proof structure:
+    1. `c · T₁ · s ≤ c · T₂ · s` from `T₁ ≤ T₂` and
+       `0 ≤ c`, `0 ≤ s` (two applications of
+       `mul_le_mul_of_nonneg_*`).
+    2. Negate: `-(c · T₂) · s ≤ -(c · T₁) · s` via `nlinarith`
+       (handles the product rearrangement).
+    3. `Real.exp` monotonicity lifts step 2.
+    4. Multiply by `K ≥ 0` preserves direction.
+    5. Subtract from `1`; `linarith` closes.
+
+    Note `T₁` and `T₂` may be negative — the monotonicity
+    claim is purely about ordering. Operationally, observation
+    windows are positive; this generality costs nothing. -/
+theorem LL006_bound_monotone_in_T
+    {s K c T₁ T₂ : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_c_nn : 0 ≤ c)
+    (h_s_nn : 0 ≤ s)
+    (h_T_le : T₁ ≤ T₂) :
+    1 - K * Real.exp (-(c * T₁) * s)
+      ≤ 1 - K * Real.exp (-(c * T₂) * s) := by
+  have h_cT_le : c * T₁ ≤ c * T₂ := mul_le_mul_of_nonneg_left h_T_le h_c_nn
+  have h_inner_pos : c * T₁ * s ≤ c * T₂ * s :=
+    mul_le_mul_of_nonneg_right h_cT_le h_s_nn
+  have h_inner : -(c * T₂) * s ≤ -(c * T₁) * s := by nlinarith [h_inner_pos]
+  have h_exp : Real.exp (-(c * T₂) * s) ≤ Real.exp (-(c * T₁) * s) :=
+    Real.exp_le_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T₂) * s) ≤ K * Real.exp (-(c * T₁) * s) :=
+    mul_le_mul_of_nonneg_left h_exp h_K_nn
+  linarith
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.55 — LL-006 detection-bound range theorems landed (bound ∈ [0,1])"
+  "0.0.64 — LL-006 detection-bound monotonicity-in-T + monotonicity-in-squared-magnitude landed"
 
 end LavaLamp
