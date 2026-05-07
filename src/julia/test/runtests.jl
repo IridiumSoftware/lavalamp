@@ -1,6 +1,6 @@
 using Test
 using Random
-using Statistics: mean
+using Statistics: mean, std
 using LavaLamp
 using DynamicalSystems: trajectory, current_state, lyapunov as cheap_lyap
 
@@ -457,6 +457,105 @@ end
                                                          target_seconds=-0.1)
         @test_throws ArgumentError verify_constant_time(λs_g, env;
                                                          target_seconds=0.0)
+    end
+
+    @testset "verify_jittered adds randomised offset (LL-019 regime-2)" begin
+        # verify_jittered = verify_constant_time + Uniform(0, jitter_window)
+        # offset on top of the pad target. LL-019 round-3 amendment
+        # (regime 2: multi-tenant shared environment) requires this
+        # additional decorrelation when the timing channel sits above
+        # the shared-host scheduling jitter floor.
+        Random.seed!(101)
+        N = 20
+        F_base = 8.0
+        b = ones(N)
+        s_const = constant_stream(1.0; t_max=2000.0)
+        p_genuine = CouplingParams(F_base, [s_const], [1.0], [b])
+        ds_factory = () -> lorenz96_coupled(N; F=F_base, coupling=p_genuine)
+
+        Random.seed!(101)
+        env = register_envelope(ds_factory;
+                                 n_trials=3, N=800, Δt=0.05, Ttr=150.0)
+
+        Random.seed!(9001)
+        ds_g = ds_factory()
+        λs_g = lyapunov_spectrum(ds_g; N=800, Δt=0.05, Ttr=150.0)
+
+        target = 0.3                 # seconds
+        jitter = 0.05                # seconds (50 ms — large enough to be
+                                     # measurable above OS jitter at the
+                                     # test scale)
+
+        # Lower bound: at least target_seconds (jitter only adds, never
+        # subtracts).
+        t1 = time()
+        r1 = verify_jittered(λs_g, env;
+                              k=10.0,
+                              target_seconds=target,
+                              jitter_window=jitter,
+                              rng=Random.Xoshiro(42))
+        elapsed1 = time() - t1
+        @test elapsed1 >= target
+
+        # Upper bound: target + jitter + slack. Slack accommodates
+        # OS scheduler granularity; 200 ms is generous.
+        slack = 0.2
+        @test elapsed1 <= target + jitter + slack
+
+        # Result agreement with plain verify (no oracle leak).
+        @test r1 == verify(λs_g, env; k=10.0)
+        @test r1 isa Bool
+
+        # Determinism: same seed → identical jitter draw → wall-clock
+        # within OS-scheduler granularity. We assert the *return value*
+        # matches across runs (the wall-clock itself is OS-dependent).
+        Random.seed!(9001)
+        ds_g2 = ds_factory()
+        λs_g2 = lyapunov_spectrum(ds_g2; N=800, Δt=0.05, Ttr=150.0)
+        r1_replay = verify_jittered(λs_g2, env;
+                                     k=10.0,
+                                     target_seconds=target,
+                                     jitter_window=jitter,
+                                     rng=Random.Xoshiro(42))
+        @test r1 == r1_replay
+
+        # Zero jitter degenerates to verify_constant_time behaviour.
+        t2 = time()
+        r2 = verify_jittered(λs_g, env;
+                              k=10.0,
+                              target_seconds=target,
+                              jitter_window=0.0,
+                              rng=Random.Xoshiro(42))
+        elapsed2 = time() - t2
+        @test r2 == verify(λs_g, env; k=10.0)
+        @test elapsed2 >= target
+        @test elapsed2 <= target + slack    # tighter bound — no jitter
+
+        # Different seeds produce different jitter offsets — the wall-
+        # clock distribution is non-degenerate. Assert via at least one
+        # observable difference across draws (variance > 0 is the
+        # security property; the function returning quickly enough on
+        # the same input across seeds is incidental).
+        elapsed_samples = Float64[]
+        for seed in 1001:1010
+            t = time()
+            verify_jittered(λs_g, env;
+                             k=10.0,
+                             target_seconds=target,
+                             jitter_window=jitter,
+                             rng=Random.Xoshiro(seed))
+            push!(elapsed_samples, time() - t)
+        end
+        # Variance over 10 samples should be non-trivial given jitter ≥ 1 ms.
+        @test std(elapsed_samples) > 0.001
+
+        # Argument validation
+        @test_throws ArgumentError verify_jittered(λs_g, env;
+                                                    target_seconds=-0.1,
+                                                    jitter_window=0.001)
+        @test_throws ArgumentError verify_jittered(λs_g, env;
+                                                    target_seconds=0.1,
+                                                    jitter_window=-0.001)
     end
 
     # ─── LL-020 Strategy 2: ε-DP envelope perturbation ─────────────────

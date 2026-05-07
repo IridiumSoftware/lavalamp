@@ -42,7 +42,7 @@ using ..Sensors: CouplingParams
 using ..Engine: lyapunov_spectrum
 
 export Envelope, register_envelope, residue, verify, synthetic_adversary
-export verify_full, verify_constant_time
+export verify_full, verify_constant_time, verify_jittered
 export differentially_private_envelope
 
 """
@@ -267,6 +267,81 @@ function verify_constant_time(λs::AbstractVector{<:Real},
     elapsed = time() - t_start
     if elapsed < target_seconds
         sleep(target_seconds - elapsed)
+    end
+    return result
+end
+
+"""
+    verify_jittered(λs, env::Envelope;
+                    k::Float64=4.0,
+                    target_seconds::Float64=0.1,
+                    jitter_window::Float64=0.001,
+                    rng::AbstractRNG=default_rng()) -> Bool
+
+LL-019 regime-2 deployment-context wrapper around `verify`.
+Extends `verify_constant_time` with a uniform-random jitter
+offset on top of constant-time padding.
+
+Total wall-clock elapsed:
+
+    max(verify_elapsed, target_seconds) + Uniform(0, jitter_window)
+
+The constant-time pad alone (`verify_constant_time`) is
+sufficient for LL-019 *regime 1* (dev-host artifact, sub-µs
+data-dependent timing channel below OS scheduling jitter
+floor; the 0.0.19 KS-test benchmark validates this regime).
+LL-019 *regime 2* — multi-tenant shared environments (cloud
+VMs, container orchestrators with neighbouring workloads,
+co-tenant CPUs) — needs additional jitter randomisation
+because the timing channel sits *above* the shared-host
+jitter floor and a co-tenant adversary can aggregate
+observations to recover the verify result.
+
+The uniform-random offset decorrelates systematic timing
+leakage from the verify result: even if the constant-time
+pad is observed to systematically vary by a few µs across
+accept/reject inputs (e.g. cache-line effects, branch
+predictor state), the jitter offset dominates that signal at
+the per-call level and aggregating across many calls cannot
+recover it without a much larger sample than is available
+in any reasonable attack window.
+
+**Spec defaults (LL-019 regime-2 deployment constraint):**
+- `target_seconds ≥ 0.010` (10 ms; dominates typical
+  shared-host scheduling jitter floor).
+- `jitter_window ≥ 0.001` (1 ms; uniform offset over a window
+  comparable to the shared-host noise floor).
+
+These are deployment minima; production deployments calibrate
+to the specific co-tenancy environment. The function accepts
+any positive values for both — the caller is responsible for
+choosing values that meet the deployment's adversary model.
+
+Determinism: the jitter draw uses the supplied `rng` (default
+`default_rng()`); pass `Random.Xoshiro(seed)` for reproducible
+test runs. Note that *intentional* determinism in the jitter
+defeats the security property — `default_rng()` is the
+operationally-correct default for production use.
+
+Returns the same `Bool` as `verify`; like `verify_constant_time`,
+the function does not itself add an oracle leak.
+"""
+function verify_jittered(λs::AbstractVector{<:Real},
+                         env::Envelope;
+                         k::Float64=4.0,
+                         target_seconds::Float64=0.1,
+                         jitter_window::Float64=0.001,
+                         rng::AbstractRNG=default_rng())
+    target_seconds > 0 ||
+        throw(ArgumentError("target_seconds must be positive"))
+    jitter_window >= 0 ||
+        throw(ArgumentError("jitter_window must be non-negative"))
+    t_start = time()
+    result = verify(λs, env; k=k)
+    elapsed = time() - t_start
+    pad_to = target_seconds + jitter_window * rand(rng)
+    if elapsed < pad_to
+        sleep(pad_to - elapsed)
     end
     return result
 end

@@ -34,7 +34,7 @@ using .Sensors: nyquist_compliant
 using .Engine: lorenz96, lyapunov_spectrum, lorenz96_coupled
 using .Engine: lorenz63, rossler
 using .Audit: Envelope, register_envelope, residue, verify, synthetic_adversary
-using .Audit: verify_full, verify_constant_time
+using .Audit: verify_full, verify_constant_time, verify_jittered
 using .Audit: differentially_private_envelope
 using .ChaosGuard: GuardState, INVALID, WARMUP, VALID
 using .ChaosGuard: GuardConfig, default_config
@@ -57,7 +57,7 @@ export nyquist_compliant
 
 # Residue audit / verifier (LL-006 / LL-017 / LL-019 / LL-020).
 export Envelope, register_envelope, residue, verify, synthetic_adversary
-export verify_full, verify_constant_time
+export verify_full, verify_constant_time, verify_jittered
 export differentially_private_envelope
 
 # Chaos-guard / periodic-window safety signal (LL-007 / LL-002).
