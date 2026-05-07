@@ -808,10 +808,281 @@ theorem LL022_LL023_conformance_supports_LL006_asymptote
   -- Math content: theorem 11.
   exact LL006_bound_tendsto_one_at_T_infty h_c_pos h_s_pos
 
+/-! ## LL-030 sensor-defense joint-closure (theorems 18–22)
+
+LL-030 (sensor-defense-joint-closure) is the engine-surfaced
+joint-defense meta-claim that **LL-016 + LL-024 + LL-029
+jointly defend V-006 + V-018 with no single-point failure**.
+The triad scored 12.00 in both R-edge modes of the
+Discovery.Triadic engine pass on the 29-entry spec corpus —
+top candidate, higher structural cohesion than the deployment-
+stack triple LL-022/LL-023/LL-024.
+
+This block mirrors the LL-022/LL-023 pattern (theorems 13–17):
+structures + conformance predicates for each component, three
+extraction lemmas (theorems 18–20), a joint-conformance
+combined-extraction theorem (theorem 21) encoding the "no
+single-point failure" claim at the type level, and a
+compositional theorem (theorem 22) chaining sensor-defense +
+deployment-stack conformance into LL-006 well-typedness.
+
+**Scope.** The theorems capture the *structural composition
+shape* of LL-030's claim — that joint conformance simultaneously
+witnesses each component's load-bearing field, and that no
+sub-conformance is redundant. They do not capture the
+*operational defense* against V-006 and V-018, which would
+require formalising the attack vectors as Lean predicates (a
+substantial future lift; spec entry's `:tested` upgrade path
+documents the integration-test route instead).
+
+**Status discipline.** Per the conjunctive-claim rule, this
+type-checked structural content is sub-claim evidence for
+LL-030, not entry-level evidence — LL-030 stays at `:argued`.
+Promotion to `:tested` follows the integration-test path
+documented in the LL-030 spec entry.
+-/
+
+namespace LL016
+
+/-- LL-016 sensor-authenticity-requirement. Hardware sensor
+    reads participating in the LL-004 external-potential-field
+    coupling must satisfy an independent authenticity check.
+    Structure fields encode the deployment's authenticity-
+    strategy commitment:
+
+    - `has_authenticity_strategy` — at least one of the spec's
+      strategies (1) hardware attestation, (1.5) eBPF kernel-
+      side cross-validation, or (2) multi-sensor cross-
+      validation is wired up. The prototype-tier default is
+      strategy 2; LL-022(a)-conformant deployments add 1; Linux
+      deployments without TPM may use 1.5.
+    - `has_anomaly_flagging` — strategy (3): sensor reads
+      outside plausible joint envelopes are excluded from `U(s)`
+      participation.
+
+    Strategy (4) (accepted residual risk with explicit
+    deployment-context guidance) is *not* a conformance
+    field — it is the documented fallback when the deployment
+    cannot satisfy 1, 1.5, or 2. A deployment relying on
+    strategy 4 alone is non-conformant for LL-016 in this
+    structural sense. -/
+structure AuthenticityRequirement where
+  has_authenticity_strategy : Bool
+  has_anomaly_flagging : Bool
+
+/-- LL-016 conformance predicate: deployment satisfies both
+    the authenticity-strategy and anomaly-flagging requirements.
+    Prototype-tier default per the spec is strategy 2 + 3 =
+    `has_authenticity_strategy ∧ has_anomaly_flagging`. -/
+def conformant (a : AuthenticityRequirement) : Prop :=
+  a.has_authenticity_strategy = true ∧
+  a.has_anomaly_flagging = true
+
+end LL016
+
+namespace LL024
+
+/-- LL-024 real-sensor-deployment-strategy. Per-platform FFI
+    strategy bridging the synthetic-stream prototype to a
+    hardware-bound deployment. Structure fields:
+
+    - `has_per_platform_sensor_enumeration` — Linux uses pure
+      file I/O via sysfs/procfs (Phase 1 lands at 0.0.63);
+      macOS uses IOKit/SMC FFI (Phase 2); Windows uses WMI/PDH
+      (Phase 3). At least the deployment's target platform
+      must have its sensor enumeration concretized.
+    - `has_nyquist_compliant_sample_rates` — per LL-005
+      `nyquist_compliant` must hold per (sensor, assumed
+      adversary bandwidth) pair at deployment-config time.
+    - `has_authenticity_instantiation` — LL-016's authenticity
+      strategy is actually wired up at the per-platform sensor-
+      read boundary, not just declared abstractly. -/
+structure DeploymentStrategy where
+  has_per_platform_sensor_enumeration : Bool
+  has_nyquist_compliant_sample_rates : Bool
+  has_authenticity_instantiation : Bool
+
+/-- LL-024 conformance predicate: deployment satisfies all
+    three operational requirements. -/
+def conformant (d : DeploymentStrategy) : Prop :=
+  d.has_per_platform_sensor_enumeration = true ∧
+  d.has_nyquist_compliant_sample_rates = true ∧
+  d.has_authenticity_instantiation = true
+
+end LL024
+
+namespace LL029
+
+/-- LL-029 multi-channel-entropy-independence. Cross-validation
+    requires physical-mechanism diversity, not just sensor
+    diversity. Structure fields:
+
+    - `has_physical_mechanism_diversity` — sensors span at
+      least two uncorrelated physical-mechanism families per
+      the seven-family taxonomy (thermal / acoustic /
+      EM-RF / electrical / optical / entropy-source-decay /
+      quantum-flavoured).
+    - `has_calibration_window_correlation_test` — the
+      registration-time `|ρ| > 0.3` over a 60-second window
+      check classifies sensor pairs into families via
+      union-find on the correlation graph
+      (`SensorIndependence.classify_families`).
+    - `has_within_family_dedup` — within-family multi-sensor
+      configurations count as one entropy source (four
+      thermal sensors do not provide diversity if all four
+      are downstream of the same heat-injection mechanism). -/
+structure EntropyIndependence where
+  has_physical_mechanism_diversity : Bool
+  has_calibration_window_correlation_test : Bool
+  has_within_family_dedup : Bool
+
+/-- LL-029 conformance predicate: deployment satisfies all
+    three independence requirements. -/
+def conformant (e : EntropyIndependence) : Prop :=
+  e.has_physical_mechanism_diversity = true ∧
+  e.has_calibration_window_correlation_test = true ∧
+  e.has_within_family_dedup = true
+
+end LL029
+
+/-- **Theorem 18.** LL-016 conformance witnesses the
+    authenticity-strategy sub-claim — the load-bearing field
+    against V-006 (sensor-input poisoning) when the deployment
+    cannot rely on strategy 4 (accepted residual risk).
+
+    Mirrors theorems 13/14: from a `LL016.conformant` proof,
+    extract the individual authenticity-strategy field. Used
+    by downstream sensor-defense composition theorems. -/
+theorem LL016_conformance_implies_authenticity_strategy
+    {a : LL016.AuthenticityRequirement}
+    (h : LL016.conformant a) :
+    a.has_authenticity_strategy = true :=
+  h.1
+
+/-- **Theorem 19.** LL-024 conformance witnesses the per-
+    platform sensor-enumeration sub-claim — the load-bearing
+    field bridging LL-016's abstract authenticity claim to
+    a concrete per-platform instantiation.
+
+    Without this field, LL-016's authenticity claim survives
+    on paper while real deployments fall to specific platform
+    sensor-spoofing techniques the spec doesn't enumerate. -/
+theorem LL024_conformance_implies_per_platform_sensor_enumeration
+    {d : LL024.DeploymentStrategy}
+    (h : LL024.conformant d) :
+    d.has_per_platform_sensor_enumeration = true :=
+  h.1
+
+/-- **Theorem 20.** LL-029 conformance witnesses the
+    calibration-window correlation-test sub-claim — the
+    load-bearing field against V-018 (sensor-fusion inversion
+    via physical-mechanism coupling).
+
+    Without this field, LL-016 Strategy 2 (multi-sensor cross-
+    validation) and LL-024's multi-sensor deployment both rest
+    on an implicit independence assumption that V-018 can
+    physically defeat. -/
+theorem LL029_conformance_implies_calibration_window_correlation_test
+    {e : LL029.EntropyIndependence}
+    (h : LL029.conformant e) :
+    e.has_calibration_window_correlation_test = true :=
+  h.2.1
+
+/-- **Theorem 21.** LL-030 joint conformance — combined
+    extraction encoding "no single-point failure" at the
+    type level.
+
+    From three separate conformance witnesses
+    (`LL016.conformant a`, `LL024.conformant d`, `LL029.conformant
+    e`), extract all eight load-bearing fields. The conjunction
+    in the conclusion is built field-by-field from the
+    conformance projections; this is the structural form of
+    LL-030's claim that the three components compose with no
+    redundancy.
+
+    The "no single-point failure" property is encoded
+    structurally: dropping any one of the three conformance
+    hypotheses leaves the conclusion underivable, since the
+    fields it would supply are no longer accessible. The Lean
+    type-checker enforces this — a proof attempt missing one
+    hypothesis fails. -/
+theorem LL030_joint_conformance
+    {a : LL016.AuthenticityRequirement}
+    {d : LL024.DeploymentStrategy}
+    {e : LL029.EntropyIndependence}
+    (h_a : LL016.conformant a) (h_d : LL024.conformant d)
+    (h_e : LL029.conformant e) :
+    a.has_authenticity_strategy = true ∧
+        a.has_anomaly_flagging = true ∧
+        d.has_per_platform_sensor_enumeration = true ∧
+        d.has_nyquist_compliant_sample_rates = true ∧
+        d.has_authenticity_instantiation = true ∧
+        e.has_physical_mechanism_diversity = true ∧
+        e.has_calibration_window_correlation_test = true ∧
+        e.has_within_family_dedup = true :=
+  ⟨h_a.1, h_a.2,
+   h_d.1, h_d.2.1, h_d.2.2,
+   h_e.1, h_e.2.1, h_e.2.2⟩
+
+/-- **Theorem 22.** LL-022 + LL-023 + LL-030 joint conformance
+    supports LL-006 well-typedness, with sensor-defense
+    grounding.
+
+    Composition theorem extending theorem 16 to incorporate
+    the sensor-side stack. Under joint conformance witnesses
+    for all five components (LL-022 OS-trust-stack, LL-023
+    consumer-API surface, LL-016 authenticity, LL-024 deployment
+    strategy, LL-029 entropy independence) *and* parameter
+    validity, the LL-006 bound value sits in `[0, 1]` for any
+    squared-magnitude argument.
+
+    The proof body extracts representative load-bearing fields
+    from each of the five conformance witnesses (encoding the
+    operational dependency at the type level), then discharges
+    the math content via the pre-existing bound-shape theorems
+    (theorems 4 + 5).
+
+    Distinction from theorem 16: theorem 16 grounds LL-006 in
+    the deployment-stack triple alone (LL-022/LL-023/LL-024
+    conformance, where LL-024 is treated only via LL-022's
+    sensor-API field). Theorem 22 strengthens the operational
+    grounding by additionally requiring LL-016 authenticity and
+    LL-029 entropy-independence — encoding that LL-006's bound
+    is meaningful only in deployments that defend V-006 and
+    V-018 jointly, not just in deployments that satisfy the
+    governance-tier OS/API surface invariants.
+
+    Same composition pattern: conformance hypotheses encode the
+    *type-level* deployment-context dependency; the proof
+    discharges the *math content* via theorems 4 + 5. -/
+theorem LL022_LL023_LL030_conformance_supports_LL006_well_typed
+    {os : LL022.OSAssumptions} {api : LL023.ConsumerAPI}
+    {a : LL016.AuthenticityRequirement}
+    {d : LL024.DeploymentStrategy}
+    {e : LL029.EntropyIndependence}
+    (h_os : LL022.conformant os) (h_api : LL023.conforms api)
+    (h_a : LL016.conformant a) (h_d : LL024.conformant d)
+    (h_e : LL029.conformant e)
+    {K c T δ : ℝ}
+    (h_K_nn : 0 ≤ K) (h_K_le_one : K ≤ 1)
+    (h_cT_nn : 0 ≤ c * T) :
+    0 ≤ 1 - K * Real.exp (-(c * T) * δ ^ 2) ∧
+        1 - K * Real.exp (-(c * T) * δ ^ 2) ≤ 1 := by
+  -- Consume conformance witnesses (operational deployment-
+  -- context preconditions across all five components).
+  have _h_random : os.has_host_grade_random = true := h_os.2.2
+  have _h_no_oracle : api.preserves_no_oracle = true := h_api.2.2
+  have _h_authenticity : a.has_authenticity_strategy = true := h_a.1
+  have _h_platform : d.has_per_platform_sensor_enumeration = true := h_d.1
+  have _h_independence : e.has_calibration_window_correlation_test = true := h_e.2.1
+  -- Math content: bound's range theorems (theorems 4 + 5).
+  exact ⟨LL006_bound_nonneg h_K_nn h_K_le_one h_cT_nn,
+         LL006_bound_le_one h_K_nn⟩
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.67 — Compositional theorems chaining LL-022/LL-023 conformance → LL-006 claims landed"
+  "0.0.70 — LL-030 sensor-defense joint-closure: theorems 18–22 landed"
 
 end LavaLamp

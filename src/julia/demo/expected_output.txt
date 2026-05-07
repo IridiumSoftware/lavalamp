@@ -63,18 +63,39 @@ Injecting one sub-threshold sample (λ̂₁=0.10; chaos collapse) ...
   state after collapse: INVALID
 ✓ Guard valid? false  (expected false; reseed flow would fire here in production)
 
+────────────────────────────────────────────────────────────────────────
+Step 6 — Sensor-defense joint-closure (LL-030): LL-016 + LL-029 triad
+────────────────────────────────────────────────────────────────────────
+LL-030 claims LL-016 (authenticity) + LL-024 (deployment)
++ LL-029 (entropy independence) jointly defend V-006 (sensor-
+input poisoning) + V-018 (sensor-fusion inversion). The
+integration test in src/julia/test/runtests.jl exercises four
+scenarios + three single-point-failure ablations; this step
+numerically demonstrates two of them.
+• Healthy baseline — LL-016 per-stream authenticity passes : true
+• Healthy baseline — LL-029 family count                   : 3  (expected 3)
+• V-006 attack    — LL-016 rejects spike-injected stream   : true
+• V-018 attack    — LL-029 collapses coupled pair → families: 2  (expected 2)
+• V-006 invisible to LL-029 alone (correlation analysis)   : true
+• V-018 invisible to LL-016 alone (per-stream envelope)    : true
+  → Each attack class is blocked by exactly one component;
+    removing that component creates a single-point failure.
+    The triad is non-redundant. (Theorem 21 encodes this at
+    the type level; theorem 22 chains it into LL-006.)
+
 ========================================================================
 Summary
 ========================================================================
 • Honest system accepted   : true        (expected true)
 • Adversary system rejected: true        (expected true)
 • Chaos guard tripped post-collapse: true (expected true)
+• LL-030 sensor-defense triad blocks V-006 + V-018: true (expected true)
 
 • Wall-clock — registration : <TIMING> s
 • Wall-clock — verify (honest) : <TIMING> s
 • Wall-clock — verify (adversary) : <TIMING> s
 
-✅ All three pillars of the LavaLamp pipeline behave as specified.
+✅ All four pillars of the LavaLamp pipeline behave as specified.
    See THEOREMS.md for the Lean 4 / Mathlib v4.29.1 formal-
    verification track; src/lean4/ for the Lake project itself.
 

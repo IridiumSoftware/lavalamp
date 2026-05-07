@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 #
-# LavaLamp end-to-end demo (0.0.51).
+# LavaLamp end-to-end demo.
 #
 # Run from the lavalamp/ root with a clean checkout:
 #
@@ -28,6 +28,15 @@
 #                 at 0.0.48 via Mathlib `mul_le_of_le_one_right`)
 #                 captures the bound shape this script exhibits
 #                 numerically.
+#   8. LL-030   — Sensor-defense joint-closure: LL-016 authenticity
+#                 check + LL-029 multi-channel-entropy-independence
+#                 cross-validation jointly defend V-006 (sensor-input
+#                 poisoning) and V-018 (sensor-fusion inversion via
+#                 physical-mechanism coupling). Lean theorems 18-22
+#                 capture the structural composition shape; the demo
+#                 here numerically shows V-006 rejected by LL-016
+#                 alone and V-018 detected by LL-029 alone, validating
+#                 that the triad has no single-point failure.
 #
 # What it does NOT exercise:
 #
@@ -212,6 +221,80 @@ update!(g, 0.10)
 @printf "✓ Guard valid? %s  (expected false; reseed flow would fire here in production)\n" is_valid(g)
 
 # ─────────────────────────────────────────────────────────────────────
+# 6. Sensor-defense joint-closure (LL-030): LL-016 + LL-029 in concert.
+# ─────────────────────────────────────────────────────────────────────
+
+println("\n" * "─"^72)
+println("Step 6 — Sensor-defense joint-closure (LL-030): LL-016 + LL-029 triad")
+println("─"^72)
+println("LL-030 claims LL-016 (authenticity) + LL-024 (deployment)")
+println("+ LL-029 (entropy independence) jointly defend V-006 (sensor-")
+println("input poisoning) + V-018 (sensor-fusion inversion). The")
+println("integration test in src/julia/test/runtests.jl exercises four")
+println("scenarios + three single-point-failure ablations; this step")
+println("numerically demonstrates two of them.")
+
+# LL-016 Strategies 2 + 3 simplified: per-stream envelope + max-step rule.
+authentic(s; envelope=(-10.0, 10.0), max_step=8.0) = begin
+    vs = s.values
+    all(envelope[1] <= v <= envelope[2] for v in vs) || return false
+    all(abs(vs[i+1] - vs[i]) <= max_step for i in 1:length(vs)-1) || return false
+    return true
+end
+
+# Build three healthy synthetic sensor streams (thermal/battery/AC
+# stand-ins). Independent gaussian seeds give independent streams.
+s_thermal = gaussian_noise_stream(1.0; t_max=120.0, sample_rate=10.0,
+                                   rng=Random.Xoshiro(101))
+s_battery = gaussian_noise_stream(1.0; t_max=120.0, sample_rate=10.0,
+                                   rng=Random.Xoshiro(202))
+s_ac      = gaussian_noise_stream(1.0; t_max=120.0, sample_rate=10.0,
+                                   rng=Random.Xoshiro(303))
+
+# Healthy baseline (positive case): all defenses pass.
+auth_ok = authentic(s_thermal) && authentic(s_battery) && authentic(s_ac)
+cl_baseline = classify_families([s_thermal, s_battery, s_ac];
+                                 ρ_threshold=0.3, window_s=60.0,
+                                 n_samples=600)
+@printf "• Healthy baseline — LL-016 per-stream authenticity passes : %s\n" auth_ok
+@printf "• Healthy baseline — LL-029 family count                   : %d  (expected 3)\n" cl_baseline.n_families
+
+# V-006 — sensor-input poisoning: inject a hairdryer-style spike.
+vs_attacked = copy(s_thermal.values)
+vs_attacked[600] += 50.0
+s_thermal_attacked = SensorStream(s_thermal.times, vs_attacked)
+v006_blocked = !authentic(s_thermal_attacked)
+@printf "• V-006 attack    — LL-016 rejects spike-injected stream   : %s\n" v006_blocked
+
+# V-018 — sensor-fusion inversion: physically couple two sensors.
+rng_v018 = Random.Xoshiro(2018)
+ε_v018   = 0.3 .* randn(rng_v018, length(s_thermal.values))
+vs_coupled = 0.95 .* s_thermal.values .+ 0.05 .* ε_v018
+s_battery_coupled = SensorStream(s_thermal.times, vs_coupled)
+cl_v018 = classify_families([s_thermal, s_battery_coupled, s_ac];
+                             ρ_threshold=0.3, window_s=60.0,
+                             n_samples=600)
+v018_blocked = cl_v018.n_families < 3
+@printf "• V-018 attack    — LL-029 collapses coupled pair → families: %d  (expected 2)\n" cl_v018.n_families
+
+# Cross-defense surface (no-single-point-failure): each attack class
+# is invisible to the *other* defense.
+v006_invisible_to_ll029 = (classify_families([s_thermal_attacked, s_battery, s_ac];
+                                              ρ_threshold=0.3, window_s=60.0,
+                                              n_samples=600).n_families == 3)
+v018_invisible_to_ll016 = authentic(s_battery_coupled)
+@printf "• V-006 invisible to LL-029 alone (correlation analysis)   : %s\n" v006_invisible_to_ll029
+@printf "• V-018 invisible to LL-016 alone (per-stream envelope)    : %s\n" v018_invisible_to_ll016
+println("  → Each attack class is blocked by exactly one component;")
+println("    removing that component creates a single-point failure.")
+println("    The triad is non-redundant. (Theorem 21 encodes this at")
+println("    the type level; theorem 22 chains it into LL-006.)")
+
+ll030_ok = auth_ok && cl_baseline.n_families == 3 && v006_blocked &&
+           cl_v018.n_families == 2 && v006_invisible_to_ll029 &&
+           v018_invisible_to_ll016
+
+# ─────────────────────────────────────────────────────────────────────
 # Summary
 # ─────────────────────────────────────────────────────────────────────
 
@@ -221,18 +304,19 @@ println("="^72)
 honest_ok   = result_honest && max_k_honest < K_CHECK
 adv_ok      = !result_adv  && max_k_adv > K_REJECT
 guard_ok    = !is_valid(g)
-all_ok      = honest_ok && adv_ok && guard_ok
+all_ok      = honest_ok && adv_ok && guard_ok && ll030_ok
 
 println("• Honest system accepted   : $(result_honest)        (expected true)")
 println("• Adversary system rejected: $(!result_adv)        (expected true)")
 println("• Chaos guard tripped post-collapse: $(!is_valid(g)) (expected true)")
+println("• LL-030 sensor-defense triad blocks V-006 + V-018: $(ll030_ok) (expected true)")
 println()
 @printf "• Wall-clock — registration : %.2f s\n" t_register
 @printf "• Wall-clock — verify (honest) : %.2f s\n" t_verify_honest
 @printf "• Wall-clock — verify (adversary) : %.2f s\n" t_verify_adv
 
 if all_ok
-    println("\n✅ All three pillars of the LavaLamp pipeline behave as specified.")
+    println("\n✅ All four pillars of the LavaLamp pipeline behave as specified.")
     println("   See THEOREMS.md for the Lean 4 / Mathlib v4.29.1 formal-")
     println("   verification track; src/lean4/ for the Lake project itself.")
 else
