@@ -26,6 +26,7 @@ include("Engine.jl")
 include("Audit.jl")
 include("ChaosGuard.jl")
 include("RealSensors.jl")
+include("SensorIndependence.jl")
 
 using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
@@ -41,6 +42,8 @@ using .ChaosGuard: Guard, update!, is_valid, current_lambda, reseed!
 using .RealSensors: real_thermal_stream, real_battery_stream
 using .RealSensors: real_ac_stream, real_usb_stream
 using .RealSensors: real_cpu_governor_stream, real_loadavg_stream
+using .SensorIndependence: correlation_matrix, classify_families
+using .SensorIndependence: n_independent_families, FamilyClassification
 
 # Engine + spectrum estimator (LL-003).
 export lorenz96, lyapunov_spectrum
@@ -68,5 +71,12 @@ export Guard, update!, is_valid, current_lambda, reseed!
 export real_thermal_stream, real_battery_stream
 export real_ac_stream, real_usb_stream
 export real_cpu_governor_stream, real_loadavg_stream
+
+# Multi-channel entropy independence (LL-029). Defends V-018
+# (sensor-fusion-inversion). Operates on any vector of
+# SensorStream — synthetic now, real-hardware streams when
+# the LL-024 scaffold lands platform-specific implementations.
+export correlation_matrix, classify_families, n_independent_families
+export FamilyClassification
 
 end # module LavaLamp

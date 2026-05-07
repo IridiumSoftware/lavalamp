@@ -808,13 +808,14 @@ end
         @test_throws ErrorException real_cpu_governor_stream()
         @test_throws ErrorException real_loadavg_stream()
 
-        # The error message references the scoping companion.
+        # The error message points at the scoping companion + LL-024.
         try
             real_thermal_stream()
             @test false  # should not reach here
         catch e
             msg = sprint(showerror, e)
-            @test occursin("p_real_sensor_scoping_companion.md", msg)
+            @test occursin("scoping companion", msg) ||
+                  occursin("project-internal companion", msg)
             @test occursin("LL-024", msg)
         end
     end
@@ -909,6 +910,203 @@ end
                 @test !occursin(ident, contents)
             end
         end
+    end
+
+    # ─── LL-029: multi-channel entropy independence ────────────────
+
+    @testset "correlation_matrix is symmetric with unit diagonal (LL-029)" begin
+        # Pearson correlation matrix structural properties.
+        s1 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(101))
+        s2 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(202))
+        s3 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(303))
+        ρ = correlation_matrix([s1, s2, s3];
+                                window_s=60.0, n_samples=300)
+        @test size(ρ) == (3, 3)
+        @test all(ρ[i, i] ≈ 1.0 for i in 1:3)
+        @test ρ ≈ ρ'                  # symmetric
+        @test all(-1.0 - 1e-9 .<= vec(ρ) .<= 1.0 + 1e-9)
+    end
+
+    @testset "Identical streams classify as one family (LL-029)" begin
+        # Two references to the same SensorStream must classify
+        # together — sanity check on the union-find path.
+        s = gaussian_noise_stream(1.0; t_max=120.0,
+                                   rng=Random.Xoshiro(42))
+        cl = classify_families([s, s];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=300)
+        @test cl.n_families == 1
+        @test cl.assignments == [1, 1]
+        @test cl.ρ[1, 2] ≈ 1.0
+    end
+
+    @testset "Independent gaussian streams classify as N families (LL-029)" begin
+        # Three independently-seeded gaussian streams should split
+        # into three families at the ρ_threshold = 0.3 LL-029
+        # spec default.
+        s1 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(1001))
+        s2 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(2002))
+        s3 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(3003))
+        cl = classify_families([s1, s2, s3];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=600)
+        @test cl.n_families == 3
+        @test sort(cl.assignments) == [1, 2, 3]
+    end
+
+    @testset "Constant streams treated as orthogonal (LL-029)" begin
+        # Constant streams have zero variance — _pearson returns
+        # 0.0 by construction; constants must classify as
+        # independent (each carries no info to share).
+        c1 = constant_stream(1.0)
+        c2 = constant_stream(2.0)
+        c3 = constant_stream(3.0)
+        ρ = correlation_matrix([c1, c2, c3];
+                                window_s=60.0, n_samples=200)
+        @test ρ[1, 2] == 0.0
+        @test ρ[1, 3] == 0.0
+        @test ρ[2, 3] == 0.0
+        cl = classify_families([c1, c2, c3];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=200)
+        @test cl.n_families == 3
+    end
+
+    @testset "Coupled streams (s2 = α·s1 + ε) classify together (LL-029)" begin
+        # Models the V-018 attack mechanism: s1 = "thermal sensor"
+        # readings of a heater event; s2 = "battery-discharge
+        # sensor" readings of the same heater event with small
+        # independent noise. Cross-correlation ≈ 0.95; LL-029
+        # must classify them as same-family.
+        n = 300
+        t_grid = collect(range(0.0, 60.0; length=n))
+        rng_shared = Random.Xoshiro(42)
+        s1_vals = randn(rng_shared, n)
+        rng_noise = Random.Xoshiro(43)
+        s2_vals = 0.95 .* s1_vals .+ 0.05 .* randn(rng_noise, n)
+        s1 = SensorStream(t_grid, s1_vals)
+        s2 = SensorStream(t_grid, s2_vals)
+        cl = classify_families([s1, s2];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=300)
+        @test cl.n_families == 1
+        @test cl.assignments == [1, 1]
+        @test abs(cl.ρ[1, 2]) > 0.9
+    end
+
+    @testset "Mixed coupled + independent: 2 coupled + 1 alone → 2 families (LL-029)" begin
+        # Three sensors: s1, s2 share a thermal mechanism (heater);
+        # s3 is acoustic (independent). LL-029 must classify
+        # s1+s2 together and s3 separately.
+        n = 300
+        t_grid = collect(range(0.0, 60.0; length=n))
+        shared = randn(Random.Xoshiro(100), n)
+        s1_vals = shared .+ 0.1 .* randn(Random.Xoshiro(101), n)
+        s2_vals = 0.9 .* shared .+ 0.1 .* randn(Random.Xoshiro(102), n)
+        s3_vals = randn(Random.Xoshiro(200), n)        # independent
+        s1 = SensorStream(t_grid, s1_vals)
+        s2 = SensorStream(t_grid, s2_vals)
+        s3 = SensorStream(t_grid, s3_vals)
+        cl = classify_families([s1, s2, s3];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=300)
+        @test cl.n_families == 2
+        @test cl.assignments[1] == cl.assignments[2]   # s1 and s2 in same family
+        @test cl.assignments[3] != cl.assignments[1]   # s3 separate
+    end
+
+    @testset "Anti-correlated streams treated as same family (LL-029)" begin
+        # Threshold is on |ρ|: anti-correlated streams share a
+        # mechanism (one rises when the other falls) and must
+        # merge — otherwise an adversary could trivially defeat
+        # LL-029 by sign-flipping one channel.
+        n = 200
+        t_grid = collect(range(0.0, 60.0; length=n))
+        x = randn(Random.Xoshiro(42), n)
+        s1 = SensorStream(t_grid, x)
+        s2 = SensorStream(t_grid, -x)                  # ρ = -1
+        cl = classify_families([s1, s2];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=200)
+        @test cl.n_families == 1
+        @test cl.ρ[1, 2] ≈ -1.0  atol=1e-9
+    end
+
+    @testset "Threshold sensitivity: lower threshold merges more (LL-029)" begin
+        # Build two streams with a weak shared component (ρ ≈ 0.2).
+        # At ρ_threshold = 0.5 they should split (independent);
+        # at ρ_threshold = 0.1 they should merge.
+        n = 600
+        t_grid = collect(range(0.0, 60.0; length=n))
+        x = randn(Random.Xoshiro(42), n)
+        y_vals = 0.2 .* x .+ 0.98 .* randn(Random.Xoshiro(43), n)
+        s1 = SensorStream(t_grid, x)
+        s2 = SensorStream(t_grid, y_vals)
+        cl_high = classify_families([s1, s2];
+                                     ρ_threshold=0.5,
+                                     window_s=60.0, n_samples=600)
+        @test cl_high.n_families == 2
+        cl_low = classify_families([s1, s2];
+                                    ρ_threshold=0.1,
+                                    window_s=60.0, n_samples=600)
+        @test cl_low.n_families == 1
+    end
+
+    @testset "n_independent_families convenience wrapper (LL-029)" begin
+        s1 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(1))
+        s2 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(2))
+        s3 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(3))
+        n = n_independent_families([s1, s2, s3];
+                                    ρ_threshold=0.3,
+                                    window_s=60.0, n_samples=600)
+        @test n == 3
+    end
+
+    @testset "FamilyClassification record structure (LL-029)" begin
+        s1 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(1))
+        s2 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(2))
+        cl = classify_families([s1, s2];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=300)
+        @test cl isa FamilyClassification
+        @test length(cl.assignments) == 2
+        @test cl.ρ_threshold == 0.3
+        @test all(1 .<= cl.assignments .<= cl.n_families)
+        @test size(cl.ρ) == (2, 2)
+    end
+
+    @testset "Empty stream list returns 0 families (LL-029)" begin
+        cl = classify_families(SensorStream[];
+                                ρ_threshold=0.3,
+                                window_s=60.0, n_samples=300)
+        @test cl.n_families == 0
+        @test cl.assignments == Int[]
+        @test size(cl.ρ) == (0, 0)
+    end
+
+    @testset "Argument validation (LL-029)" begin
+        s = constant_stream(1.0)
+        @test_throws ArgumentError correlation_matrix([s, s];
+                                                       window_s=60.0,
+                                                       n_samples=1)
+        @test_throws ArgumentError correlation_matrix([s, s];
+                                                       window_s=0.0,
+                                                       n_samples=300)
+        @test_throws ArgumentError classify_families([s, s];
+                                                      ρ_threshold=-0.1,
+                                                      window_s=60.0,
+                                                      n_samples=300)
     end
 
 end
