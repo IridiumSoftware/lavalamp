@@ -48,6 +48,9 @@
 
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
+import Mathlib.Order.Filter.AtTopBot.Field
+
+open Filter
 
 namespace LavaLamp
 
@@ -488,10 +491,205 @@ theorem LL006_bound_strict_monotone_in_T
     mul_lt_mul_of_pos_left h_exp h_K_pos
   linarith
 
+/-- LL-006 detection-bound asymptotic: bound → 1 as T → ∞.
+
+    For fixed `0 ≤ K`, `0 < c`, `0 < s`, the bound value
+    `1 - K · exp(-(c · T) · s)` tends to `1` as the
+    observation window `T` grows without bound. Operationally:
+    given enough observation time, the detection probability
+    bound becomes arbitrarily tight — the "asymptotic
+    detectability" structural claim made formal.
+
+    Hypothesis discipline:
+    - `0 < c` (strict) — exponent rate positive; required so
+      the inner argument actually grows.
+    - `0 < s` (strict) — squared-magnitude positive; required
+      so the inner argument actually grows. Vacuous for
+      `s = 0` (bound is constantly `1 - K`).
+
+    No `0 ≤ K` hypothesis: the limit holds for any real `K`
+    because `exp(-(c·T)·s) → 0` regardless of sign and
+    `K · 0 = 0`. The downstream `:proved` LL-006 theorem
+    will add `0 ≤ K ≤ 1` to keep the bound a valid
+    probability; the asymptote itself is sign-agnostic.
+
+    Proof structure:
+    1. `0 < c · s` from `mul_pos`.
+    2. Tendsto chain on the inner argument:
+       `T → ∞` ⇒ `c · T → ∞` (via `const_mul_atTop`)
+       ⇒ `c · T · s → ∞` (via `atTop_mul_const`)
+       ⇒ `-(c · T · s) → -∞` (via `tendsto_neg_atTop_atBot.comp`).
+    3. `convert` to `-(c · T) * s` form (definitionally equal
+       up to `ring`).
+    4. `Real.tendsto_exp_atBot.comp` lifts to
+       `exp(-(c · T) · s) → 0`.
+    5. `Tendsto.const_mul K` gives
+       `K · exp(...) → K · 0 = 0`; rewrite via `mul_zero`.
+    6. `Tendsto.const_sub 1` gives the final result;
+       rewrite via `sub_zero`. -/
+theorem LL006_bound_tendsto_one_at_T_infty
+    {s K c : ℝ}
+    (h_c_pos : 0 < c)
+    (h_s_pos : 0 < s) :
+    Tendsto (fun T : ℝ => 1 - K * Real.exp (-(c * T) * s))
+            atTop (nhds 1) := by
+  have h_inner : Tendsto (fun T : ℝ => -(c * T) * s) atTop atBot := by
+    have h1 : Tendsto (fun T : ℝ => c * T) atTop atTop :=
+      Tendsto.const_mul_atTop h_c_pos tendsto_id
+    have h2 : Tendsto (fun T : ℝ => c * T * s) atTop atTop :=
+      Tendsto.atTop_mul_const h_s_pos h1
+    have h3 : Tendsto (fun T : ℝ => -(c * T * s)) atTop atBot :=
+      tendsto_neg_atTop_atBot.comp h2
+    convert h3 using 1
+    funext T; ring
+  have h_exp : Tendsto (fun T : ℝ => Real.exp (-(c * T) * s))
+                       atTop (nhds 0) :=
+    Real.tendsto_exp_atBot.comp h_inner
+  have h_K_exp : Tendsto (fun T : ℝ => K * Real.exp (-(c * T) * s))
+                          atTop (nhds 0) := by
+    have h := h_exp.const_mul K
+    rw [mul_zero] at h
+    exact h
+  have h_final := h_K_exp.const_sub 1
+  rw [sub_zero] at h_final
+  exact h_final
+
+/-- LL-006 detection-bound asymptotic: bound → 1 as s → ∞.
+
+    Symmetric to theorem 11 with `s` as the variable axis.
+    For fixed `0 ≤ K`, `0 < c`, `0 < T`, the bound value
+    `1 - K · exp(-(c · T) · s)` tends to `1` as the
+    squared-magnitude argument `s` grows without bound.
+
+    Operationally: stronger and stronger adversaries become
+    arbitrarily detectable in the limit — there is no upper
+    plateau on detection probability under unbounded
+    adversary magnitude. -/
+theorem LL006_bound_tendsto_one_at_s_infty
+    {K c T : ℝ}
+    (h_c_pos : 0 < c)
+    (h_T_pos : 0 < T) :
+    Tendsto (fun s : ℝ => 1 - K * Real.exp (-(c * T) * s))
+            atTop (nhds 1) := by
+  have h_cT_pos : 0 < c * T := mul_pos h_c_pos h_T_pos
+  have h_inner : Tendsto (fun s : ℝ => -(c * T) * s) atTop atBot := by
+    have h1 : Tendsto (fun s : ℝ => (c * T) * s) atTop atTop :=
+      Tendsto.const_mul_atTop h_cT_pos tendsto_id
+    have h2 : Tendsto (fun s : ℝ => -((c * T) * s)) atTop atBot :=
+      tendsto_neg_atTop_atBot.comp h1
+    convert h2 using 1
+    funext s; ring
+  have h_exp : Tendsto (fun s : ℝ => Real.exp (-(c * T) * s))
+                       atTop (nhds 0) :=
+    Real.tendsto_exp_atBot.comp h_inner
+  have h_K_exp : Tendsto (fun s : ℝ => K * Real.exp (-(c * T) * s))
+                          atTop (nhds 0) := by
+    have h := h_exp.const_mul K
+    rw [mul_zero] at h
+    exact h
+  have h_final := h_K_exp.const_sub 1
+  rw [sub_zero] at h_final
+  exact h_final
+
+/-! ## LL-022 / LL-023 parametric shape theorems
+
+These two namespaces encode the **type-level discipline** for
+deployment-stack conformance theorems (round-3 §1D.v
+priorities 5 + 6). The structures define the conformance
+witnesses; the predicates are the conformance content; the
+extraction lemmas demonstrate that conformance witnesses
+yield each individual sub-claim. Evidence type:
+`type-checked` (Lean's type system enforces the propagation
+shape).
+
+Per round-3 §1D.v: "shape-discipline only; no Mathlib needed
+at the shape level." These declarations encode the form of
+how conditional security claims compose; concrete LL-022 /
+LL-023 theorems with full security content land in
+subsequent versions when the consumer-API surface and the
+TPM-attestation API are concretized.
+-/
+
+namespace LL022
+
+/-- LL-022 OS-trust-stack assumptions. Mirror of the spec
+    entry's required-mechanism enumeration:
+    (a) hardware root of trust (TPM / SecureEnclave / TrustZone),
+    (b) OS sensor APIs at sufficient bandwidth,
+    (c) host-grade entropy sources.
+
+    Each field is a `Bool` representing whether the deployment
+    *claims* to provide the mechanism; the conformance
+    predicate then asserts they're all `true`. Real
+    deployments populate this from a TPM attestation +
+    capability discovery; this scaffold encodes the type
+    shape. -/
+structure OSAssumptions where
+  has_hardware_root_of_trust : Bool
+  has_os_sensor_apis : Bool
+  has_host_grade_random : Bool
+
+/-- LL-022 conformance predicate: deployment satisfies all
+    three required-mechanism claims. -/
+def conformant (os : OSAssumptions) : Prop :=
+  os.has_hardware_root_of_trust = true ∧
+  os.has_os_sensor_apis = true ∧
+  os.has_host_grade_random = true
+
+end LL022
+
+namespace LL023
+
+/-- LL-023 consumer-API surface. The three load-bearing
+    invariants from the LL-023 spec entry:
+    - Register/verify pair exposed (LL-011 + LL-006 surfaces).
+    - LL-017 no-oracle response discipline preserved through
+      the API. -/
+structure ConsumerAPI where
+  exposes_register : Bool
+  exposes_verify : Bool
+  preserves_no_oracle : Bool
+
+/-- LL-023 conformance predicate: consumer API meets all
+    three surface invariants. -/
+def conforms (api : ConsumerAPI) : Prop :=
+  api.exposes_register = true ∧
+  api.exposes_verify = true ∧
+  api.preserves_no_oracle = true
+
+end LL023
+
+/-- LL-022 parametric shape — extraction lemma: conformance
+    witnesses the hardware-root-of-trust sub-claim.
+
+    Theorem-shape demonstration: from a `LL022.conformant`
+    proof, extract the individual `has_hardware_root_of_trust`
+    sub-claim. Real LL-022 theorems will use this same
+    pattern to extract the relevant sub-claim for whichever
+    LavaLamp property the deployment cites. -/
+theorem LL022_conformance_implies_hardware_root_of_trust
+    {os : LL022.OSAssumptions}
+    (h : LL022.conformant os) :
+    os.has_hardware_root_of_trust = true :=
+  h.1
+
+/-- LL-023 parametric shape — extraction lemma: conformance
+    witnesses the no-oracle sub-claim.
+
+    Theorem-shape demonstration mirroring theorem 13. From a
+    `LL023.conforms` proof, extract the LL-017 no-oracle
+    invariant — the most security-relevant of the three
+    consumer-API surface claims. -/
+theorem LL023_conforms_implies_no_oracle
+    {api : LL023.ConsumerAPI}
+    (h : LL023.conforms api) :
+    api.preserves_no_oracle = true :=
+  h.2.2
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.65 — LL-006 joint monotonicity + strict variants landed"
+  "0.0.66 — LL-006 asymptotic limits + LL-022/LL-023 parametric shape landed"
 
 end LavaLamp

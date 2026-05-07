@@ -18,15 +18,16 @@ Expected: `Build completed successfully (1901 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
 Lean kernel verifies every proof at compile time.
 
-**Status.** All ten theorems below are kernel-verified
+**Status.** All fourteen theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
 evidence-type discipline).
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
-theorem 1 below. Theorems 2–10 are composition lemmas building
-toward a future LL-006 `:proved` status; they currently land as
-`lean-proved` content supporting LL-021 + LL-006 entries without
-themselves being entry-promoting.
+theorem 1 below. Theorems 2–14 are composition lemmas building
+toward future `:proved` status for LL-006 and the LL-022 / LL-023
+parametric shape entries; they currently land as `lean-proved`
+content supporting their associated entries without themselves
+being entry-promoting.
 
 ---
 
@@ -44,6 +45,10 @@ themselves being entry-promoting.
 | 8 | `LL006_bound_monotone_joint` | composition | — (supports LL-006) |
 | 9 | `LL006_bound_strict_monotone_in_squared_magnitude` | strict monotonicity | — (supports LL-006) |
 | 10 | `LL006_bound_strict_monotone_in_T` | strict monotonicity | — (supports LL-006) |
+| 11 | `LL006_bound_tendsto_one_at_T_infty` | asymptotic limit | — (supports LL-006) |
+| 12 | `LL006_bound_tendsto_one_at_s_infty` | asymptotic limit | — (supports LL-006) |
+| 13 | `LL022_conformance_implies_hardware_root_of_trust` | parametric shape (type-checked) | — (supports LL-022) |
+| 14 | `LL023_conforms_implies_no_oracle` | parametric shape (type-checked) | — (supports LL-023) |
 
 ---
 
@@ -461,9 +466,232 @@ inequality to non-strict.
 
 ---
 
+## 11 — `LL006_bound_tendsto_one_at_T_infty` (asymptotic, T-axis)
+
+**Statement.** As the observation window grows without
+bound, the detection probability bound approaches `1`.
+Formally: under `0 < c`, `0 < s`, the bound value
+`1 - K · exp(-(c · T) · s)` tends to `1` along `Filter.atTop`
+in `T`.
+
+```lean
+theorem LL006_bound_tendsto_one_at_T_infty
+    {s K c : ℝ}
+    (h_c_pos : 0 < c)
+    (h_s_pos : 0 < s) :
+    Tendsto (fun T : ℝ => 1 - K * Real.exp (-(c * T) * s))
+            atTop (nhds 1) := by
+  have h_inner : Tendsto (fun T : ℝ => -(c * T) * s) atTop atBot := by
+    have h1 : Tendsto (fun T : ℝ => c * T) atTop atTop :=
+      Tendsto.const_mul_atTop h_c_pos tendsto_id
+    have h2 : Tendsto (fun T : ℝ => c * T * s) atTop atTop :=
+      Tendsto.atTop_mul_const h_s_pos h1
+    have h3 : Tendsto (fun T : ℝ => -(c * T * s)) atTop atBot :=
+      tendsto_neg_atTop_atBot.comp h2
+    convert h3 using 1
+    funext T; ring
+  have h_exp : Tendsto (fun T : ℝ => Real.exp (-(c * T) * s))
+                       atTop (nhds 0) :=
+    Real.tendsto_exp_atBot.comp h_inner
+  have h_K_exp : Tendsto (fun T : ℝ => K * Real.exp (-(c * T) * s))
+                          atTop (nhds 0) := by
+    have h := h_exp.const_mul K
+    rw [mul_zero] at h
+    exact h
+  have h_final := h_K_exp.const_sub 1
+  rw [sub_zero] at h_final
+  exact h_final
+```
+
+**Proof.** Six-step Filter.Tendsto composition:
+
+1. Tendsto chain on the inner argument:
+   `T → ∞` ⇒ `c · T → ∞` (via `Tendsto.const_mul_atTop`)
+   ⇒ `c · T · s → ∞` (via `Tendsto.atTop_mul_const`)
+   ⇒ `-(c · T · s) → -∞` (via `tendsto_neg_atTop_atBot.comp`).
+2. `convert ... using 1` + `funext ... ring` to reach the
+   form `-(c · T) * s` (definitionally equal up to ring).
+3. `Real.tendsto_exp_atBot.comp` lifts to
+   `exp(-(c · T) · s) → 0`.
+4. `Tendsto.const_mul K` gives
+   `K · exp(...) → K · 0`; rewrite via `mul_zero`.
+5. `Tendsto.const_sub 1` gives the final result;
+   rewrite via `sub_zero`.
+
+**No `0 ≤ K` hypothesis.** The asymptotic limit is sign-
+agnostic in `K` because `exp(-(c·T)·s) → 0` regardless of
+sign and `K · 0 = 0`. The downstream `:proved` LL-006
+theorem will add `0 ≤ K ≤ 1` to keep the bound a valid
+probability; the asymptote itself doesn't need it.
+
+**Spec connection.** The "asymptotic detectability"
+structural claim of LL-006: given enough observation time
+*and* nonzero sensitivity `c · s`, the detection-bound
+value can be driven arbitrarily close to `1`. This is what
+makes the bound a meaningful detector — without it, the
+bound could plateau short of `1` and provide no real
+detection-probability lower bound at long observation
+windows.
+
+---
+
+## 12 — `LL006_bound_tendsto_one_at_s_infty` (asymptotic, s-axis)
+
+**Statement.** Symmetric to theorem 11 with `s` as the
+variable axis. As the squared adversary magnitude grows
+without bound, the bound approaches `1`.
+
+```lean
+theorem LL006_bound_tendsto_one_at_s_infty
+    {K c T : ℝ}
+    (h_c_pos : 0 < c)
+    (h_T_pos : 0 < T) :
+    Tendsto (fun s : ℝ => 1 - K * Real.exp (-(c * T) * s))
+            atTop (nhds 1) := by
+  have h_cT_pos : 0 < c * T := mul_pos h_c_pos h_T_pos
+  have h_inner : Tendsto (fun s : ℝ => -(c * T) * s) atTop atBot := by
+    have h1 : Tendsto (fun s : ℝ => (c * T) * s) atTop atTop :=
+      Tendsto.const_mul_atTop h_cT_pos tendsto_id
+    have h2 : Tendsto (fun s : ℝ => -((c * T) * s)) atTop atBot :=
+      tendsto_neg_atTop_atBot.comp h1
+    convert h2 using 1
+    funext s; ring
+  have h_exp : Tendsto (fun s : ℝ => Real.exp (-(c * T) * s))
+                       atTop (nhds 0) :=
+    Real.tendsto_exp_atBot.comp h_inner
+  have h_K_exp : Tendsto (fun s : ℝ => K * Real.exp (-(c * T) * s))
+                          atTop (nhds 0) := by
+    have h := h_exp.const_mul K
+    rw [mul_zero] at h
+    exact h
+  have h_final := h_K_exp.const_sub 1
+  rw [sub_zero] at h_final
+  exact h_final
+```
+
+**Proof.** Slightly shorter than theorem 11 because the
+inner argument `(c · T) · s` already factors cleanly with
+`s` as the variable; only one `Tendsto.const_mul_atTop`
+needed (vs two products in theorem 11).
+
+**Spec connection.** Stronger and stronger adversaries
+become arbitrarily detectable in the limit — there is no
+upper plateau on detection probability under unbounded
+adversary magnitude. Operationally an adversary that scales
+its magnitude up linearly will eventually trip the
+detection bound; only adversaries staying *bounded* in
+magnitude can hope to evade detection beyond an asymptotic
+floor.
+
+---
+
+## 13 — `LL022_conformance_implies_hardware_root_of_trust` (parametric shape)
+
+**Statement.** From an LL-022 conformance proof, extract
+the hardware-root-of-trust sub-claim. Type-checked
+(Lean's type system enforces the propagation discipline);
+the proof body is a single field projection.
+
+```lean
+namespace LL022
+
+structure OSAssumptions where
+  has_hardware_root_of_trust : Bool
+  has_os_sensor_apis : Bool
+  has_host_grade_random : Bool
+
+def conformant (os : OSAssumptions) : Prop :=
+  os.has_hardware_root_of_trust = true ∧
+  os.has_os_sensor_apis = true ∧
+  os.has_host_grade_random = true
+
+end LL022
+
+theorem LL022_conformance_implies_hardware_root_of_trust
+    {os : LL022.OSAssumptions}
+    (h : LL022.conformant os) :
+    os.has_hardware_root_of_trust = true :=
+  h.1
+```
+
+**What this exists for.** The round-3 §1D.v "shape-discipline
+only" priority. The structures encode the LL-022 spec
+entry's three required-mechanism fields (TPM /
+SecureEnclave / TrustZone for `has_hardware_root_of_trust`;
+sensor APIs at sufficient bandwidth for `has_os_sensor_apis`;
+host-grade entropy for `has_host_grade_random`). The
+`conformant` predicate asserts all three.
+
+The extraction lemma is the simplest non-trivial theorem
+about the shape: from full conformance, a specific sub-claim
+follows. Concrete LL-022 theorems (e.g., "given conformance,
+the LL-006 detection bound holds") will use this same
+pattern — pull the relevant field projection from the
+conformance witness.
+
+**Evidence type.** `type-checked`. The propagation is
+encoded in the dependent-type structure of the conformance
+predicate; the proof body is mechanically verified by
+Lean's elaborator.
+
+**Spec connection.** LL-022 spec entry's required-
+mechanism enumeration. Real deployments populate
+`OSAssumptions` from a TPM attestation + capability
+discovery; this scaffold encodes the type shape, and
+provides the conformance-extraction template that future
+LL-022 theorems compose with.
+
+---
+
+## 14 — `LL023_conforms_implies_no_oracle` (parametric shape)
+
+**Statement.** Mirror of theorem 13 for LL-023's consumer-
+API surface. From an LL-023 conformance proof, extract the
+LL-017 no-oracle invariant — the most security-relevant of
+the three consumer-API surface claims.
+
+```lean
+namespace LL023
+
+structure ConsumerAPI where
+  exposes_register : Bool
+  exposes_verify : Bool
+  preserves_no_oracle : Bool
+
+def conforms (api : ConsumerAPI) : Prop :=
+  api.exposes_register = true ∧
+  api.exposes_verify = true ∧
+  api.preserves_no_oracle = true
+
+end LL023
+
+theorem LL023_conforms_implies_no_oracle
+    {api : LL023.ConsumerAPI}
+    (h : LL023.conforms api) :
+    api.preserves_no_oracle = true :=
+  h.2.2
+```
+
+**What this exists for.** Same round-3 §1D.v "shape-
+discipline only" priority — LL-023 side. Structure
+encodes the consumer-API surface invariants; predicate
+asserts all three; lemma extracts the LL-017 no-oracle
+invariant from a conformance witness.
+
+**Why no-oracle specifically.** LL-017's no-oracle
+discipline is what makes the LL-006 / LL-019 results
+operationally meaningful — without it, a verifier could
+leak information through response timing, error message
+content, or response structure that lets adversaries
+re-derive the registered envelope. The LL-023 consumer-API
+surface must preserve this; theorem 14 demonstrates the
+extraction from a conformance witness.
+
+---
+
 ## What this collectively proves
 
-The ten theorems chain to give:
+The fourteen theorems chain to give:
 
 - **LL-021 worst-case bound** (theorem 1) — projected adversary
   magnitude is bounded by unprojected magnitude.
@@ -488,6 +716,21 @@ The ten theorems chain to give:
   prefactor, exponent, and adversary signal, extending
   observation by any positive duration produces a strict
   detection improvement.
+- **Asymptotic limit in `T`** (theorem 11) — bound → 1 as
+  observation window grows without bound; "asymptotic
+  detectability" structural claim made formal.
+- **Asymptotic limit in `δ²`** (theorem 12) — bound → 1 as
+  squared adversary magnitude grows without bound; no upper
+  plateau on detection probability under unbounded
+  adversary magnitude.
+- **LL-022 conformance shape** (theorem 13) — extraction
+  template for the OS-trust-stack-dependency entry; proves
+  conformance witnesses yield the hardware-root-of-trust
+  sub-claim.
+- **LL-023 conformance shape** (theorem 14) — extraction
+  template for the consumer-API-surface entry; proves
+  conformance witnesses yield the LL-017 no-oracle
+  invariant.
 
 ## What this does NOT prove
 
@@ -502,10 +745,11 @@ requires:
 - The lower-bound proof itself (probabilistic concentration
   inequality on the spectrum residue).
 
-Each is a multi-session research investment. The ten
-theorems above prove every *algebraic* and *real-analysis*
-property the eventual `:proved` proof will compose with —
-the missing piece is the probability-space side.
+Each is a multi-session research investment. The fourteen
+theorems above prove every *algebraic*, *real-analysis*,
+*asymptotic*, and *type-shape* property the eventual
+`:proved` proof will compose with — the missing piece is
+the probability-space side.
 
 ## Source
 
@@ -515,8 +759,8 @@ top-level README §"Try it" or in `src/lean4/README.md`.
 ## Honest framing reminder
 
 Per the project's evidence-type discipline: a theorem with
-`sorry` in its body is **not** a proof. All ten theorems
-above are kernel-verified with no `sorry`. The build is configured so any `sorry` regression
+`sorry` in its body is **not** a proof. All fourteen
+theorems above are kernel-verified with no `sorry`. The build is configured so any `sorry` regression
 would surface as a `declaration uses 'sorry'` linter warning —
 the current build returns zero warnings, so the proofs are
 honest.
