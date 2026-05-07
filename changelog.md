@@ -5,6 +5,147 @@ messages match entry summaries.
 
 ---
 
+## 0.0.54 — 2026-05-06 — LL-021/LL-006 composition theorem (`LL006_worst_case_lower_than_isotropic`)
+
+Lands the second composition foothold on the LL-006
+detection-bound track. Theorem 2 in the round-3 §1D.v
+priority sequence (after the 0.0.48 LL-021 worst-case bound
+and the 0.0.49 squared-effective-magnitude corollary).
+
+**The theorem.**
+
+```lean
+theorem LL006_worst_case_lower_than_isotropic
+    {ε_A proj K c T : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_nn : 0 ≤ proj)
+    (h_proj_le_one : proj ≤ 1)
+    (h_K_nn : 0 ≤ K)
+    (h_cT_nn : 0 ≤ c * T) :
+    1 - K * Real.exp (-(c * T) * (ε_A * proj) ^ 2)
+      ≤ 1 - K * Real.exp (-(c * T) * ε_A ^ 2) := by
+  have h_sq : (ε_A * proj) ^ 2 ≤ ε_A ^ 2 :=
+    LL021_eff_squared_bound h_ε h_proj_nn h_proj_le_one
+  have h_neg_cT : -(c * T) ≤ 0 := neg_nonpos.mpr h_cT_nn
+  have h_neg : -(c * T) * ε_A ^ 2 ≤ -(c * T) * (ε_A * proj) ^ 2 :=
+    mul_le_mul_of_nonpos_left h_sq h_neg_cT
+  have h_exp : Real.exp (-(c * T) * ε_A ^ 2)
+                 ≤ Real.exp (-(c * T) * (ε_A * proj) ^ 2) :=
+    Real.exp_le_exp.mpr h_neg
+  have h_mul : K * Real.exp (-(c * T) * ε_A ^ 2)
+                 ≤ K * Real.exp (-(c * T) * (ε_A * proj) ^ 2) :=
+    mul_le_mul_of_nonneg_left h_exp h_K_nn
+  linarith
+```
+
+Five-step composition: (1) squared-magnitude bound from
+LL-021's corollary; (2) multiply by non-positive scalar
+`-(c·T)` flips direction; (3) `Real.exp` monotonicity lifts
+the inequality through the exponential; (4) multiplying by
+`K ≥ 0` preserves direction; (5) subtraction from `1` flips
+once and `linarith` discharges. Every hypothesis is used
+load-bearing in at least one step.
+
+**What this proves.** The worst-case detection-probability
+bound *value* is less than or equal to the isotropic
+detection-probability bound *value*: the LL-021 asymmetry
+claim against LL-006 is mathematically derivable from the
+bound shape, not just empirically observed.
+
+**What this does NOT prove.** The bound itself
+(`P(detect) ≥ 1 - K · exp(-c · T · δ²)`) is a probability-
+space claim. Formalizing it requires:
+
+- A probability space modeling trajectory sampling.
+- Random variables for the spectrum estimator output.
+- The detection-event predicate (when do we say a trajectory
+  was "detected as adversarial"?).
+- The lower-bound proof itself (probabilistic concentration
+  inequality on the spectrum residue).
+
+Each of these is a multi-session research investment. The
+0.0.54 theorem proves a *property* of the bound shape —
+specifically that the bound is monotone-decreasing in the
+squared adversary magnitude — independent of whether the
+shape itself bounds `P(detect)`.
+
+**LL-006 status implication: unchanged at `:benchmarked`.**
+Promoting to `:proved` requires the full probability
+formalization above. The `:benchmarked` content (`K=1,
+c′=0.00423, T=60` from the 0.0.17 P3-bound benchmark)
+remains the operational evidence; the 0.0.54 theorem is
+composition-tier infrastructure that the eventual `:proved`
+proof will compose with.
+
+**Imports added.** `Mathlib.Analysis.SpecialFunctions.Exp`
+joins the existing `Mathlib.Data.Real.Basic` in
+`src/lean4/LavaLamp/Theorems.lean`. This pulls in Mathlib's
+real-analysis content for `Real.exp` + `Real.exp_le_exp`
+monotonicity. The full Mathlib environment (round-3 §1D.v
+Decision 1 Option A) handles this without additional
+configuration.
+
+**Build verification.**
+
+```
+$ cd src/lean4 && lake build
+✔ [1899/1901] Built LavaLamp.Theorems (6.9s)
+✔ [1900/1901] Built LavaLamp (1000ms)
+Build completed successfully (1901 jobs).
+```
+
+1901 jobs green; **zero warnings**. Job count jumped 767 →
+1901 with the `Real.exp` import — that's the cost of
+pulling Mathlib's analysis module graph. CI workflow at
+`.github/workflows/lean.yml` has a 60-minute timeout from
+0.0.47 which absorbs the larger build comfortably.
+
+**Composition foothold inventory after 0.0.54:**
+
+1. `LL021_worst_case_bound` — 0.0.48 :proved; the
+   foundational `ε_A · proj ≤ ε_A` algebraic bound via
+   `mul_le_of_le_one_right`.
+2. `LL021_eff_squared_bound` — 0.0.49 corollary;
+   `(ε_A · proj)² ≤ ε_A²` via `pow_le_pow_left₀`.
+3. `LL006_worst_case_lower_than_isotropic` — 0.0.54 (this
+   version); composes (1) + (2) with `Real.exp`
+   monotonicity to derive the asymmetry implication.
+
+Each composition step is a real algebraic statement, kernel-
+verified at compile time. The chain demonstrates the
+:proved → :proved-via-composition pattern: future Lean theorems
+land *atop* established :proved content rather than from
+scratch.
+
+**Counts.** Unchanged at 29/1/3/0/4/20/1.
+
+**Files touched this version:**
+
+- `src/lean4/LavaLamp/Theorems.lean` — added
+  `LL006_worst_case_lower_than_isotropic` theorem after
+  `LL021_eff_squared_bound`; added
+  `import Mathlib.Analysis.SpecialFunctions.Exp`;
+  `scaffold_tier` string bumped to "0.0.54 — LL-006
+  worst-case-detection-bound monotonicity composed with
+  LL-021".
+- `LAVALAMP_SPEC.md` — LL-006 entry gains a new "LL-021/
+  LL-006 composition theorem (0.0.54)" footer; LL-021
+  entry's 0.0.49 footer gains a forward-reference to the
+  cashed composition theorem at 0.0.54.
+- `artifact_registry.md` — version line bump; LL-006 row's
+  Test/Proof column gets the Lean theorem-file pointer; A1-A6
+  self-check refreshed for 0.0.54.
+- `dashboard.md` — last-updated stamp; Recent companion docs
+  section gets new top entry covering the composition
+  theorem + composition-foothold-inventory.
+- `changelog.md` — this entry.
+- `README.md` — trajectory entry for 0.0.54.
+- `src/lean4/README.md` — first-priority row in the
+  theorem-plan table updated to mention the LL-006
+  composition theorem.
+
+---
+
 ## 0.0.51 — 2026-05-06 — Clone-and-run demo for publication-day shipability
 
 Lands a self-contained end-to-end walkthrough at

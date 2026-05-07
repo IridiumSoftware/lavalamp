@@ -381,8 +381,40 @@ LL-ID, not the Key.
   result file:
   `src/julia/benchmark/results/p3f_per_sde_detection_power.txt`
   (deterministic; byte-identical across runs).
+- **LL-021/LL-006 composition theorem (2026-05-06, 0.0.54):**
+  The Lean track at `src/lean4/LavaLamp/Theorems.lean` lands
+  `LL006_worst_case_lower_than_isotropic`:
 
-### LL-007 — chaos-guard
+  ```
+  ∀ ε_A proj K c T, 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 →
+                    0 ≤ K → 0 ≤ c·T →
+    1 - K · exp(-(c·T) · (ε_A·proj)²)
+      ≤ 1 - K · exp(-(c·T) · ε_A²)
+  ```
+
+  Proof: composition of `LL021_eff_squared_bound`
+  ((ε_A·proj)² ≤ ε_A² from 0.0.49) with `Real.exp` monotonicity
+  + `mul_le_mul_of_nonpos_left` (multiplying by non-positive
+  `-(c·T)`) + `mul_le_mul_of_nonneg_left` (multiplying by
+  `K ≥ 0`) + `linarith` (subtraction from 1). `lake build`
+  clean — 1901 jobs (Mathlib analysis content pulled in for
+  `Real.exp`); zero warnings.
+
+  **What this proves:** the worst-case detection-probability
+  bound value is *less than or equal to* the isotropic bound
+  value — the structural asymmetry claim LL-021 makes
+  against LL-006 is mathematically derivable (not just
+  empirically observed) from the bound shape.
+
+  **What this does NOT prove:** the bound itself
+  (`P(detect) ≥ 1 - K · exp(-c · T · δ²)`). LL-006's
+  `:benchmarked` status is unchanged — promoting to
+  `:proved` requires the full probability-space
+  formalization (random variables, detection event predicate,
+  the lower-bound proof itself), which is a multi-session
+  research investment. This theorem is composition-foothold
+  #2 (after `LL021_eff_squared_bound` at 0.0.49) on the
+  path toward that formalization.
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
 - Logic tier: Operational
 - Description: A background process estimates the largest
@@ -1204,6 +1236,15 @@ LL-ID, not the Key.
   is additional `lean-proved` content supporting the same
   entry, not a new entry). Sets the composition foothold for
   the round-3 §1D.v priority-4 LL-006 detection-bound theorem.
+- **LL-006 composition theorem cashes the foothold (2026-05-06,
+  0.0.54):** `LL006_worst_case_lower_than_isotropic` lands in
+  `src/lean4/LavaLamp/Theorems.lean`, composing
+  `LL021_eff_squared_bound` (this entry) with `Real.exp`
+  monotonicity to prove the asymmetry claim — the worst-case
+  detection-probability bound value is `≤` the isotropic
+  bound value. See LL-006's "LL-021/LL-006 composition
+  theorem" footer for the full statement + proof structure;
+  LL-021 status unchanged at `:proved`.
 
 ---
 

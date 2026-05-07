@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.51 — clone-and-run demo at `src/julia/demo/lavalamp_demo.jl` lands for publication-day shipability; exercises LL-003 / LL-004 / LL-006 / LL-007 / LL-019 / LL-021 end-to-end in ~4 s wall-clock with honest ACCEPT + adversary REJECT + chaos-guard transition; top-level README gains a "Try it" quickstart; counts unchanged at 29/1/3/0/4/20/1).
+Last updated: 2026-05-06 (0.0.54 — LL-021/LL-006 composition theorem `LL006_worst_case_lower_than_isotropic` lands; proves worst-case detection-bound value ≤ isotropic bound value via `LL021_eff_squared_bound` + `Real.exp` monotonicity; `lake build` clean — 1901 jobs (Mathlib analysis pulled in for `Real.exp`); LL-006 stays `:benchmarked` — composition theorem proves bound-shape monotonicity, not the full P(detect) probability formalization; counts unchanged at 29/1/3/0/4/20/1).
 
 ## Status summary
 
@@ -591,6 +591,68 @@ Remaining `:open` entries fall into two classes:
   deployments must specify which A4 capability level they assume.
 
 ## Recent companion docs / formal artefacts
+
+- **LL-021 / LL-006 composition theorem** (0.0.54,
+  2026-05-06) — Second composition foothold on the path
+  toward LL-006 detection-bound `:proved` status.
+  `LL006_worst_case_lower_than_isotropic` lands in
+  `src/lean4/LavaLamp/Theorems.lean`:
+
+  ```
+  ∀ ε_A proj K c T, 0 ≤ ε_A → 0 ≤ proj → proj ≤ 1 →
+                    0 ≤ K → 0 ≤ c·T →
+    1 - K · exp(-(c·T) · (ε_A·proj)²)
+      ≤ 1 - K · exp(-(c·T) · ε_A²)
+  ```
+
+  **Proof structure (tactic mode, five-step composition).**
+  (1) `(ε_A · proj)² ≤ ε_A²` from `LL021_eff_squared_bound`
+  (the 0.0.49 corollary). (2) Multiplying by the non-positive
+  scalar `-(c·T)` flips the inequality direction
+  (`mul_le_mul_of_nonpos_left`). (3) `Real.exp_le_exp.mpr`
+  applied to the result lifts the inequality through `exp`.
+  (4) Multiplying by `K ≥ 0` preserves the direction
+  (`mul_le_mul_of_nonneg_left`). (5) Subtracting from `1`
+  flips once and `linarith` closes the goal.
+
+  **Why it matters — the asymmetry claim made mathematical.**
+  LL-021 says the worst-case adversary direction has a *lower*
+  detection probability than the isotropic-ε_A direction.
+  Until 0.0.54 that claim was empirically observed
+  (`:benchmarked`) and structurally argued. With this
+  theorem it's *mathematically derivable* from the bound
+  shape — composition of the projection bound (LL-021) with
+  the exponential's monotonicity in the squared magnitude
+  yields the asymmetry directly.
+
+  **What this does NOT prove.** The bound itself
+  (`P(detect) ≥ 1 - K · exp(-c · T · δ²)`) is a probability-
+  space claim. Promoting LL-006 to `:proved` requires
+  formalizing the probability space (sample space of
+  trajectories, random variables, detection event predicate)
+  and proving the lower bound — a multi-session research
+  investment. This theorem proves a *property* of the bound
+  shape (monotonicity in δ²), not the bound's existence as
+  a lower bound on `P(detect)`. LL-006 stays `:benchmarked`.
+
+  **Build verification.** `lake build` 1901 jobs green
+  (was 767 pre-`Real.exp` import — `Mathlib.Analysis.SpecialFunctions.Exp`
+  pulled in measure-theoretic / real-analysis dependencies,
+  which is the whole point of round-3 §1D.v Decision 1
+  Option A — full Mathlib). Zero warnings; CI workflow's
+  60-minute timeout from 0.0.47 absorbs the larger build.
+
+  **Composition foothold inventory after 0.0.54:**
+  (1) `LL021_worst_case_bound` (0.0.48; `:proved`).
+  (2) `LL021_eff_squared_bound` (0.0.49; corollary).
+  (3) `LL006_worst_case_lower_than_isotropic` (0.0.54;
+  composes 1 + 2 with `Real.exp`). The chain demonstrates
+  that the LL-021/LL-006 asymmetry is provable from
+  algebraic + real-analysis content alone; the missing
+  piece for full LL-006 `:proved` is the probability
+  formalization itself.
+
+  Counts unchanged at 29/1/3/0/4/20/1.
 
 - **Clone-and-run demo for publication-day** (0.0.51,
   2026-05-06) — A self-contained end-to-end walkthrough at

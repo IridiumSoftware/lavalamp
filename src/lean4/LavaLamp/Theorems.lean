@@ -47,6 +47,7 @@
 -/
 
 import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.SpecialFunctions.Exp
 
 namespace LavaLamp
 
@@ -149,10 +150,88 @@ theorem LL021_eff_squared_bound
     (LL021_worst_case_bound h_ε h_proj_le_one)
     2
 
+/-- LL-006 worst-case-detection-bound monotonicity — the LL-021/LL-006
+    composition theorem (round-3 §1D.v priority 4 partial).
+
+    The detection-probability bound shape from LL-006 is
+    `P(detect) ≥ 1 - K · exp(-c · T · δ²)`. LL-021 says the
+    *effective* perturbation magnitude at the worst-case
+    direction is `δ = ε_eff = ε_A · proj` rather than the
+    isotropic `ε_A`. This theorem composes the two: at the
+    worst-case direction, the bound's lower-confidence value
+    `1 - K · exp(-c · T · ε_eff²)` is *less than* the
+    isotropic bound's value `1 - K · exp(-c · T · ε_A²)`.
+
+    Operationally: the worst-case detection probability is
+    *lower* than the isotropic detection probability — which
+    is exactly the structural asymmetry claim LL-021 makes
+    against LL-006. The empirical fit constants
+    (`K=1, c′=0.0288, T=60`) are LL-021's `:benchmarked`
+    content; this theorem proves the *monotonicity* of the
+    bound shape independent of those constants.
+
+    Hypotheses:
+    - `0 ≤ ε_A` (non-negative magnitude; from LL-006
+      formulation).
+    - `0 ≤ proj`, `proj ≤ 1` (`proj = |û · m_unit|` lives in
+      [0, 1] by Cauchy-Schwarz; LL-021 geometric setup).
+    - `0 ≤ K` (bound prefactor non-negative; bound holds
+      trivially when `K = 0`).
+    - `0 ≤ c * T` (composite rate-times-window non-negative;
+      true whenever both `c` and `T` are non-negative — `c`
+      is the bound's exponent rate from the §2.1 derivation,
+      `T` is the observation-window length).
+
+    Conclusion: the worst-case bound value is `≤` the
+    isotropic bound value.
+
+    Proof structure:
+    1. `(ε_A * proj)² ≤ ε_A²` from `LL021_eff_squared_bound`.
+    2. `-(c·T) · ε_A² ≤ -(c·T) · (ε_A·proj)²` by multiplying
+       step 1 by the non-positive scalar `-(c·T)`
+       (`mul_le_mul_of_nonpos_left`).
+    3. `Real.exp` monotonicity: step 2 implies
+       `Real.exp(-(c·T)·ε_A²) ≤ Real.exp(-(c·T)·(ε_A·proj)²)`.
+    4. Multiply by `K ≥ 0` (preserves inequality direction).
+    5. Subtract from `1` (flips inequality direction once).
+
+    LL-006 status implication: the theorem proves a *property*
+    of the bound shape (worst-case ≤ isotropic), not the bound
+    itself. LL-006's `:benchmarked` status is unchanged at
+    0.0.54; promoting to `:proved` requires the full
+    probability-space formalization (random variables,
+    detection event predicate, the `P(detect) ≥ ...` lower
+    bound itself), which is a multi-session research
+    investment. This theorem demonstrates that LL-021's
+    asymmetry claim against LL-006 is *mathematically
+    derivable* (not just empirically observed) from the bound
+    shape. -/
+theorem LL006_worst_case_lower_than_isotropic
+    {ε_A proj K c T : ℝ}
+    (h_ε : 0 ≤ ε_A)
+    (h_proj_nn : 0 ≤ proj)
+    (h_proj_le_one : proj ≤ 1)
+    (h_K_nn : 0 ≤ K)
+    (h_cT_nn : 0 ≤ c * T) :
+    1 - K * Real.exp (-(c * T) * (ε_A * proj) ^ 2)
+      ≤ 1 - K * Real.exp (-(c * T) * ε_A ^ 2) := by
+  have h_sq : (ε_A * proj) ^ 2 ≤ ε_A ^ 2 :=
+    LL021_eff_squared_bound h_ε h_proj_nn h_proj_le_one
+  have h_neg_cT : -(c * T) ≤ 0 := neg_nonpos.mpr h_cT_nn
+  have h_neg : -(c * T) * ε_A ^ 2 ≤ -(c * T) * (ε_A * proj) ^ 2 :=
+    mul_le_mul_of_nonpos_left h_sq h_neg_cT
+  have h_exp : Real.exp (-(c * T) * ε_A ^ 2)
+                 ≤ Real.exp (-(c * T) * (ε_A * proj) ^ 2) :=
+    Real.exp_le_exp.mpr h_neg
+  have h_mul : K * Real.exp (-(c * T) * ε_A ^ 2)
+                 ≤ K * Real.exp (-(c * T) * (ε_A * proj) ^ 2) :=
+    mul_le_mul_of_nonneg_left h_exp h_K_nn
+  linarith
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.49 — LL-021 squared-effective-magnitude bound landed (composition foothold for LL-006)"
+  "0.0.54 — LL-006 worst-case-detection-bound monotonicity composed with LL-021"
 
 end LavaLamp

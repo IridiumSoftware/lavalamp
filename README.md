@@ -227,7 +227,25 @@ LL-019 / LL-021 end-to-end in ~4 s wall-clock with honest
 ACCEPT (residue/σ ≈ 3 < k=10) + adversary REJECT at ε_A=3σ
 (residue/σ ≈ 14 > k=5) + chaos-guard `WARMUP → VALID →
 INVALID` transition; top-level README gains a "Try it"
-quickstart; counts unchanged at 29/1/3/0/4/20/1).
+quickstart; counts unchanged at 29/1/3/0/4/20/1) → 0.0.52 +
+0.0.53 (privacy-pass cleanup before public visibility flip;
+private-project cross-references scrubbed; CLAUDE.md
+untracked from git; personal email stripped from
+Project.toml; closure_forces_structure working-tree
+references replaced with paper-content references; counts
+unchanged) → 0.0.54 (LL-021/LL-006 composition theorem
+`LL006_worst_case_lower_than_isotropic` lands in
+`src/lean4/LavaLamp/Theorems.lean`; proves the worst-case
+detection-bound value `1 - K · exp(-c·T·(ε_A·proj)²) ≤
+1 - K · exp(-c·T·ε_A²)` via `LL021_eff_squared_bound` +
+`Real.exp` monotonicity + `mul_le_mul_of_nonpos_left` +
+`linarith`; `Mathlib.Analysis.SpecialFunctions.Exp`
+imported; `lake build` clean — 1901 jobs (was 767;
+analysis content pulled in for `Real.exp`); zero warnings;
+LL-006 stays `:benchmarked` — composition theorem proves
+bound-shape monotonicity, not the full P(detect)
+probability formalization; counts unchanged at
+29/1/3/0/4/20/1).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new
