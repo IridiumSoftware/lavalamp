@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.55 — LL-006 detection-bound range theorems `LL006_bound_le_one` + `LL006_bound_nonneg` establish bound value sits in [0,1] under `K ∈ [0,1]` + `c·T ≥ 0`; well-typedness as lower-bound-on-probability now formal; also restores `### LL-007 — chaos-guard` header accidentally dropped in 0.0.54 LAVALAMP_SPEC.md edit; `lake build` clean (1901 jobs, zero warnings); counts unchanged at 29/1/3/0/4/20/1).
+Last updated: 2026-05-06 (0.0.56 — top-level `THEOREMS.md` lands; auto-citable summary of all 5 Lean theorems with statements + proofs, readable without Lean install; README trimmed — Trajectory + Round 3 narrative blocks removed; `CLAUDE.md` removed from See list and Layout (untracked since 0.0.53); counts unchanged at 29/1/3/0/4/20/1).
 
 ## Status summary
 
@@ -591,6 +591,25 @@ Remaining `:open` entries fall into two classes:
   deployments must specify which A4 capability level they assume.
 
 ## Recent companion docs / formal artefacts
+
+- **`THEOREMS.md` lands at repo root** (0.0.56, 2026-05-06)
+  — Auto-citable summary of every theorem proved in
+  LavaLamp's Lean 4 track. Each of the five theorems gets:
+  full Lean statement (verbatim from
+  `src/lean4/LavaLamp/Theorems.lean`), proof structure /
+  one-liner, hypothesis explanation, spec connection. Plus
+  a header (build instructions; honest-framing reminder),
+  an index table (theorem # / name / type / promotes), and
+  two summary sections ("What this collectively proves" /
+  "What this does NOT prove" — the probability-space gap
+  to LL-006 `:proved`). Readable without installing Lean —
+  the article and external readers can cite a single file
+  to see what's machine-verified. **README cleanup
+  bundled in:** version-by-version "Trajectory" string +
+  "Round 3 ran 2026-05-06" narrative block removed (~180
+  lines); `changelog.md` has the durable record. `CLAUDE.md`
+  removed from See: list and Layout block (untracked since
+  0.0.53). Counts unchanged at 29/1/3/0/4/20/1.
 
 - **LL-006 detection-bound range theorems** (0.0.55,
   2026-05-06) — Two short theorems establish that the

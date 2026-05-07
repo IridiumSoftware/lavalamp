@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.55 (LL-006 detection-bound range theorems land in `src/lean4/LavaLamp/Theorems.lean`; `LL006_bound_le_one : 0 ≤ K → 1 - K·exp(-(c·T)·δ²) ≤ 1` and `LL006_bound_nonneg : 0 ≤ K → K ≤ 1 → 0 ≤ c·T → 0 ≤ 1 - K·exp(-(c·T)·δ²)` together establish the bound value sits in [0,1] (well-typed as lower-bound-on-probability); also restores `### LL-007 — chaos-guard` header that was accidentally dropped in 0.0.54 LAVALAMP_SPEC.md edit; `lake build` clean (1901 jobs, zero warnings); LL-006 stays `:benchmarked` — range theorems establish well-typedness, not the full probability-space lower bound; counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
+Version: 0.0.56 (top-level `THEOREMS.md` lands as auto-citable summary of all 5 Lean theorems with statements + proofs; readable without Lean install; README trimmed — version-by-version "Trajectory" + Round 3 narrative blocks removed (changelog has the durable record); README "See:" list and Layout block updated — `THEOREMS.md` added, `CLAUDE.md` removed (untracked since 0.0.53); counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

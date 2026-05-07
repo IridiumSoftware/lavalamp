@@ -5,6 +5,81 @@ messages match entry summaries.
 
 ---
 
+## 0.0.56 — 2026-05-06 — `THEOREMS.md` at repo root + README trim
+
+Lands two readability-tier improvements for the public repo:
+
+**1. `THEOREMS.md` at repo root.** Auto-citable summary of
+every theorem proved in LavaLamp's Lean 4 track. Each of
+the five theorems gets:
+
+- Full Lean statement (verbatim from
+  `src/lean4/LavaLamp/Theorems.lean`).
+- Proof structure / one-liner with named Mathlib lemmas.
+- Hypothesis explanation (which hypotheses are needed
+  where, and why).
+- Spec connection (which LL-NNN entries the theorem touches
+  + status implications).
+
+Plus an index table, build-verification instructions, two
+summary sections ("What this collectively proves" / "What
+this does NOT prove"), and an honest-framing reminder
+(`sorry` would surface as a linter warning; current build
+returns zero warnings).
+
+**Why this matters for the article.** The X article + any
+future paper-tier artefact can cite "see `THEOREMS.md` for
+the formal claims" as a single-file pointer. A reader
+without Lean installed can read the theorem statements +
+proof structure directly. Previously the formal-verification
+content lived inside `LavaLamp/Theorems.lean`'s comment
+blocks + `src/lean4/README.md` — visible only to readers
+willing to navigate the Lean 4 source tree.
+
+**2. README trim.** Removed two blocks that aren't
+necessary for a public repo:
+
+- The version-by-version "Trajectory" string (~150 lines)
+  — every version from 0.0.1 through 0.0.55 listed in a
+  single dense paragraph. The `changelog.md` has the
+  durable per-version record; the README's job is the
+  *current state* + how to use the project, not the entire
+  development history.
+- The "Round 3 ran 2026-05-06" narrative paragraph — full
+  process detail of the synthesis-team round (seat
+  rotation, verdicts, decision rendering). Useful to
+  internal readers but irrelevant to a clone-and-evaluate
+  reader. The `docs/synthesis_team_round3_companion.md`
+  has the canonical record.
+
+`CLAUDE.md` removed from the README's "See:" list and from
+the Layout block — it's been untracked since 0.0.53 and
+the references were stale.
+
+**Net effect.** README drops from ~340 lines to ~160; the
+"Try it" + spec-ledger + layout sections are intact and
+front-and-center; `THEOREMS.md` is one click away from the
+top-level table-of-contents.
+
+Counts unchanged at 29/1/3/0/4/20/1. No Lean / Julia /
+spec changes — readability-only pass.
+
+**Files touched this version:**
+
+- `THEOREMS.md` — **new file, repo root**; ~250 lines;
+  full formal-verification summary.
+- `README.md` — Trajectory section (lines 108-289 in
+  pre-trim) removed; "See:" list updated (added
+  `THEOREMS.md`, removed `CLAUDE.md`); Layout block
+  updated (added `THEOREMS.md` row, removed `CLAUDE.md`
+  row).
+- `artifact_registry.md` — version line bump.
+- `dashboard.md` — last-updated stamp; Recent companion
+  docs section gets new top entry.
+- `changelog.md` — this entry.
+
+---
+
 ## 0.0.55 — 2026-05-06 — LL-006 detection-bound range theorems (bound ∈ [0,1])
 
 Lands two short theorems establishing the bound *value*
