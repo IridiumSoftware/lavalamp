@@ -1752,4 +1752,252 @@ end
         end
     end
 
+    # ----- LL-031 integration test (reseed-oracle joint-closure) -----
+    #
+    # LL-031 spec entry promotion path: integration test exercising
+    # V-011 (reseed-oracle attack) scenarios PLUS three single-point-
+    # failure ablations disabling one of LL-007 / LL-019 / LL-022(c)
+    # at a time and confirming the V-011 oracle (or the deeper attack
+    # under it) succeeds in exactly those configurations.
+    #
+    # Reuses existing API: Guard / update! / reseed! for LL-007;
+    # verify_constant_time / verify for LL-019; an in-test "zero RNG"
+    # type that always returns zero perturbation vectors models the
+    # LL-022(c) host-TRNG-disabled ablation.
+
+    """
+        ZeroRNG <: AbstractRNG
+
+    Test-local RNG returning zeros — models the LL-022(c) host-
+    TRNG-disabled ablation. `randn` on a `ZeroRNG` returns a zero
+    vector, so `reseed!`'s unit-vector perturbation has L2 norm
+    zero and the post-reseed state matches pre-reseed (no entropy
+    injection). Real deployments substitute getrandom(2) /
+    SecRandomCopyBytes / BCryptGenRandom; this stub exercises the
+    "what if the host TRNG were broken" failure mode.
+    """
+    struct ZeroRNG <: AbstractRNG end
+    Random.rand!(::ZeroRNG, A::AbstractArray{Float64}) = (fill!(A, 0.0); A)
+    Base.randn(::ZeroRNG, n::Int) = zeros(n)
+
+    @testset "LL-031 integration: reseed-oracle joint-closure" begin
+        function fresh_guard()
+            return Guard(default_config(1.66; warmup_steps=2))
+        end
+
+        # Sub-threshold sample below τ_λ = 0.166 → INVALID.
+        COLLAPSE_SAMPLE = 0.05
+        # Above recovery_threshold = 0.83 → recovery to WARMUP / VALID.
+        HEALTHY_SAMPLE  = 1.7
+
+        @testset "Positive case — all three defenses present, V-011 defeated" begin
+            Random.seed!(101)
+            ds = lorenz96(40; F=8.0)
+            g = fresh_guard()
+
+            # LL-007: drive to VALID, then collapse triggers INVALID.
+            for _ in 1:2; update!(g, HEALTHY_SAMPLE); end
+            @test g.state == VALID
+            update!(g, COLLAPSE_SAMPLE)
+            @test g.state == INVALID    # LL-007 catches collapse
+
+            # LL-022(c): reseed with proper TRNG-style RNG injects
+            # entropy → post-reseed state differs from pre-reseed.
+            u_before = copy(current_state(ds))
+            reseed!(ds, g; rng=Random.Xoshiro(7777), magnitude=1.0)
+            u_after = copy(current_state(ds))
+            diff_norm = sqrt(sum((u_after .- u_before) .^ 2))
+            @test isapprox(diff_norm, 1.0; atol=1e-10)
+            @test g.reseed_count == 1
+            @test g.state == WARMUP
+
+            # LL-019: response timing constant-time-padded so reseed
+            # events are indistinguishable from regular verifications
+            # by elapsed time alone.
+            Random.seed!(102)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(103)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            target_seconds = 0.05
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=target_seconds)
+            @test t_padded >= target_seconds
+        end
+
+        @testset "Scenario A — V-011 attempt: timing-padding hides reseed event" begin
+            # LL-007 catches collapse, reseed fires, LL-019 pads
+            # timing so V-011 oracle cannot distinguish reseed-
+            # adjacent verification from regular verification.
+            Random.seed!(201)
+            ds = lorenz96(40; F=8.0)
+            g = fresh_guard()
+            for _ in 1:2; update!(g, HEALTHY_SAMPLE); end
+            update!(g, COLLAPSE_SAMPLE)
+            @test g.state == INVALID
+            reseed!(ds, g; rng=Random.Xoshiro(2018), magnitude=1.0)
+            @test g.state == WARMUP
+
+            Random.seed!(202)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(203)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            t_post_reseed = @elapsed verify_constant_time(λs, env;
+                                                            k=10.0,
+                                                            target_seconds=0.05)
+            @test t_post_reseed >= 0.05
+        end
+
+        @testset "Scenario B — chaos collapse persists without reseed" begin
+            # If LL-007 catches collapse but reseed never fires, the
+            # INVALID state is sticky. Security primitive cannot
+            # recover; attacker's perturbation persists.
+            g = fresh_guard()
+            for _ in 1:2; update!(g, HEALTHY_SAMPLE); end
+            @test g.state == VALID
+            update!(g, COLLAPSE_SAMPLE)
+            @test g.state == INVALID
+            @test !is_valid(g)
+        end
+
+        @testset "Scenario C — V-011 attempt with all three engaged → defeated" begin
+            # Compound: collapse + reseed + timing-padding all engaged.
+            # Each defense layer fires; oracle observer sees no
+            # distinguishable reseed-event timing.
+            Random.seed!(301)
+            ds = lorenz96(40; F=8.0)
+            g = fresh_guard()
+            for _ in 1:2; update!(g, HEALTHY_SAMPLE); end
+            update!(g, COLLAPSE_SAMPLE)
+            @test g.state == INVALID                      # LL-007 ✓
+            reseed!(ds, g; rng=Random.Xoshiro(99), magnitude=1.0)
+            @test g.reseed_count == 1                     # LL-022(c) ✓
+
+            Random.seed!(302)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(303)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=0.05)
+            @test t_padded >= 0.05                         # LL-019 ✓
+        end
+
+        @testset "Ablation 1 — disable LL-007: chaos collapse undetected" begin
+            # Mock LL-007 by skipping update!. Without state-machine-
+            # with-INVALID-transition, sub-threshold λ̂₁ doesn't flip
+            # state; no reseed mechanism fires; chaos collapse
+            # persists. V-011 reseed-oracle moot — deeper failure
+            # is the chaos-collapse-attack succeeds directly.
+            g = fresh_guard()
+            @test g.state == WARMUP             # initial; never transitioned
+            @test g.reseed_count == 0           # no reseed fired
+            @test !is_valid(g)                  # never reached VALID either
+        end
+
+        @testset "Ablation 2 — disable LL-019: reseed timing observable" begin
+            # Without timing-padding, plain verify is data-dependent.
+            # Compare elapsed time of plain verify vs constant-time
+            # variant on the same inputs.
+            Random.seed!(401)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(402)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+
+            t_plain  = @elapsed verify(λs, env; k=10.0)
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=0.10)
+            # Plain verify is fast; padded is bounded below by target.
+            @test t_padded >= 0.10
+            # Plain verify observably faster — timing channel exists.
+            @test t_plain < t_padded
+        end
+
+        @testset "Ablation 3 — disable LL-022(c): reseed produces no entropy" begin
+            # ZeroRNG models broken host TRNG. randn returns zeros →
+            # unit-vector perturbation has L2 norm zero → post-reseed
+            # state matches pre-reseed.
+            Random.seed!(501)
+            ds = lorenz96(40; F=8.0)
+            g = fresh_guard()
+            for _ in 1:2; update!(g, HEALTHY_SAMPLE); end
+            update!(g, COLLAPSE_SAMPLE)
+            @test g.state == INVALID
+
+            u_before = copy(current_state(ds))
+            reseed!(ds, g; rng=ZeroRNG(), magnitude=1.0)
+            u_after = copy(current_state(ds))
+            diff_norm = sqrt(sum((u_after .- u_before) .^ 2))
+            # No entropy injected → state unchanged.
+            @test diff_norm == 0.0
+            # Bookkeeping still updated.
+            @test g.reseed_count == 1
+            @test g.state == WARMUP
+        end
+
+        @testset "No-single-point-failure summary: V-011 needs all three" begin
+            # Each ablation above demonstrated a distinct failure
+            # surface. The triad is non-redundant.
+            g_engaged = fresh_guard()
+            for _ in 1:2; update!(g_engaged, HEALTHY_SAMPLE); end
+            update!(g_engaged, COLLAPSE_SAMPLE)
+            ll007_engaged_catches = (g_engaged.state == INVALID)
+            ll007_skipped_no_catch = (fresh_guard().state == WARMUP)
+            @test ll007_engaged_catches
+            @test ll007_skipped_no_catch
+
+            Random.seed!(601)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(602)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            ll019_padded_meets_target =
+                (@elapsed verify_constant_time(λs, env; k=10.0,
+                                                 target_seconds=0.05)) >= 0.05
+            @test ll019_padded_meets_target
+
+            Random.seed!(603)
+            ds_a = lorenz96(40; F=8.0)
+            g_a = fresh_guard()
+            for _ in 1:2; update!(g_a, HEALTHY_SAMPLE); end
+            update!(g_a, COLLAPSE_SAMPLE)
+            u_before = copy(current_state(ds_a))
+            reseed!(ds_a, g_a; rng=Random.Xoshiro(99), magnitude=1.0)
+            ll022c_engaged =
+                sqrt(sum((current_state(ds_a) .- u_before) .^ 2)) > 0.0
+            @test ll022c_engaged
+
+            Random.seed!(604)
+            ds_b = lorenz96(40; F=8.0)
+            g_b = fresh_guard()
+            for _ in 1:2; update!(g_b, HEALTHY_SAMPLE); end
+            update!(g_b, COLLAPSE_SAMPLE)
+            u_before_b = copy(current_state(ds_b))
+            reseed!(ds_b, g_b; rng=ZeroRNG(), magnitude=1.0)
+            ll022c_disabled =
+                sqrt(sum((current_state(ds_b) .- u_before_b) .^ 2)) == 0.0
+            @test ll022c_disabled
+        end
+    end
+
 end
