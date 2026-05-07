@@ -43,6 +43,7 @@ using .ChaosGuard: Guard, update!, is_valid, current_lambda, reseed!
 using .RealSensors: real_thermal_stream, real_battery_stream
 using .RealSensors: real_ac_stream, real_usb_stream
 using .RealSensors: real_cpu_governor_stream, real_loadavg_stream
+using .RealSensors: record_stream
 using .SensorIndependence: correlation_matrix, classify_families
 using .SensorIndependence: n_independent_families, FamilyClassification
 using .RuntimeConformance: ConformanceStatus, PASS, FAIL, SKIPPED, DEFERRED
@@ -71,12 +72,15 @@ export GuardState, INVALID, WARMUP, VALID
 export GuardConfig, default_config
 export Guard, update!, is_valid, current_lambda, reseed!
 
-# Real-sensor scaffold (LL-024). Scaffold tier — calling these
-# functions errors pointing to the scoping companion. Per-platform
-# FFI implementations land per the Phase 1 / 2 / 3 roadmap.
+# Real-hardware sensor readers (LL-024). Linux Phase 1 implemented
+# in pure Julia file-I/O against sysfs/procfs paths; macOS / Windows
+# remain scaffold-error stubs with documented per-platform hooks.
+# The `record_stream` helper is the platform-independent core that
+# tests + custom-source callers use directly.
 export real_thermal_stream, real_battery_stream
 export real_ac_stream, real_usb_stream
 export real_cpu_governor_stream, real_loadavg_stream
+export record_stream
 
 # Multi-channel entropy independence (LL-029). Defends V-018
 # (sensor-fusion-inversion). Operates on any vector of

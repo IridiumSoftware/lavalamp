@@ -877,45 +877,170 @@ end
         @test λ1s[3] - λ1s[2] > 0.05
     end
 
-    # ─── LL-024 Real-sensor scaffold ──────────────────────────────────
+    # ─── LL-024 RealSensors (Phase 1: Linux implemented; others scaffold) ──
 
-    @testset "Real-sensor scaffold (LL-024)" begin
-        # Scaffold-tier API surface exists but errors meaningfully.
-        # Per LL-024 :argued at 0.0.38; per-platform FFI implementations
-        # land per the the project-internal companion §2.5
-        # roadmap (Linux first, then macOS, then Windows). These tests
-        # confirm the module imports + the API surface + the error
-        # discipline (scaffold stubs error rather than silently
-        # returning garbage SensorStream values, per CLAUDE.md
-        # "stubs that return data are forbidden").
-
-        # All six real-sensor constructors are callable as functions.
+    @testset "Real-sensor API surface (LL-024)" begin
+        # All six real-sensor constructors are callable as functions
+        # regardless of platform. Phase 1 (Linux) implements them via
+        # sysfs/procfs reads; macOS / Windows / other remain scaffold-
+        # tier and error meaningfully when called.
         @test isa(real_thermal_stream, Function)
         @test isa(real_battery_stream, Function)
         @test isa(real_ac_stream, Function)
         @test isa(real_usb_stream, Function)
         @test isa(real_cpu_governor_stream, Function)
         @test isa(real_loadavg_stream, Function)
+        @test isa(record_stream, Function)
+    end
 
-        # Calling each constructor at scaffold tier throws an error.
-        # The error message must point to the scoping companion so
-        # operators can find the implementation roadmap.
-        @test_throws ErrorException real_thermal_stream()
-        @test_throws ErrorException real_battery_stream()
-        @test_throws ErrorException real_ac_stream()
-        @test_throws ErrorException real_usb_stream()
-        @test_throws ErrorException real_cpu_governor_stream()
-        @test_throws ErrorException real_loadavg_stream()
+    @testset "record_stream synchronous recording (LL-024 Phase 1)" begin
+        # The platform-independent core. Closure-based reader returns
+        # increasing values; record_stream samples at sample_rate Hz
+        # for t_max seconds and builds a SensorStream of that shape.
+        counter = Ref(0.0)
+        reader = () -> (counter[] += 1.0; counter[])
+        stream = record_stream(reader; sample_rate=20.0, t_max=0.1)
+        @test stream isa SensorStream
+        # 20 Hz × 0.1 s = 2 samples expected (n_samples = floor + 1)
+        @test length(stream.values) >= 2
+        # Reader was called once per sample → values are sequential
+        # integers starting from 1.0.
+        @test stream.values[1] == 1.0
+        @test all(diff(stream.values) .≈ 1.0)
+        # Times start at 0 and progress.
+        @test stream.times[1] == 0.0
+        @test stream.times[end] > 0.0
+        @test issorted(stream.times)
+    end
 
-        # The error message points at the scoping companion + LL-024.
-        try
-            real_thermal_stream()
-            @test false  # should not reach here
-        catch e
-            msg = sprint(showerror, e)
-            @test occursin("scoping companion", msg) ||
-                  occursin("project-internal companion", msg)
-            @test occursin("LL-024", msg)
+    @testset "record_stream argument validation (LL-024 Phase 1)" begin
+        @test_throws ArgumentError record_stream(() -> 1.0;
+                                                  sample_rate=0.0,
+                                                  t_max=0.1)
+        @test_throws ArgumentError record_stream(() -> 1.0;
+                                                  sample_rate=10.0,
+                                                  t_max=0.0)
+        @test_throws ArgumentError record_stream(() -> 1.0;
+                                                  sample_rate=-1.0,
+                                                  t_max=0.1)
+    end
+
+    @testset "Linux reader helpers with mock fixtures (LL-024 Phase 1)" begin
+        # The internal _read_*_linux_value helpers accept a `root`
+        # keyword for test injection. Build a tempdir mimicking the
+        # canonical sysfs/procfs layout and assert reads.
+        # Works on any platform — only file I/O is exercised, not
+        # platform-specific kernel interfaces.
+        using LavaLamp.RealSensors: _read_thermal_linux_value,
+                                     _read_battery_current_linux_value,
+                                     _read_ac_online_linux_value,
+                                     _read_usb_count_linux_value,
+                                     _read_cpu_freq_linux_value,
+                                     _read_loadavg_linux_value
+
+        mktempdir() do tmp
+            # Thermal: hwmon0/temp1_input contains "45000" (millidegrees)
+            hwmon = joinpath(tmp, "hwmon", "hwmon0")
+            mkpath(hwmon)
+            write(joinpath(hwmon, "temp1_input"), "45000\n")
+            @test _read_thermal_linux_value(1;
+                                             root=joinpath(tmp, "hwmon")) ≈ 45.0
+
+            # Battery: BAT0/current_now contains "1500000" (microamps)
+            bat = joinpath(tmp, "power_supply", "BAT0")
+            mkpath(bat)
+            write(joinpath(bat, "current_now"), "1500000\n")
+            @test _read_battery_current_linux_value(
+                root=joinpath(tmp, "power_supply")) == 1500000.0
+
+            # AC: ACAD/online contains "1"
+            ac = joinpath(tmp, "power_supply", "ACAD")
+            mkpath(ac)
+            write(joinpath(ac, "online"), "1\n")
+            @test _read_ac_online_linux_value(
+                root=joinpath(tmp, "power_supply")) == 1.0
+
+            # No battery / AC root exists → return 0.0
+            @test _read_battery_current_linux_value(
+                root=joinpath(tmp, "nonexistent")) == 0.0
+            @test _read_ac_online_linux_value(
+                root=joinpath(tmp, "nonexistent")) == 0.0
+
+            # USB: count digit-prefixed entries under usb root
+            usb = joinpath(tmp, "usb")
+            mkpath(usb)
+            mkpath(joinpath(usb, "1-1"))
+            mkpath(joinpath(usb, "2-1"))
+            mkpath(joinpath(usb, "usb1"))    # not digit-prefixed; skip
+            @test _read_usb_count_linux_value(root=usb) == 2.0
+
+            # CPU freq: cpu0/cpufreq/scaling_cur_freq contains "2400000"
+            cpufreq = joinpath(tmp, "cpu", "cpu0", "cpufreq")
+            mkpath(cpufreq)
+            write(joinpath(cpufreq, "scaling_cur_freq"), "2400000\n")
+            @test _read_cpu_freq_linux_value(0;
+                                              root=joinpath(tmp, "cpu")) == 2400000.0
+            # Missing core → 0.0
+            @test _read_cpu_freq_linux_value(99;
+                                              root=joinpath(tmp, "cpu")) == 0.0
+
+            # Loadavg: file with kernel-format content
+            la = joinpath(tmp, "loadavg")
+            write(la, "0.42 0.55 0.61 1/123 4567\n")
+            @test _read_loadavg_linux_value(path=la) ≈ 0.42
+            # Missing file → 0.0
+            @test _read_loadavg_linux_value(
+                path=joinpath(tmp, "nonexistent")) == 0.0
+        end
+    end
+
+    if Sys.islinux()
+        @testset "Linux Phase 1 readers exercise actual sysfs/procfs (LL-024)" begin
+            # On Linux, exercise the public readers against the host's
+            # actual sysfs/procfs paths. Use tiny t_max to keep test
+            # runtime small. We assert the SensorStream shape is right;
+            # the values themselves are host-dependent and not checked
+            # for specific magnitudes.
+            stream = real_loadavg_stream(sample_rate=10.0, t_max=0.1)
+            @test stream isa SensorStream
+            @test length(stream.values) >= 2
+            @test stream.values[1] >= 0.0  # load average is non-negative
+
+            # Battery / AC may be absent on servers but should still
+            # produce a SensorStream (zero-valued).
+            stream_bat = real_battery_stream(sample_rate=10.0, t_max=0.1)
+            @test stream_bat isa SensorStream
+            stream_ac = real_ac_stream(sample_rate=10.0, t_max=0.1)
+            @test stream_ac isa SensorStream
+
+            # USB count is non-negative.
+            stream_usb = real_usb_stream(sample_rate=10.0, t_max=0.1)
+            @test stream_usb isa SensorStream
+            @test all(stream_usb.values .>= 0.0)
+        end
+    else
+        @testset "Non-Linux platforms hit scaffold-error path (LL-024)" begin
+            # macOS / Windows / other: each reader errors meaningfully.
+            @test_throws ErrorException real_thermal_stream()
+            @test_throws ErrorException real_battery_stream()
+            @test_throws ErrorException real_ac_stream()
+            @test_throws ErrorException real_usb_stream()
+            @test_throws ErrorException real_cpu_governor_stream()
+            @test_throws ErrorException real_loadavg_stream()
+
+            # Error message points at LL-024 + per-platform implementation
+            # hook (Darwin IOKit / Windows WMI) + synthetic substitute.
+            try
+                real_thermal_stream()
+                @test false   # should not reach here
+            catch e
+                msg = sprint(showerror, e)
+                @test occursin("scaffold tier", msg) ||
+                      occursin("Phase", msg) ||
+                      occursin("scoping companion", msg) ||
+                      occursin("project-internal companion", msg)
+                @test occursin("not yet implemented", msg)
+            end
         end
     end
 
