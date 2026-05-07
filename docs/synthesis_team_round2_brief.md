@@ -105,7 +105,7 @@ The minimum set for a round-2 review:
    architecture.
 8. **`docs/qkd_pqc_complementarity_companion.md`** (0.0.4).
    Positioning analysis. The C-conjugate adversary inheritance
-   from Closure v5's cross-sector autopoiesis 0/5202 result.
+   from the closure_forces_structure paper's cross-sector autopoiesis 0/5202 result.
    Critical for round-2 reviewers to challenge whether the
    structural-prior transfer to LavaLamp is load-bearing or
    hand-wavy.

@@ -1360,7 +1360,7 @@ unchanged.
 2. **The metaphor is corpus-honest.** Cockroach/catapult/
    castle/immune-system maps directly onto Possibilistic
    Security's autopoietic-closure principle and the C-conjugate
-   adversary structure from Closure v5. This isn't a marketing
+   adversary structure from the closure_forces_structure paper. This isn't a marketing
    layer pasted onto technical work — it's the same principle
    in a register accessible to non-technical readers.
 3. **Round-3 readiness improved.** The synthesis-team seats
@@ -5569,10 +5569,9 @@ margin. P3 (Julia prototype core) unblocked.
     per-exponent threshold τᵢ, not scalar. Detection-probability
     bound P(detect) ≥ 1 - K·exp(-c·T·δ_A²) on observation
     window T and adversary spectrum gap δ_A; structural-separation
-    prior anchored on Closure v5 catlab_spec.jl
-    Thm_Q51_autopoietic / Thm_Q102_structure (cross-sector
-    autopoiesis fails 0/5202 across 5 ICs at threshold 0.999;
-    cross_sector_autopoiesis_v1.py is the source).
+    prior anchored on the closure_forces_structure paper's
+    Q₅₁ / Q₁₀₂ autopoietic-fixed-point results (cross-sector
+    autopoiesis fails 0/5202 across 5 ICs at threshold 0.999).
   - **§2.2 Resolution-Bounded Security claim (LL-008) +
     LL-018.** S_production = h_KS = Σ max(λᵢ, 0) (Pesin); bound
     S_production > S_measurement + log(1/η)/Δt; per-class A1..A6
@@ -5660,12 +5659,12 @@ extends compositional coverage; P6 Lean machine-verifies the
 core structural theorems (LL-006 detection bound, LL-008
 resolution-boundary, LL-018 per-class quantification).
 
-The Closure v5 corpus citations used to ground LL-006's
-structural-separation prior were verified directly against
-`catlab_spec.jl` (lines 1855, 1858, 2415) and
-`cross_sector_autopoiesis_v1.py`. The earlier
+The closure_forces_structure corpus citations used to ground LL-006's
+structural-separation prior were verified directly against the
+paper's autopoietic-fixed-point machinery (Q₅₁ / Q₁₀₂; cross-
+sector autopoiesis result). The earlier
 `qkd_pqc_complementarity_companion.md` named the citations; this
-companion ties them to specific corpus loci. The
+companion ties them to specific paper loci. The
 0/5202-on-primary-seed result is `:catlab` evidence — algebraic
 / computational categorical proof at the source — which makes
 LavaLamp's structural-separation prior load-bearing rather than
@@ -5736,7 +5735,7 @@ hand-waved.
 Two related refinements landed in the same session: (1) Catlab.jl
 inserted as a fifth tier in the formal stack between numerical
 verification and Haskell compositional completeness, motivated by
-the Closure v5 corpus's `:catlab` evidence-type precedent (9 of
+the closure_forces_structure corpus's `:catlab` evidence-type precedent (9 of
 145 `:proved` entries); (2) a positioning companion capturing the
 QKD / PQC / possibilistic-identity complementarity worked through
 earlier in the session.
@@ -5750,7 +5749,7 @@ earlier in the session.
   iterates faster than Haskell or Lean for "does the model close
   at all"), and the LavaLamp-specific decision rule (skip Catlab
   by default; revisit if P2 verification-protocol design surfaces
-  categorical structure). Anchors the tier on Closure v5
+  categorical structure). Anchors the tier on the closure_forces_structure paper
   corpus precedent — `:catlab` is an audited evidence type with
   9 `:proved` entries currently in the corpus.
 
@@ -5762,12 +5761,12 @@ earlier in the session.
   with PQC rather than replacing it (PQC defends transit
   confidentiality; possibilistic identity defends authentication
   — different layers); replaces MFA under identity-as-closure;
-  and inherits the C-conjugate adversary from the Closure v5
-  cross-sector autopoiesis result (0/5202 on primary seed,
-  v156). Records the resolution of an earlier misreading by
+  and inherits the C-conjugate adversary from the closure_forces_structure paper
+  cross-sector autopoiesis result (0/5202 on primary seed).
+  Records the resolution of an earlier misreading by
   Claude of the Possibilistic Security paper's PQC claim. Adds
   a §2.6 noting the implication of the Q₅₁-as-autopoietic
-  reframing (Closure v5 v157, S157) for the identity layer:
+  reframing (the closure_forces_structure paper) for the identity layer:
   identity is Q₅₁-tier, and the residue audit is a spectrum
   check, not a checkpoint trace match.
 
@@ -5790,7 +5789,7 @@ earlier in the session.
 
 The 0.0.2 language plan correction (Haskell + Lean → Julia /
 Haskell / Lean) covered the prototype-core mistake. It missed the
-Catlab tier, which has independent corpus precedent (Closure v5
+Catlab tier, which has independent corpus precedent (the closure_forces_structure paper
 has 9 `:catlab` `:proved` entries via CatLab.jl) and serves a
 distinct job: *computational* category theory that fits between
 numerical verification and Haskell's compositional-completeness
@@ -5799,7 +5798,7 @@ check.
 The three-jobs distinction is load-bearing: collapsing Catlab into
 Haskell (or vice versa) loses content. Catlab computes with
 categorical objects; Haskell enumerates composition space; Lean
-proves theorems formally. Closure v5's evidence taxonomy already
+proves theorems formally. the closure_forces_structure paper's evidence taxonomy already
 treats `:catlab` as a distinct evidence type capable of
 proved-tier status, so this is precedent, not speculation.
 
@@ -5816,7 +5815,7 @@ covered both. It captures conclusions about LavaLamp's security
 tier, defensive posture, and complementarity with QKD / PQC /
 identity-as-closure that were settled earlier in the session and
 risked being lost to chat history. The §2.6 connection between
-LavaLamp identity and the Q₅₁-as-autopoietic Closure v5 result
+LavaLamp identity and the Q₅₁-as-autopoietic the closure_forces_structure paper result
 is new — it grounds the residue audit's spectrum-vs-trace
 distinction in a corpus reframing, which strengthens the
 conceptual argument behind LL-006.

@@ -216,7 +216,7 @@ theorem detection_probability_lower_bound
 The proof would need either (a) a direct Pesin-Eckmann-Ruelle
 bound on the spectrum estimator's variance composed with the
 chosen vector test's per-component rejection probability, or
-(b) a probabilistic claim grounded in the Closure v5 cross-
+(b) a probabilistic claim grounded in the closure_forces_structure paper cross-
 sector autopoiesis 0/5202 result transferred to the
 continuous-dynamics setting. Both routes are P5/P6 work.
 

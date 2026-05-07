@@ -752,9 +752,9 @@ Grok synthesis "load-bearing parallel boundary triple"; §1C.A7
 (Self-Reproducing Fixed Point) shows Q_102 = Q_51 ∪ C(Q_51)
 is autopoietically closed: 100% of 420 composition products
 map back to existing Q_102 vertices, depth-independent at
-depths 2-4 (Theorem S130). The Closure v5 corpus's
-`catlab_spec.jl` empirically confirms this with the 0/5202
-result at threshold 0.999 — cross-sector autopoiesis fails
+depths 2-4. The paper's computational autopoiesis test
+empirically confirms this with the 0/5202 result at
+threshold 0.999 — cross-sector autopoiesis fails
 structurally.
 
 But: the *attempted* attack still produces a partial

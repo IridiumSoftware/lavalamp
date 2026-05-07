@@ -15,18 +15,19 @@ No scripts. Methodology refinement.
 
 - LavaLamp `CLAUDE.md` — the "Language tiers and phase discipline"
   section as set in 0.0.2 (Julia / Haskell / Lean / C-C++).
-- Closure v5 `BUSINESS/CLAUDE.md` — the "Language tooling" section
-  documenting the Julia-vs-Python distinction by *arithmetic
-  type*, not by language: a Julia `Float64` computation is
-  `:computational`; a Julia `Rational{BigInt}` computation is
-  `:algebraic`. The proof is in the arithmetic type.
-- Closure v5 `BUSINESS/dashboard.md` — current state of 145
-  `:proved` entries, 9 of which carry evidence type `:catlab`
+- closure_forces_structure paper governance — the "Language
+  tooling" discipline documenting the Julia-vs-Python
+  distinction by *arithmetic type*, not by language: a Julia
+  `Float64` computation is `:computational`; a Julia
+  `Rational{BigInt}` computation is `:algebraic`. The proof
+  is in the arithmetic type.
+- closure_forces_structure paper status — 145 `:proved`
+  entries, 9 of which carry evidence type `:catlab`
   (categorical machine proofs via CatLab.jl).
-- Closure v5 changelog through v158 — confirms `:catlab` is an
-  active, audited evidence type with `:proved` status, used
-  e.g. for S25 (adhesivity), Q₂₄ vertex-count and orbit-closure
-  verification.
+- closure_forces_structure paper evidence-type taxonomy —
+  confirms `:catlab` is an active, audited evidence type
+  with `:proved` status, used e.g. for adhesivity, Q₂₄
+  vertex-count and orbit-closure verification.
 - A parallel in-house Lean track has the closure-equation
   proof landed via a project-local `Category` typeclass with
   no Catlab precedent in that project; in retrospect Catlab
@@ -67,7 +68,7 @@ categorical constructions concrete and executable. You can:
   identities on concrete instances.
 - Build coproducts, pushouts, and other limits / colimits and
   check universal properties.
-- Run DPO rewriting (the framework Closure v5 uses for ternary
+- Run DPO rewriting (the framework the closure_forces_structure paper uses for ternary
   causal hypergraph dynamics).
 
 Over exact types (`Rational{BigInt}`, exact algebraic
@@ -75,7 +76,7 @@ representations) the output is *algebraic evidence* in the corpus
 sense — a deductive computation producing a proof, not a numerical
 approximation.
 
-This is not theoretical. The Closure v5 corpus has 9 of 145
+This is not theoretical. The the closure_forces_structure corpus has 9 of 145
 `:proved` scorecard entries carrying evidence type `:catlab`
 (e.g. S25 adhesivity verification, finite-object cardinality
 checks, DPO pushout-complement existence). The evidence-type
@@ -101,7 +102,7 @@ content:
 - **Catlab → Haskell:** loses the ability to compute *with*
   categorical objects. Haskell can express categorical structure
   as types (and there's a long tradition of doing so), but
-  doesn't iterate as fast on concrete instances. The Closure v5
+  doesn't iterate as fast on concrete instances. The the closure_forces_structure paper
   decision to use Catlab over Haskell for categorical proofs was
   made on this productivity basis.
 - **Haskell → Lean:** loses universal-coverage testing. Lean
@@ -148,7 +149,7 @@ Catlab is *optional* per project. Decision rule:
   content — functors between non-trivial categories, natural
   transformations, universal constructions, adhesive-category
   rewriting (DPO), spectral-triple structure, multicategory
-  composition. The Closure v5 corpus is the canonical example;
+  composition. The the closure_forces_structure corpus is the canonical example;
   a parallel in-house engine's closure equation
   `R_γα ∘ R_βγ ∘ R_αβ = id_τα` is a smaller but real example.
 
@@ -185,7 +186,7 @@ claim. It does not become a spec entry.
 The argument that Catlab earns a tier slot rests on three
 already-verified facts:
 
-1. **Closure v5 `:catlab` evidence type is established and
+1. **the closure_forces_structure paper `:catlab` evidence type is established and
    audited.** 9 entries currently carry `:catlab` evidence type
    with `:proved` status. Audit rule A4 admits this combination.
    The corpus's evidence-type taxonomy is the precedent.
@@ -198,7 +199,7 @@ already-verified facts:
 3. **Productivity gradient is empirical.** Catlab + Julia
    iteration speed is observably faster than Haskell + GHC or
    Lean + tactic mode for "does the model close at all" questions
-   in the Closure v5 sessions. This is reported, not measured;
+   in the closure_forces_structure paper sessions. This is reported, not measured;
    the productivity argument is anchored in corpus practice, not
    benchmark numbers.
 

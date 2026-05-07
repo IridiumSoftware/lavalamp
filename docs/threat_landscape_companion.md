@@ -96,7 +96,8 @@ faithful description* of the corpus's defensive principle:
 
 - **Corpus-faithful**: the immune-system framing maps directly
   onto the autopoietic-closure structure articulated in
-  Closure v5's `Thm_Q51_autopoietic` / `Thm_Q102_structure`.
+  the closure_forces_structure paper's Q₅₁ / Q₁₀₂
+  autopoietic-fixed-point results.
   The immune system's "watching, waiting, digesting,
   incorporating, denying, obfuscating, repairing" is *exactly*
   the activity-pattern of an autopoietic system maintaining
@@ -276,7 +277,7 @@ membrane*, not just better defenses.
 *explicitly bounded.* LavaLamp does not claim to defeat a
 state-level adversary. The corpus's framing — Possibilistic
 Security as detection-postured rather than prevention-postured;
-the C-conjugate adversary inheritance from Closure v5's
+the C-conjugate adversary inheritance from the closure_forces_structure paper's
 0/5202 cross-sector autopoiesis result — explicitly accepts
 that against a structural-mimic attacker (one who *structurally
 co-occurs* with the genuine system), detection is the load-
@@ -324,7 +325,7 @@ metaphor:
   - **Digesting / incorporating**: TRNG-driven reseed flow
     (LL-007) — the system absorbs fresh entropy and
     incorporates it into ongoing dynamics. This is the
-    autopoietic-incorporation principle from Closure v5
+    autopoietic-incorporation principle from the closure_forces_structure paper
     operating at the SDE level.
   - **Denying**: per LL-017 no-oracle, the verification
     protocol denies threshold-probing surfaces.

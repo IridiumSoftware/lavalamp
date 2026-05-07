@@ -334,8 +334,8 @@ LL-ID, not the Key.
   trajectory-vs-spectrum comparison. Calibration of the §2.1
   bound's constants (K, c, δ_A(ε_A) mapping) is the
   :benchmarked-upgrade follow-up. Structural-separation prior
-  anchors on Closure v5 catlab_spec.jl Thm_Q51_autopoietic /
-  Thm_Q102_structure (cross-sector autopoiesis fails 0/5202
+  anchors on the closure_forces_structure paper's Q₅₁ / Q₁₀₂
+  autopoietic-fixed-point results (cross-sector autopoiesis fails 0/5202
   across 5 ICs at threshold 0.999) — see
   qkd_pqc_complementarity_companion.md §2.5.
 - **Round-2 acknowledgment (2026-05-02):** The empirical
@@ -501,7 +501,7 @@ LL-ID, not the Key.
   Δt; trajectories analysed over bounded windows; finite-
   dimensional Lorenz-96 N=20-40 (not hypergraph-rewriting,
   not continuum-limit); no autopoietic dynamics in the SDE
-  itself. The Closure v5 corpus' Q₁₀₂ autopoietic structure
+  itself. The the closure_forces_structure corpus' Q₁₀₂ autopoietic structure
   is the *target of analysis* per
   qkd_pqc_complementarity_companion.md §2.5, not the
   *physical instantiation* — explicitly out of scope here.

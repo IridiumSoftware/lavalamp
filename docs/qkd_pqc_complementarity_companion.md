@@ -15,21 +15,22 @@ No scripts. Positioning analysis.
 
 **Sources consulted:**
 
-- Closure v5 `BUSINESS/security/possibilistic_security_companion_v1.md`
-  — the framework establishing identity-as-closure, the C-conjugate
+- closure_forces_structure paper Possibilistic Security
+  framework — establishes identity-as-closure, the C-conjugate
   adversary, the obstruction layers L0–L8, and the Sakharov
   conditions for identity dominance.
-- Closure v5 `BUSINESS/security/triadic_closure_companion_v1.md`
-  (referenced by name; held confidentially per the corpus's
-  outreach-channel design — public framework + confidential
-  kernel boundary).
-- Closure v5 changelog entry v156 (2026-04-02): cross-sector
-  autopoiesis tested computationally and **fails at 0/5202** on
-  the primary seed (`cross_sector_autopoiesis_v1.py`). This is
-  the structural origin of the C-conjugate adversary.
-- Closure v5 changelog entry v157 (2026-04-02): Q₅₁ formalised
-  as the autopoietic object (S157); Q₁₀₂ = Q₅₁ + spectral data,
-  not a separate Rosen-closed object.
+- closure_forces_structure paper triadic-closure structure
+  (referenced by name; full kernel held confidentially per
+  the corpus's outreach-channel design — public framework +
+  confidential kernel boundary).
+- closure_forces_structure paper cross-sector autopoiesis
+  result : tested computationally and **fails at
+  0/5202** on the primary seed. This is the structural origin
+  of the C-conjugate adversary.
+- closure_forces_structure paper Q₅₁ formalisation
+  : Q₅₁ as the autopoietic object;
+  Q₁₀₂ = Q₅₁ + spectral data, not a separate Rosen-closed
+  object.
 - LavaLamp `LAVALAMP_SPEC.md` — LL-001 substrate-bound identity,
   LL-006 Lyapunov-spectrum residue audit, LL-008
   resolution-bounded security claim, LL-016 sensor-authenticity
@@ -146,21 +147,21 @@ in production. Stripping the VPN because "we have QKD" or
 "we have LavaLamp" leaves the other layers exposed.
 
 This rule has practical force for OPSEC: the practical-track
-work in `BUSINESS/security/OPSEC_CHECKLIST.md` (Mullvad VPN,
-LuLu firewall, lockdown mode, etc.) does not become unnecessary
-if a possibilistic-identity primitive ships. The framework
+work (Mullvad VPN, LuLu firewall, lockdown mode, etc.) does
+not become unnecessary if a possibilistic-identity primitive
+ships. The framework
 complements the network-layer defence; it does not replace it.
 
 ### 2.5 The C-conjugate adversary, structurally
 
 LavaLamp inherits the C-conjugate adversary construction from
-the Closure v5 corpus's Possibilistic Security framework. The
+the closure_forces_structure corpus's Possibilistic Security framework. The
 structural origin is now sharper than when the paper was written:
 
-- The Closure v5 quotient sequence Q₂₄ → Q₅₁ has C-closures
+- The the closure_forces_structure paper quotient sequence Q₂₄ → Q₅₁ has C-closures
   Q₄₈ = Q₂₄ ∪ C(Q₂₄) and Q₁₀₂ = Q₅₁ ∪ C(Q₅₁).
 - **Cross-sector autopoiesis tested computationally and failed**
-  at 0/5202 on the primary seed (Closure v5 v156, with
+  at 0/5202 on the primary seed (the closure_forces_structure paper, with
   0.4–2.4% accidental closure on alternative ICs — i.e.,
   effectively zero structural closure).
 - This is the structural origin of the C-conjugate adversary
@@ -192,8 +193,8 @@ is the L7 compositional-identity check.
 
 ### 2.6 Q₅₁ as the autopoietic object — implication for identity
 
-Closure v5 v157 (2026-04-02) formalised Q₅₁ as the primary
-autopoietic object (S157), with Q₁₀₂ = Q₅₁ + spectral data
+The closure_forces_structure paper formalises Q₅₁ as the
+primary autopoietic object, with Q₁₀₂ = Q₅₁ + spectral data
 (J, γ, D_F). The Rosen (M, R) closure realises on Q₅₁ — not on
 Q₁₀₂. C-closure adds operator-level structure (the spectral
 enrichment) but zero new composition operations.
@@ -238,14 +239,15 @@ results in §2 rest on:
    **Manually argued.**
 4. **C-conjugate adversary inherits from cross-sector
    autopoiesis failure.** The 0/5202 failure is
-   **computationally verified** in the Closure v5 corpus
-   (`cross_sector_autopoiesis_v1.py`, primary seed). The
+   **computationally verified** in the closure_forces_structure
+   corpus (cross-sector autopoiesis test, primary seed). The
    transfer to LavaLamp's adversary model is structural
    inheritance — manually argued, but rests on a verified
    corpus result.
 5. **Q₅₁-tier is the identity layer; Q₁₀₂ adds spectral
-   enrichment.** The Q₅₁-as-primary reframing is corpus result
-   S157, evidence type proof in the Closure v5 spec. The
+   enrichment.** The Q₅₁-as-primary reframing is a paper-tier
+   result with proof-grade evidence in the closure_forces_structure
+   paper. The
    transfer to LavaLamp is structural inheritance. **Manually
    argued.**
 

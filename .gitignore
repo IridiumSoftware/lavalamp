@@ -39,3 +39,10 @@ LocalPreferences.toml
 
 # macOS metadata
 .DS_Store
+
+# Project-internal governance — kept local, not tracked publicly
+CLAUDE.md
+
+# paper-index hook artifacts (local navigation aids; not project content)
+.paper-index.json
+**/.paper-index.json

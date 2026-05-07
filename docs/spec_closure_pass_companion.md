@@ -246,13 +246,12 @@ specialises it to the LavaLamp prototype:
   evolves under a fixed SDE; nothing about the SDE's form
   changes during integration.
 
-### §4.3 — The Closure v5 corpus connection
+### §4.3 — The closure_forces_structure corpus connection
 
-LL-010 inherits its motivation from the Closure v5 corpus
-work, where Q102's autopoietic structure (Thm_Q102_structure
-= "Q₁₀₂ is a self-reproducing fixed point") is the *target
-of analysis* but the *physical instantiation* is explicitly
-out of scope. LavaLamp's residue audit anchors on the
+LL-010 inherits its motivation from the closure_forces_structure
+paper, where Q₁₀₂'s autopoietic structure ("Q₁₀₂ is a
+self-reproducing fixed point") is the *target of analysis*
+but the *physical instantiation* is explicitly out of scope. LavaLamp's residue audit anchors on the
 0/5202 cross-sector autopoiesis result (per
 `docs/qkd_pqc_complementarity_companion.md` §2.5) but
 does NOT instantiate autopoietic dynamics in the SDE itself.

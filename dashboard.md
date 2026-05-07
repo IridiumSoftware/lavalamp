@@ -167,7 +167,7 @@ P2 — **Architectural design pass.** ✓ Landed in 0.0.5
   - Lyapunov-spectrum residue audit (LL-006): vector
     per-exponent threshold; detection bound P(detect) ≥
     1 - K·exp(-c·T·δ_A²) with structural-separation prior from
-    Closure v5 cross-sector autopoiesis 0/5202 result.
+    the closure_forces_structure paper cross-sector autopoiesis 0/5202 result.
   - Resolution-Bounded Security claim (LL-008) + per-class
     A1..A6 quantification (new LL-018).
   - Chaos-Guard (LL-007): Benettin estimator over W ≈
@@ -1212,7 +1212,7 @@ Remaining `:open` entries fall into two classes:
 - **`docs/language_plan_catlab_tier_companion.md`** (0.0.4) —
   methodology refinement inserting Catlab.jl / GATlab as a
   fifth tier between numerical verification and Haskell
-  compositional completeness. Anchors on Closure v5 corpus
+  compositional completeness. Anchors on the closure_forces_structure corpus
   precedent (`:catlab` evidence type, 9 of 145 `:proved`
   entries). Establishes the three-jobs distinction: Catlab
   (computational categorical), Haskell (compositional), Lean
@@ -1224,9 +1224,9 @@ Remaining `:open` entries fall into two classes:
   residue audit, not prevent observation); composes with PQC
   rather than replacing it; replaces MFA under
   identity-as-closure; inherits the C-conjugate adversary
-  structurally from Closure v5's cross-sector autopoiesis
+  structurally from the closure_forces_structure paper's cross-sector autopoiesis
   failure (0/5202 on primary seed). §2.6 connects identity to
-  the Q₅₁-as-autopoietic reframing (Closure v5 v157, S157):
+  the Q₅₁-as-autopoietic reframing (the closure_forces_structure paper):
   identity is Q₅₁-tier; the residue audit is a spectrum check,
   not a checkpoint trace match.
 - **`docs/architecture_design_companion.md`** (0.0.5) — P2

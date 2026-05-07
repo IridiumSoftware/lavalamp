@@ -43,25 +43,22 @@ formal restatement.
 - `docs/qkd_pqc_complementarity_companion.md` — positioning
   framing: LavaLamp is resolution-bounded computational, not QKD;
   defensive-postured (detection, not prevention); inherits the
-  C-conjugate adversary structurally from the Closure v5
+  C-conjugate adversary structurally from the closure_forces_structure paper
   cross-sector autopoiesis result (0/5202).
 - `docs/concept_origin_companion.md` — provenance.
 - `docs/language_plan_catlab_tier_companion.md` — the five-tier
   formal stack and the LavaLamp-specific decision rule on Catlab.
 
-**Corpus references** (Closure v5, paths under
-`Research Papers/Relational_Closure_and_Emergent Gauge_Structure/Closure v5/`):
+**Corpus references** (closure_forces_structure paper):
 
-- `catlab_spec.jl` line 1855 — `Thm_Q51_autopoietic`: "Q₅₁ =
-  Q(K₆³) is autopoietic… cross-sector autopoiesis fails 0/5202
-  (cross_sector_autopoiesis_v1.py, 5 ICs)".
-- `catlab_spec.jl` line 2415 — `Thm_Q102_structure`:
-  "Cross-sector autopoiesis fails (0/5202 orig×conj compositions
-  match, 5 ICs): the coproduct structure (S153) is a structural
-  necessity."
-- `cross_sector_autopoiesis_v1.py` — test infrastructure:
-  `test_cross_sector(Q, label, threshold=0.999)`. Pairwise
-  hyperedge composition test; tested on Q₄₈ and Q₁₀₂.
+- **Q₅₁ autopoietic-fixed-point result.** Q₅₁ = Q(K₆³) is
+  autopoietic; cross-sector autopoiesis fails 0/5202 across
+  5 ICs at threshold 0.999.
+- **Q₁₀₂ autopoietic-structure result.** Cross-sector
+  autopoiesis fails 0/5202 (orig × conj compositions match,
+  5 ICs); the coproduct structure is a structural necessity.
+- **Cross-sector test infrastructure.** Pairwise hyperedge
+  composition test at threshold 0.999; tested on Q₄₈ and Q₁₀₂.
 
 These references are the structural prior that LavaLamp's
 adversary model (the C-conjugate at the entropy layer) inherits
@@ -157,7 +154,7 @@ The detection capability rests on three structural facts:
    estimator. Higher exponents converge slower but at known rates;
    k (number of resolvable exponents) grows with T.
 
-3. **Structural-separation prior.** The Closure v5 cross-sector
+3. **Structural-separation prior.** The the closure_forces_structure paper cross-sector
    autopoiesis test (0/5202 across 5 ICs at threshold 0.999) is
    the corpus precedent for the kind of structural separation the
    audit relies on: structurally-similar-but-distinct compositional
@@ -969,9 +966,10 @@ claim.
 - **Manually argued.** Premises: spectrum invariance (Oseledec),
   estimator concentration (Pesin / Eckmann-Ruelle, standard
   results in dynamical systems), structural-separation prior
-  (Closure v5 catlab_spec.jl `Thm_Q51_autopoietic` / `Thm_Q102_structure`,
-  cross_sector_autopoiesis test 0/5202 at 0.999, 5 ICs —
-  computational evidence at the corpus layer). Argument: vector
+  (the closure_forces_structure paper's Q₅₁ / Q₁₀₂
+  autopoietic-fixed-point results — cross-sector autopoiesis
+  test 0/5202 at 0.999 across 5 ICs; computational evidence
+  at the corpus layer). Argument: vector
   per-exponent thresholding combined with these three premises
   yields the §2.1 detection-probability bound P(detect) ≥
   1 - K·exp(-c·T·δ²). Conclusion: detection probability rises
@@ -1214,10 +1212,10 @@ All are honestly `:argued`, not `:verified` or `:proved`.
   security decoupling. Any future refactor that proposes
   re-coupling reopens V-002 (basin spoofing). The asymmetry-trap
   watch in `dashboard.md` covers this.
-- **Corpus citations checked.** The Closure v5 grounding
-  citations used in §2.1 (`Thm_Q51_autopoietic`, `Thm_Q102_structure`,
-  `cross_sector_autopoiesis_v1.py`) were verified against
-  `catlab_spec.jl` lines 1855, 1858, and 2415 directly during
-  this session. The earlier `qkd_pqc_complementarity_companion.md`
-  named the citations; this companion ties them to the precise
-  corpus loci.
+- **Corpus citations checked.** The closure_forces_structure
+  paper grounding citations used in §2.1 (Q₅₁ / Q₁₀₂
+  autopoietic-fixed-point results; cross-sector autopoiesis
+  0/5202) were verified against the paper's source material
+  during this session. The earlier
+  `qkd_pqc_complementarity_companion.md` named the citations;
+  this companion ties them to the precise paper loci.

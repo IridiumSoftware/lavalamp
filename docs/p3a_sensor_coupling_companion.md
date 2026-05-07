@@ -401,7 +401,7 @@ spectrum, and §2.5 confirms it gives non-degenerate ∂λ/∂α.
 
 State-dependent coupling (U quadratic-or-higher in x) is a
 future enhancement, not a P3 requirement. The §2.1 detection
-bound's structural-separation prior (Closure v5 cross-sector
+bound's structural-separation prior (the closure_forces_structure paper cross-sector
 autopoiesis 0/5202) does not require state-dependent coupling
 to be load-bearing — the linear case suffices for non-zero
 δ_A.
