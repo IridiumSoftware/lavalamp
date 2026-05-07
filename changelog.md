@@ -5,6 +5,134 @@ messages match entry summaries.
 
 ---
 
+## 0.0.55 — 2026-05-06 — LL-006 detection-bound range theorems (bound ∈ [0,1])
+
+Lands two short theorems establishing the bound *value*
+`1 - K · exp(-(c · T) · δ²)` itself sits in the unit
+interval. Without this, the LL-006 statement
+`P(detect) ≥ <bound value>` is structurally incomplete:
+if the bound exits `[0, 1]`, the inequality is either
+vacuous (`bound < 0`) or structurally meaningless
+(`bound > 1`). These theorems make the bound *well-typed*
+as a lower-bound-on-probability.
+
+**The theorems.**
+
+```lean
+theorem LL006_bound_le_one
+    {δ K c T : ℝ}
+    (h_K_nn : 0 ≤ K) :
+    1 - K * Real.exp (-(c * T) * δ ^ 2) ≤ 1
+
+theorem LL006_bound_nonneg
+    {δ K c T : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_K_le_one : K ≤ 1)
+    (h_cT_nn : 0 ≤ c * T) :
+    0 ≤ 1 - K * Real.exp (-(c * T) * δ ^ 2)
+```
+
+**Proofs.** `bound_le_one` is one line of work:
+`Real.exp_pos` gives `0 < exp(...)`; `mul_nonneg`
+lifts to `0 ≤ K · exp(...)` under `0 ≤ K`; `linarith`
+discharges. `bound_nonneg` is four steps:
+
+1. `mul_nonneg h_cT_nn (sq_nonneg δ)` gives
+   `0 ≤ (c · T) · δ²`.
+2. Negate: `-(c · T) · δ² ≤ 0` via `linarith`.
+3. `Real.exp_le_exp.mpr` lifts the inequality through
+   `exp`; `Real.exp_zero` rewrite gives
+   `Real.exp (-(c · T) · δ²) ≤ 1`.
+4. `mul_le_mul_of_nonneg_left` applies `0 ≤ K`;
+   `linarith` closes the goal via the `K ≤ 1` hypothesis.
+
+**The `K ≤ 1` hypothesis.** Required only for the lower
+bound. Matches LL-006's fitted `K = 1` constant from the
+0.0.17 P3-bound benchmark (the bound saturates at K=1).
+The formalisation accepts any `K ∈ [0, 1]` for generality.
+
+**Why two theorems, not one conjunctive theorem.** The
+upper bound `bound ≤ 1` only needs `0 ≤ K`; the lower
+bound `0 ≤ bound` needs additionally `K ≤ 1` and
+`0 ≤ c · T`. Separate theorems with minimal hypotheses
+are cleaner for downstream use — call sites can invoke
+just the bound they need with just the hypotheses they
+have.
+
+**Bug fix bundled in.** The `### LL-007 — chaos-guard`
+header in `LAVALAMP_SPEC.md` was accidentally dropped
+during the 0.0.54 LL-006 footer addition (the Edit's
+`old_string` included the header without including it in
+`new_string`). 0.0.55 restores the header. LL-007 entry
+content is unchanged; only the missing markdown header is
+restored.
+
+**Build verification.**
+
+```
+$ cd src/lean4 && lake build
+✔ [1899/1901] Built LavaLamp.Theorems (5.1s)
+✔ [1900/1901] Built LavaLamp (1.1s)
+Build completed successfully (1901 jobs).
+```
+
+1901 jobs green; zero warnings. Build time identical to
+0.0.54 (Mathlib analysis content already loaded; the new
+theorems use lemmas already in scope: `Real.exp_pos`,
+`Real.exp_le_exp`, `Real.exp_zero`, `mul_nonneg`,
+`sq_nonneg`, `mul_le_mul_of_nonneg_left`).
+
+**Composition foothold inventory after 0.0.55:**
+
+1. `LL021_worst_case_bound` — 0.0.48 :proved.
+2. `LL021_eff_squared_bound` — 0.0.49 corollary.
+3. `LL006_worst_case_lower_than_isotropic` — 0.0.54
+   bound-shape monotonicity.
+4. `LL006_bound_le_one` — 0.0.55 upper-range.
+5. `LL006_bound_nonneg` — 0.0.55 lower-range.
+
+Five Lean theorems on the LL-006 / LL-021 track now,
+collectively proving: the worst-case-projected adversary
+magnitude is bounded by the unprojected magnitude (1);
+the squared form of that bound (2); the bound *value* is
+monotone-decreasing in the squared adversary magnitude (3);
+and the bound itself is in `[0, 1]` (4 + 5).
+
+**What this still doesn't prove.** `P(detect) ≥ ...`
+itself. That's a probability-space claim requiring full
+formalization. LL-006 stays `:benchmarked`. The Lean
+content built so far is *all* of the algebraic /
+real-analysis structure that the eventual `:proved` proof
+will compose with — the missing piece is the probability
+side (sample space, random variables, detection event
+predicate, the probabilistic concentration argument).
+
+**Counts.** Unchanged at 29/1/3/0/4/20/1.
+
+**Files touched this version:**
+
+- `src/lean4/LavaLamp/Theorems.lean` — added
+  `LL006_bound_le_one` and `LL006_bound_nonneg` after
+  `LL006_worst_case_lower_than_isotropic`; `scaffold_tier`
+  string bumped to "0.0.55 — LL-006 detection-bound range
+  theorems landed (bound ∈ [0,1])".
+- `LAVALAMP_SPEC.md` — LL-006 entry gains a new "LL-006
+  detection-bound range theorems (0.0.55)" footer
+  documenting the well-typedness result. The
+  `### LL-007 — chaos-guard` header (accidentally dropped
+  in 0.0.54) is restored.
+- `artifact_registry.md` — version line bump; LL-006 row
+  Test/Proof column updated to mention the range theorems;
+  A1-A6 self-check refreshed for 0.0.55.
+- `dashboard.md` — last-updated stamp; Recent companion
+  docs section gets new top entry covering the range
+  theorems + LL-007 header restoration + composition-
+  foothold-inventory.
+- `changelog.md` — this entry.
+- `README.md` — trajectory entry for 0.0.55.
+
+---
+
 ## 0.0.54 — 2026-05-06 — LL-021/LL-006 composition theorem (`LL006_worst_case_lower_than_isotropic`)
 
 Lands the second composition foothold on the LL-006

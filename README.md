@@ -245,7 +245,16 @@ analysis content pulled in for `Real.exp`); zero warnings;
 LL-006 stays `:benchmarked` — composition theorem proves
 bound-shape monotonicity, not the full P(detect)
 probability formalization; counts unchanged at
-29/1/3/0/4/20/1).
+29/1/3/0/4/20/1) → 0.0.55 (LL-006 detection-bound range
+theorems land — `LL006_bound_le_one : 0 ≤ K → 1 -
+K·exp(-(c·T)·δ²) ≤ 1` + `LL006_bound_nonneg : 0 ≤ K → K ≤
+1 → 0 ≤ c·T → 0 ≤ 1 - K·exp(-(c·T)·δ²)`; together establish
+bound value ∈ [0,1] under K ∈ [0,1] + c·T ≥ 0, making the
+LL-006 bound shape well-typed as a lower-bound-on-
+probability; bug fix: restores `### LL-007 — chaos-guard`
+header accidentally dropped in 0.0.54 spec edit; `lake
+build` clean — 1901 jobs, zero warnings; counts unchanged
+at 29/1/3/0/4/20/1).
 
 **Round 3 ran 2026-05-06.** Forwarded to Grok (synthesis,
 rotated from edge-witness in rounds 1/2) and ChatGPT (new

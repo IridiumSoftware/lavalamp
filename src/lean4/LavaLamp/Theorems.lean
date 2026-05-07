@@ -228,10 +228,75 @@ theorem LL006_worst_case_lower_than_isotropic
     mul_le_mul_of_nonneg_left h_exp h_K_nn
   linarith
 
+/-- LL-006 detection-bound upper-range — the bound value never exceeds 1.
+
+    For the LL-006 detection-probability bound shape
+    `1 - K · exp(-(c · T) · δ²)` to make sense as a *lower
+    bound* on a probability, the bound value must itself sit
+    in `[0, 1]` — otherwise `P(detect) ≥ <bound value>` is
+    either vacuous (bound < 0) or structurally meaningless
+    (bound > 1).
+
+    This theorem establishes the upper-range half: given only
+    `0 ≤ K`, the bound is `≤ 1`. (No constraint on `c`, `T`,
+    or `δ` is needed — `Real.exp` is always positive, so the
+    `K · exp(...)` term is always non-negative when `K ≥ 0`,
+    and subtracting a non-negative quantity from `1` gives
+    something `≤ 1`.) Pairs with `LL006_bound_nonneg` below
+    to establish the bound is a valid probability. -/
+theorem LL006_bound_le_one
+    {δ K c T : ℝ}
+    (h_K_nn : 0 ≤ K) :
+    1 - K * Real.exp (-(c * T) * δ ^ 2) ≤ 1 := by
+  have h_exp_pos : 0 < Real.exp (-(c * T) * δ ^ 2) := Real.exp_pos _
+  have : 0 ≤ K * Real.exp (-(c * T) * δ ^ 2) :=
+    mul_nonneg h_K_nn h_exp_pos.le
+  linarith
+
+/-- LL-006 detection-bound lower-range — the bound value is non-negative.
+
+    Pairs with `LL006_bound_le_one` to establish the bound is
+    in `[0, 1]`. Requires three hypotheses:
+    - `0 ≤ K` (prefactor non-negative).
+    - `K ≤ 1` (prefactor at most 1; without this, `K = 5` for
+      example would push the bound below zero even at `δ = 0`).
+    - `0 ≤ c · T` (composite rate-times-window non-negative —
+      same hypothesis as `LL006_worst_case_lower_than_isotropic`).
+
+    Proof structure:
+    1. `0 ≤ (c · T) · δ²` from `0 ≤ c·T` and `0 ≤ δ²`
+       (`mul_nonneg` + `sq_nonneg`).
+    2. `-(c · T) · δ² ≤ 0` (negation of step 1).
+    3. `Real.exp (-(c · T) · δ²) ≤ Real.exp 0 = 1`
+       (`Real.exp_le_exp.mpr` + `Real.exp_zero`).
+    4. `K · Real.exp(...) ≤ K · 1 = K ≤ 1`
+       (`mul_le_mul_of_nonneg_left` + `K ≤ 1` hypothesis).
+    5. `1 - K · Real.exp(...) ≥ 0` by subtraction.
+
+    The `K ≤ 1` hypothesis matches the LL-006 spec entry's
+    fitted constant `K = 1` — the bound is calibrated for
+    `K = 1` (saturation of the bound prefactor); the
+    formalisation accepts any `K` in `[0, 1]` for generality. -/
+theorem LL006_bound_nonneg
+    {δ K c T : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_K_le_one : K ≤ 1)
+    (h_cT_nn : 0 ≤ c * T) :
+    0 ≤ 1 - K * Real.exp (-(c * T) * δ ^ 2) := by
+  have h_sq_nn : 0 ≤ δ ^ 2 := sq_nonneg δ
+  have h_prod_nn : 0 ≤ (c * T) * δ ^ 2 := mul_nonneg h_cT_nn h_sq_nn
+  have h_neg_le : -(c * T) * δ ^ 2 ≤ 0 := by linarith
+  have h_exp_le_one : Real.exp (-(c * T) * δ ^ 2) ≤ 1 := by
+    have h := Real.exp_le_exp.mpr h_neg_le
+    rwa [Real.exp_zero] at h
+  have h_mul : K * Real.exp (-(c * T) * δ ^ 2) ≤ K * 1 :=
+    mul_le_mul_of_nonneg_left h_exp_le_one h_K_nn
+  linarith
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.54 — LL-006 worst-case-detection-bound monotonicity composed with LL-021"
+  "0.0.55 — LL-006 detection-bound range theorems landed (bound ∈ [0,1])"
 
 end LavaLamp

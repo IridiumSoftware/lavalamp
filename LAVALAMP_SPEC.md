@@ -415,6 +415,43 @@ LL-ID, not the Key.
   research investment. This theorem is composition-foothold
   #2 (after `LL021_eff_squared_bound` at 0.0.49) on the
   path toward that formalization.
+- **LL-006 detection-bound range theorems (2026-05-06, 0.0.55):**
+  Two short theorems establish that the bound *value*
+  `1 - K · exp(-(c · T) · δ²)` itself sits in `[0, 1]` —
+  without this, "P(detect) ≥ <bound value>" would be
+  structurally meaningless when the bound exits the unit
+  interval.
+
+  - `LL006_bound_le_one : 0 ≤ K → 1 - K · exp(-(c·T)·δ²) ≤ 1`
+    (one-line proof; `Real.exp_pos` + `mul_nonneg` +
+    `linarith`).
+  - `LL006_bound_nonneg : 0 ≤ K → K ≤ 1 → 0 ≤ c·T →
+    0 ≤ 1 - K · exp(-(c·T)·δ²)` (proof:
+    `0 ≤ (c·T)·δ²` from `mul_nonneg` + `sq_nonneg`,
+    negate, `Real.exp_le_exp.mpr` + `Real.exp_zero` lift to
+    `exp(-(c·T)·δ²) ≤ 1`, multiply by `K ≤ 1`, subtract from
+    `1`).
+
+  Together: under `0 ≤ K ≤ 1` and `0 ≤ c·T`, the bound is
+  a valid probability. The fitted constant `K = 1` satisfies
+  the upper bound at saturation; the formalisation accepts
+  any `K` in `[0, 1]`.
+
+  `lake build` clean — 1901 jobs, zero warnings. Composition-
+  foothold inventory after 0.0.55:
+  (1) `LL021_worst_case_bound` (0.0.48 :proved);
+  (2) `LL021_eff_squared_bound` (0.0.49 corollary);
+  (3) `LL006_worst_case_lower_than_isotropic` (0.0.54);
+  (4) `LL006_bound_le_one` (this version);
+  (5) `LL006_bound_nonneg` (this version).
+
+  LL-006 status unchanged at `:benchmarked` — the range
+  theorems establish the bound shape is *well-typed* as a
+  lower-bound-on-probability, but the bound itself
+  (`P(detect) ≥ ...`) still requires probability-space
+  formalization for `:proved`.
+
+### LL-007 — chaos-guard
 - Key: real-time Lyapunov estimate; periodic windows reject entropy
 - Logic tier: Operational
 - Description: A background process estimates the largest

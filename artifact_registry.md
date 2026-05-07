@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.54 (LL-021/LL-006 composition theorem `LL006_worst_case_lower_than_isotropic` lands in `src/lean4/LavaLamp/Theorems.lean`; proves worst-case bound value `1 - K · exp(-c·T·(ε_A·proj)²) ≤ 1 - K · exp(-c·T·ε_A²)` via `LL021_eff_squared_bound` + `Real.exp` monotonicity + `linarith`; `Mathlib.Analysis.SpecialFunctions.Exp` import added; `lake build` clean (1901 jobs, zero warnings); LL-006 stays `:benchmarked` — composition theorem proves bound-shape monotonicity, not the full probability-space `P(detect) ≥ ...` lower bound; second composition foothold after `LL021_eff_squared_bound` (0.0.49); counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
+Version: 0.0.55 (LL-006 detection-bound range theorems land in `src/lean4/LavaLamp/Theorems.lean`; `LL006_bound_le_one : 0 ≤ K → 1 - K·exp(-(c·T)·δ²) ≤ 1` and `LL006_bound_nonneg : 0 ≤ K → K ≤ 1 → 0 ≤ c·T → 0 ≤ 1 - K·exp(-(c·T)·δ²)` together establish the bound value sits in [0,1] (well-typed as lower-bound-on-probability); also restores `### LL-007 — chaos-guard` header that was accidentally dropped in 0.0.54 LAVALAMP_SPEC.md edit; `lake build` clean (1901 jobs, zero warnings); LL-006 stays `:benchmarked` — range theorems establish well-typedness, not the full probability-space lower bound; counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule
@@ -46,7 +46,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 
 | LL-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
-| LL-006 | Lyapunov-spectrum residue audit | Core | benchmarked | src/julia/benchmark/p3_bound_high_res.jl + src/julia/benchmark/results/p3_bound_high_res_lorenz96.txt + docs/p3_bound_companion.md + src/julia/benchmark/p3f_per_sde_detection_power.jl + src/julia/benchmark/results/p3f_per_sde_detection_power.txt + docs/p3f_per_sde_detection_power_companion.md (per-SDE detection-power across Lorenz-96 / Lorenz-63 / Rössler) + src/lean4/LavaLamp/Theorems.lean (0.0.54 — LL-021/LL-006 composition theorem `LL006_worst_case_lower_than_isotropic` proves bound-shape monotonicity; does NOT promote evidence-type, full P(detect) probability formalization is a future multi-session investment) | src/julia/src/Audit.jl | :benchmarked |
+| LL-006 | Lyapunov-spectrum residue audit | Core | benchmarked | src/julia/benchmark/p3_bound_high_res.jl + src/julia/benchmark/results/p3_bound_high_res_lorenz96.txt + docs/p3_bound_companion.md + src/julia/benchmark/p3f_per_sde_detection_power.jl + src/julia/benchmark/results/p3f_per_sde_detection_power.txt + docs/p3f_per_sde_detection_power_companion.md (per-SDE detection-power across Lorenz-96 / Lorenz-63 / Rössler) + src/lean4/LavaLamp/Theorems.lean (0.0.54 LL-021/LL-006 composition theorem `LL006_worst_case_lower_than_isotropic` proves bound-shape monotonicity; 0.0.55 range theorems `LL006_bound_le_one` + `LL006_bound_nonneg` establish bound value ∈ [0,1] under K ∈ [0,1] + c·T ≥ 0; does NOT promote evidence-type, full P(detect) probability formalization is a future multi-session investment) | src/julia/src/Audit.jl | :benchmarked |
 | LL-007 | chaos-guard | Operational | example-tested | src/julia/test/runtests.jl | src/julia/src/ChaosGuard.jl | :tested |
 | LL-008 | resolution-bounded security claim | Core | manual | docs/architecture_design_companion.md §2.2, §3.2 | — | :argued |
 
@@ -129,7 +129,7 @@ requires `manual`. `:open` requires `none`. Cross-audit A4 enforces.
 - `:argued`: 20 (+LL-028 +LL-029)
 - `:open`: 1
 
-## Cross-audit A1–A6 self-check (post-0.0.54)
+## Cross-audit A1–A6 self-check (post-0.0.55)
 
 - **A1 — Coverage.** Every LL-ID in `LAVALAMP_SPEC.md` has a row
   here. ✓ (29 of 29; +LL-028 +LL-029 added at 0.0.50).

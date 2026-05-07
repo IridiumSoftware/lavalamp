@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.54 — LL-021/LL-006 composition theorem `LL006_worst_case_lower_than_isotropic` lands; proves worst-case detection-bound value ≤ isotropic bound value via `LL021_eff_squared_bound` + `Real.exp` monotonicity; `lake build` clean — 1901 jobs (Mathlib analysis pulled in for `Real.exp`); LL-006 stays `:benchmarked` — composition theorem proves bound-shape monotonicity, not the full P(detect) probability formalization; counts unchanged at 29/1/3/0/4/20/1).
+Last updated: 2026-05-06 (0.0.55 — LL-006 detection-bound range theorems `LL006_bound_le_one` + `LL006_bound_nonneg` establish bound value sits in [0,1] under `K ∈ [0,1]` + `c·T ≥ 0`; well-typedness as lower-bound-on-probability now formal; also restores `### LL-007 — chaos-guard` header accidentally dropped in 0.0.54 LAVALAMP_SPEC.md edit; `lake build` clean (1901 jobs, zero warnings); counts unchanged at 29/1/3/0/4/20/1).
 
 ## Status summary
 
@@ -591,6 +591,54 @@ Remaining `:open` entries fall into two classes:
   deployments must specify which A4 capability level they assume.
 
 ## Recent companion docs / formal artefacts
+
+- **LL-006 detection-bound range theorems** (0.0.55,
+  2026-05-06) — Two short theorems establish that the
+  bound *value* `1 - K · exp(-(c · T) · δ²)` itself sits
+  in `[0, 1]`. Without this, the LL-006 statement
+  "P(detect) ≥ <bound value>" is structurally incomplete —
+  if the bound exits `[0, 1]`, the inequality is either
+  vacuous (`bound < 0`) or meaningless (`bound > 1`). The
+  range theorems make the bound shape *well-typed* as a
+  lower-bound-on-probability:
+
+  ```
+  LL006_bound_le_one : 0 ≤ K → 1 - K·exp(-(c·T)·δ²) ≤ 1
+  LL006_bound_nonneg : 0 ≤ K → K ≤ 1 → 0 ≤ c·T →
+                       0 ≤ 1 - K·exp(-(c·T)·δ²)
+  ```
+
+  **Proofs.** `bound_le_one` is one line:
+  `Real.exp_pos` gives positive exp; `mul_nonneg` lifts to
+  `0 ≤ K·exp(...)`; `linarith` discharges. `bound_nonneg`
+  is four steps: `mul_nonneg` + `sq_nonneg` give
+  `0 ≤ (c·T)·δ²`; negation gives `-(c·T)·δ² ≤ 0`;
+  `Real.exp_le_exp.mpr` lifted with `Real.exp_zero` rewrite
+  gives `exp(-(c·T)·δ²) ≤ 1`; `mul_le_mul_of_nonneg_left`
+  applies `K ≥ 0`; `linarith` closes via `K ≤ 1`.
+
+  **The `K ≤ 1` hypothesis** matches the LL-006 spec
+  entry's fitted constant `K = 1` (saturation); the
+  formalisation accepts any `K ∈ [0, 1]` for generality.
+
+  **Bug also fixed:** the `### LL-007 — chaos-guard` header
+  in `LAVALAMP_SPEC.md` was accidentally dropped during the
+  0.0.54 LL-006 footer addition — restored at 0.0.55.
+
+  **Build:** `lake build` clean — 1901 jobs, zero warnings.
+
+  **Composition foothold inventory after 0.0.55:**
+  (1) `LL021_worst_case_bound` (0.0.48 :proved);
+  (2) `LL021_eff_squared_bound` (0.0.49 corollary);
+  (3) `LL006_worst_case_lower_than_isotropic` (0.0.54 —
+      bound-shape monotonicity);
+  (4) `LL006_bound_le_one` (0.0.55 — upper range);
+  (5) `LL006_bound_nonneg` (0.0.55 — lower range).
+
+  Counts unchanged at 29/1/3/0/4/20/1. LL-006 stays
+  `:benchmarked` — well-typedness is established; the
+  underlying `P(detect) ≥ ...` lower-bound proof remains
+  the multi-session probability-formalization investment.
 
 - **LL-021 / LL-006 composition theorem** (0.0.54,
   2026-05-06) — Second composition foothold on the path
