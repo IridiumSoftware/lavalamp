@@ -1208,4 +1208,148 @@ end
                                                       n_samples=300)
     end
 
+    # ─── LL-028: runtime conformance verification ───────────────────
+
+    @testset "ConformanceStatus enum + result records (LL-028)" begin
+        @test PASS isa ConformanceStatus
+        @test FAIL isa ConformanceStatus
+        @test SKIPPED isa ConformanceStatus
+        @test DEFERRED isa ConformanceStatus
+        r = ConformanceResult("test", PASS, "ok")
+        @test r.check_name == "test"
+        @test r.status == PASS
+        @test r.detail == "ok"
+    end
+
+    @testset "probe_sensor_freshness PASS on dynamic streams (LL-028)" begin
+        # Three independent gaussian streams — all expected_dynamic.
+        # std should be well above the freshness threshold.
+        s1 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(101))
+        s2 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(202))
+        s3 = gaussian_noise_stream(1.0; t_max=120.0,
+                                    rng=Random.Xoshiro(303))
+        result = probe_sensor_freshness([s1, s2, s3], [true, true, true];
+                                         t_probe_times=[0.0, 1.0, 2.0,
+                                                         5.0, 10.0])
+        @test result.status == PASS
+        @test result.check_name == "sensor_freshness"
+        @test occursin("3 streams", result.detail)
+    end
+
+    @testset "probe_sensor_freshness FAIL on cached streams (LL-028)" begin
+        # Constant stream marked expected_dynamic=true → cached/scripted
+        # adversary signature.
+        c = constant_stream(1.0)
+        result = probe_sensor_freshness([c], [true];
+                                         t_probe_times=[0.0, 1.0, 2.0,
+                                                         5.0, 10.0])
+        @test result.status == FAIL
+        @test occursin("expected_dynamic=true", result.detail)
+        @test occursin("cached/scripted", result.detail)
+    end
+
+    @testset "probe_sensor_freshness PASS on designed-constant streams (LL-028)" begin
+        # Constant stream marked expected_dynamic=false → calibration
+        # baseline, expected to be exactly constant.
+        c = constant_stream(1.0)
+        result = probe_sensor_freshness([c], [false];
+                                         t_probe_times=[0.0, 1.0, 2.0,
+                                                         5.0, 10.0])
+        @test result.status == PASS
+    end
+
+    @testset "probe_sensor_freshness FAIL on substituted-baseline (LL-028)" begin
+        # Dynamic stream marked expected_dynamic=false → adversary has
+        # substituted a varying source for what should be a calibration
+        # baseline.
+        s = gaussian_noise_stream(1.0; t_max=120.0,
+                                   rng=Random.Xoshiro(42))
+        result = probe_sensor_freshness([s], [false];
+                                         t_probe_times=[0.0, 1.0, 2.0,
+                                                         5.0, 10.0])
+        @test result.status == FAIL
+        @test occursin("expected_dynamic=false", result.detail)
+        @test occursin("substituted calibration baseline", result.detail)
+    end
+
+    @testset "probe_sensor_freshness mixed streams (LL-028)" begin
+        # Two dynamic + one constant; both correctly profiled → PASS.
+        s_dyn1 = gaussian_noise_stream(1.0; t_max=120.0,
+                                        rng=Random.Xoshiro(1))
+        s_dyn2 = gaussian_noise_stream(1.0; t_max=120.0,
+                                        rng=Random.Xoshiro(2))
+        c = constant_stream(2.5)
+        result = probe_sensor_freshness([s_dyn1, s_dyn2, c],
+                                         [true, true, false];
+                                         t_probe_times=[0.0, 1.0, 2.0,
+                                                         5.0, 10.0])
+        @test result.status == PASS
+
+        # Now a wrong profile: claim the constant is dynamic → FAIL on
+        # exactly that one.
+        result_bad = probe_sensor_freshness([s_dyn1, s_dyn2, c],
+                                             [true, true, true];
+                                             t_probe_times=[0.0, 1.0,
+                                                             2.0, 5.0, 10.0])
+        @test result_bad.status == FAIL
+        @test occursin("stream[3]", result_bad.detail)
+    end
+
+    @testset "probe_sensor_freshness empty streams (LL-028)" begin
+        result = probe_sensor_freshness(SensorStream[], Bool[])
+        @test result.status == PASS
+        @test occursin("no streams", result.detail)
+    end
+
+    @testset "probe_sensor_freshness argument validation (LL-028)" begin
+        s = constant_stream(1.0)
+        @test_throws ArgumentError probe_sensor_freshness([s, s], [true])  # length mismatch
+        @test_throws ArgumentError probe_sensor_freshness([s], [true];
+                                                           t_probe_times=[0.0])
+        @test_throws ArgumentError probe_sensor_freshness([s], [true];
+                                                           freshness_floor_relative=-0.1)
+        @test_throws ArgumentError probe_sensor_freshness([s], [true];
+                                                           freshness_floor_absolute=-1.0)
+    end
+
+    @testset "Platform-deferred probes return DEFERRED (LL-028)" begin
+        att = probe_attestation_continuity()
+        @test att.status == DEFERRED
+        @test att.check_name == "attestation_continuity"
+        @test occursin("TPM", att.detail)
+
+        api = probe_api_conformance()
+        @test api.status == DEFERRED
+        @test api.check_name == "api_conformance"
+        @test occursin("LL-023", api.detail)
+
+        trng = probe_trng_health()
+        @test trng.status == DEFERRED
+        @test trng.check_name == "trng_health"
+        @test occursin("RDRAND", trng.detail) || occursin("getrandom", trng.detail)
+    end
+
+    @testset "verify_runtime_conformance composite (LL-028)" begin
+        # Mixed: sensor-freshness PASSes, three others DEFERRED →
+        # overall DEFERRED.
+        s = gaussian_noise_stream(1.0; t_max=120.0,
+                                   rng=Random.Xoshiro(42))
+        report = verify_runtime_conformance([s], [true])
+        @test report isa RuntimeConformanceReport
+        @test length(report.results) == 4
+        @test report.overall == DEFERRED
+        names = [r.check_name for r in report.results]
+        @test "sensor_freshness" ∈ names
+        @test "attestation_continuity" ∈ names
+        @test "api_conformance" ∈ names
+        @test "trng_health" ∈ names
+
+        # Sensor freshness FAIL → overall FAIL (FAIL outweighs DEFERRED).
+        c = constant_stream(1.0)
+        report_fail = verify_runtime_conformance([c], [true])
+        @test report_fail.overall == FAIL
+    end
+
 end

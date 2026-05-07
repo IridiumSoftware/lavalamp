@@ -27,6 +27,7 @@ include("Audit.jl")
 include("ChaosGuard.jl")
 include("RealSensors.jl")
 include("SensorIndependence.jl")
+include("RuntimeConformance.jl")
 
 using .Sensors: SensorStream, evaluate, CouplingParams, no_coupling
 using .Sensors: constant_stream, binary_step_stream, gaussian_noise_stream
@@ -44,6 +45,11 @@ using .RealSensors: real_ac_stream, real_usb_stream
 using .RealSensors: real_cpu_governor_stream, real_loadavg_stream
 using .SensorIndependence: correlation_matrix, classify_families
 using .SensorIndependence: n_independent_families, FamilyClassification
+using .RuntimeConformance: ConformanceStatus, PASS, FAIL, SKIPPED, DEFERRED
+using .RuntimeConformance: ConformanceResult, RuntimeConformanceReport
+using .RuntimeConformance: probe_sensor_freshness, probe_attestation_continuity
+using .RuntimeConformance: probe_api_conformance, probe_trng_health
+using .RuntimeConformance: verify_runtime_conformance
 
 # Engine + spectrum estimator (LL-003).
 export lorenz96, lyapunov_spectrum
@@ -78,5 +84,16 @@ export real_cpu_governor_stream, real_loadavg_stream
 # the LL-024 scaffold lands platform-specific implementations.
 export correlation_matrix, classify_families, n_independent_families
 export FamilyClassification
+
+# Runtime conformance verification (LL-028). Defends V-019
+# (runtime conformance bypass). Pure-Julia framework with one
+# fully-implementable check (sensor-freshness probe) + three
+# platform-flavored stubs returning DEFERRED. Composite
+# verify_runtime_conformance aggregates the four sub-checks.
+export ConformanceStatus, PASS, FAIL, SKIPPED, DEFERRED
+export ConformanceResult, RuntimeConformanceReport
+export probe_sensor_freshness, probe_attestation_continuity
+export probe_api_conformance, probe_trng_health
+export verify_runtime_conformance
 
 end # module LavaLamp
