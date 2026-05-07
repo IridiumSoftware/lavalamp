@@ -18,16 +18,16 @@ Expected: `Build completed successfully (1901 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
 Lean kernel verifies every proof at compile time.
 
-**Status.** All twenty-seven theorems below are kernel-verified
+**Status.** All thirty theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
 evidence-type discipline).
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
-theorem 1 below. Theorems 2–27 are composition lemmas building
-toward future `:proved` status for LL-006 and the LL-022 / LL-023
-/ LL-030 / LL-031 parametric shape entries; they currently land
-as `lean-proved` content supporting their associated entries
-without themselves being entry-promoting.
+theorem 1 below. Theorems 2–30 are composition lemmas building
+toward future `:proved` status for LL-006 and the joint-defense
+parametric shape entries (LL-022 / LL-023 / LL-030 / LL-031 /
+LL-032); they currently land as `lean-proved` content supporting
+their associated entries without themselves being entry-promoting.
 
 ---
 
@@ -62,6 +62,9 @@ without themselves being entry-promoting.
 | 25 | `LL022_conformance_implies_host_grade_random` | parametric shape (type-checked) | — (supports LL-022) |
 | 26 | `LL031_joint_conformance` | composition (combined extraction) | — (supports LL-031) |
 | 27 | `LL022_LL007_LL019_conformance_supports_LL006_well_typed` | composition (chains V-011-defense triad → LL-006) | — (supports LL-006 + reseed-oracle-defense triad) |
+| 28 | `LL028_conformance_implies_sensor_freshness_probe` | parametric shape (type-checked) | — (supports LL-028) |
+| 29 | `LL032_joint_conformance` | composition (combined extraction; bijective V-NNN coverage) | — (supports LL-032) |
+| 30 | `LL024_LL028_LL029_conformance_supports_LL006_well_typed` | composition (chains Tier-3 round-3 triad → LL-006) | — (supports LL-006 + Tier-3 operational triad) |
 
 ---
 
@@ -1270,9 +1273,160 @@ attack-class defense is wired up.
 
 ---
 
+## 28 — `LL028_conformance_implies_sensor_freshness_probe` (parametric shape)
+
+**Statement.** From a `LL028.conformant` proof, extract the
+load-bearing `has_sensor_freshness_probe` field — the field most
+relevant to V-019 (configuration-trust vs runtime-enforcement
+gap) defense. The only one of LL-028's four conformance
+requirements that is fully implementable in pure Julia at the
+prototype's current state (per `RuntimeConformance.jl` 0.0.62);
+the other three (attestation continuity, API conformance, TRNG
+health) are platform-flavored stubs returning `DEFERRED`.
+
+```lean
+structure LL028.RuntimeConformance where
+  has_attestation_continuity : Bool
+  has_sensor_freshness_probe : Bool
+  has_api_conformance_probe : Bool
+  has_trng_health_probe : Bool
+
+def LL028.conformant (r : RuntimeConformance) : Prop :=
+  r.has_attestation_continuity = true ∧
+  r.has_sensor_freshness_probe = true ∧
+  r.has_api_conformance_probe = true ∧
+  r.has_trng_health_probe = true
+
+theorem LL028_conformance_implies_sensor_freshness_probe
+    {r : LL028.RuntimeConformance}
+    (h : LL028.conformant r) :
+    r.has_sensor_freshness_probe = true :=
+  h.2.1
+```
+
+**Proof.** Field projection from the second-conjunct first field.
+
+**Why this is `lean-proved` content for LL-028.** LL-028 is the
+only conformance structure with **four** Bool fields (vs the
+three in LL-016 / LL-019 / LL-022 / LL-023 / LL-024 / LL-029) —
+the LL-028 spec entry's conformance requirements list four
+distinct probes. Theorem 28 makes the freshness-probe field
+structurally citable, which the LL-032 joint-conformance theorem
+uses for V-019 attack-class grounding.
+
+---
+
+## 29 — `LL032_joint_conformance` (combined extraction; bijective V-NNN coverage)
+
+**Statement.** From three separate conformance witnesses for the
+Tier-3 round-3 operational triad (`LL024.conformant d`,
+`LL028.conformant r`, `LL029.conformant e`), extract all ten
+load-bearing fields simultaneously. Mirror of theorems 21 / 26
+with the LL-032 triad.
+
+```lean
+theorem LL032_joint_conformance
+    {d : LL024.DeploymentStrategy}
+    {r : LL028.RuntimeConformance}
+    {e : LL029.EntropyIndependence}
+    (h_d : LL024.conformant d) (h_r : LL028.conformant r)
+    (h_e : LL029.conformant e) :
+    d.has_per_platform_sensor_enumeration = true ∧
+        d.has_nyquist_compliant_sample_rates = true ∧
+        d.has_authenticity_instantiation = true ∧
+        r.has_attestation_continuity = true ∧
+        r.has_sensor_freshness_probe = true ∧
+        r.has_api_conformance_probe = true ∧
+        r.has_trng_health_probe = true ∧
+        e.has_physical_mechanism_diversity = true ∧
+        e.has_calibration_window_correlation_test = true ∧
+        e.has_within_family_dedup = true :=
+  ⟨h_d.1, h_d.2.1, h_d.2.2,
+   h_r.1, h_r.2.1, h_r.2.2.1, h_r.2.2.2,
+   h_e.1, h_e.2.1, h_e.2.2⟩
+```
+
+**Proof.** Field-by-field reconstruction across three conformance
+witnesses; ten projections (3 + 4 + 3) form the conjunctive
+conclusion.
+
+**Bijective no-single-point-failure encoding (key structural
+claim).** Unlike theorems 21 / 26 (where component conformances
+co-defend overlapping V-NNNs), theorem 29's three component
+conformances each ground a *distinct* V-NNN:
+
+- LL-024 fields → V-006 defense (per-platform sensor
+  enumeration + Nyquist + authenticity instantiation).
+- LL-028 fields → V-019 defense (runtime conformance probes).
+- LL-029 fields → V-018 defense (entropy independence).
+
+Removing any one conformance hypothesis renders the corresponding
+conjuncts of the conclusion underivable, *and* the corresponding
+V-NNN's defense vanishes from the operational surface. The Lean
+type-checker enforces the structural side; the Julia integration
+test exercises the operational bijection.
+
+---
+
+## 30 — `LL024_LL028_LL029_conformance_supports_LL006_well_typed` (composition)
+
+**Statement.** Composition theorem extending theorems 22 / 27 to
+the Tier-3 round-3 operational triad. Under joint conformance
+witnesses for LL-024 + LL-028 + LL-029 *and* parameter validity,
+the LL-006 bound value sits in `[0, 1]` for any squared-magnitude
+argument.
+
+```lean
+theorem LL024_LL028_LL029_conformance_supports_LL006_well_typed
+    {d : LL024.DeploymentStrategy}
+    {r : LL028.RuntimeConformance}
+    {e : LL029.EntropyIndependence}
+    (h_d : LL024.conformant d) (h_r : LL028.conformant r)
+    (h_e : LL029.conformant e)
+    {K c T δ : ℝ}
+    (h_K_nn : 0 ≤ K) (h_K_le_one : K ≤ 1)
+    (h_cT_nn : 0 ≤ c * T) :
+    0 ≤ 1 - K * Real.exp (-(c * T) * δ ^ 2) ∧
+        1 - K * Real.exp (-(c * T) * δ ^ 2) ≤ 1 := by
+  have _h_platform : d.has_per_platform_sensor_enumeration = true := h_d.1
+  have _h_freshness : r.has_sensor_freshness_probe = true := h_r.2.1
+  have _h_independence : e.has_calibration_window_correlation_test = true := h_e.2.1
+  exact ⟨LL006_bound_nonneg h_K_nn h_K_le_one h_cT_nn,
+         LL006_bound_le_one h_K_nn⟩
+```
+
+**Proof.** Same two-part composition pattern as theorems 16 / 17
+/ 22 / 27: extract a representative load-bearing field from each
+conformance witness, then discharge the math content via theorems
+4 + 5.
+
+**Distinction from prior LL-006 composition theorems.** Each of
+the four composition theorems chains a *different operational
+triad* into LL-006's bound:
+
+- Theorem 16: LL-022 + LL-023 (governance triple alone).
+- Theorem 22: LL-022 + LL-023 + LL-016 + LL-024 + LL-029
+  (governance + V-006/V-018 sensor-defense triad).
+- Theorem 27: LL-022 + LL-007 + LL-019 (governance + V-011
+  reseed-oracle defense triad).
+- Theorem 30: LL-024 + LL-028 + LL-029 (Tier-3 round-3
+  operational triad with bijective V-006/V-018/V-019 defense;
+  no governance grounding required).
+
+**Note on governance grounding omission.** Theorem 30 does not
+require LL-022 / LL-023 conformance. The Tier-3 triad is itself
+a complete operational closure for V-006 / V-018 / V-019; the
+governance triple is needed for LL-006's full operational
+meaningfulness in production but not for the bound's *well-
+typedness shape*, which is parameter-only and discharged via
+theorems 4 + 5. Downstream theorems can chain LL-022 + LL-023 +
+LL-032 if a stronger operational surface is required.
+
+---
+
 ## What this collectively proves
 
-The twenty-seven theorems chain to give:
+The thirty theorems chain to give:
 
 - **LL-021 worst-case bound** (theorem 1) — projected adversary
   magnitude is bounded by unprojected magnitude.
@@ -1378,6 +1532,32 @@ The twenty-seven theorems chain to give:
   instead of the V-006/V-018 sensor-defense triad
   (LL-016/LL-024/LL-029); makes the operational meaningfulness
   of LL-006 under reseed-oracle hardening machine-checkable.
+- **LL-028 conformance shape** (theorem 28) — extraction
+  template for the runtime-conformance-verification entry;
+  unique among LavaLamp conformance structures in having four
+  Bool fields (matching the LL-028 spec entry's four
+  conformance requirements). Proves conformance witnesses
+  yield the sensor-freshness-probe sub-claim — the only one of
+  the four checks fully implementable in pure Julia at the
+  prototype's current state.
+- **LL-032 joint conformance with bijective V-NNN coverage**
+  (theorem 29) — Tier-3 round-3 operational triad
+  (LL-024/LL-028/LL-029) jointly extracting all ten load-
+  bearing fields. Distinct from theorems 21 / 26: the no-
+  single-point-failure property is *bijective* — each
+  component primarily defends a distinct V-NNN (LL-024 → V-006,
+  LL-028 → V-019, LL-029 → V-018), so removing any one
+  conformance hypothesis ablates defense for exactly one V-NNN
+  rather than weakening shared coverage.
+- **Tier-3 triad conformance → bound well-typedness composition**
+  (theorem 30) — parallels theorems 22 / 27 with the Tier-3
+  round-3 operational triad as the operational grounding;
+  notably *omits* the governance triple (LL-022 + LL-023) from
+  its hypotheses, demonstrating that the Tier-3 triad alone is
+  sufficient to ground the bound's well-typedness shape (the
+  governance triple is needed for full operational
+  meaningfulness in production but not for the parameter-only
+  bound-range claim).
 
 ## What this does NOT prove
 
@@ -1392,21 +1572,22 @@ requires:
 - The lower-bound proof itself (probabilistic concentration
   inequality on the spectrum residue).
 
-Each is a multi-session research investment. The twenty-seven
-theorems above prove every *algebraic*, *real-analysis*,
-*asymptotic*, *type-shape*, and *compositional* property the
-eventual `:proved` proof will compose with — the missing piece
-is the probability-space side.
+Each is a multi-session research investment. The thirty theorems
+above prove every *algebraic*, *real-analysis*, *asymptotic*,
+*type-shape*, and *compositional* property the eventual `:proved`
+proof will compose with — the missing piece is the probability-
+space side.
 
 **The operational defenses against V-006 + V-018** (LL-030's
-full claim) and **against V-011** (LL-031's full claim) are
-similarly *not* proved at the probability-space level. Theorems
-18–22 and 23–27 capture the structural composition shape — that
+claim), **against V-011** (LL-031's claim), and **the bijective
+V-006 + V-018 + V-019 coverage** (LL-032's claim) are similarly
+*not* proved at the probability-space level. Theorems 18–22,
+23–27, and 28–30 capture the structural composition shape — that
 joint conformance simultaneously witnesses each component's
 load-bearing field, and that no sub-conformance is redundant.
-The operational evidence (V-006 / V-018 / V-011 attacks blocked
-in concrete scenarios) lives in the integration tests documented
-in each entry's spec text and exercised by `Pkg.test()`.
+The operational evidence (attacks blocked in concrete scenarios)
+lives in the integration tests documented in each entry's spec
+text and exercised by `Pkg.test()`.
 
 ## Source
 
@@ -1416,8 +1597,8 @@ top-level README §"Try it" or in `src/lean4/README.md`.
 ## Honest framing reminder
 
 Per the project's evidence-type discipline: a theorem with
-`sorry` in its body is **not** a proof. All twenty-seven
-theorems above are kernel-verified with no `sorry`. The build
-is configured so any `sorry` regression would surface as a
+`sorry` in its body is **not** a proof. All thirty theorems
+above are kernel-verified with no `sorry`. The build is
+configured so any `sorry` regression would surface as a
 `declaration uses 'sorry'` linter warning — the current build
 returns zero warnings, so the proofs are honest.

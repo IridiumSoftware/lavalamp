@@ -2000,4 +2000,199 @@ end
         end
     end
 
+    # ----- LL-032 integration test (Tier-3 operational joint-closure) -----
+    #
+    # LL-032 spec entry promotion path: integration test exercising
+    # V-006 (sensor-input poisoning) + V-018 (sensor-fusion inversion)
+    # + V-019 (configuration-trust vs runtime-enforcement gap) attack
+    # scenarios PLUS three single-point-failure ablations disabling
+    # one of LL-024 / LL-028 / LL-029 at a time. Bijective no-single-
+    # point-failure: each ablation disables defense for exactly one
+    # V-NNN.
+    #
+    # Reuses LL-030 helpers (sensor_authenticity_check, inject_v006_spike,
+    # couple_v018) for V-006 / V-018 modeling and the existing LL-028
+    # `probe_sensor_freshness` API for V-019 modeling.
+
+    @testset "LL-032 integration: round-3 Tier-3 operational joint-closure" begin
+        # Three healthy synthetic streams, similar to LL-030.
+        s_thermal = gaussian_noise_stream(1.0; t_max=120.0,
+                                           sample_rate=10.0,
+                                           rng=Random.Xoshiro(701))
+        s_battery = gaussian_noise_stream(1.0; t_max=120.0,
+                                           sample_rate=10.0,
+                                           rng=Random.Xoshiro(702))
+        s_ac      = gaussian_noise_stream(1.0; t_max=120.0,
+                                           sample_rate=10.0,
+                                           rng=Random.Xoshiro(703))
+
+        @testset "Positive case — all three Tier-3 defenses present" begin
+            # LL-024: per-platform-readers wired (modeled by sensor_authenticity_check).
+            @test sensor_authenticity_check(s_thermal)
+            # LL-029: independent streams classify as 3 families.
+            cl = classify_families([s_thermal, s_battery, s_ac];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3
+            # LL-028: dynamic streams pass freshness probe.
+            res = probe_sensor_freshness([s_thermal, s_battery, s_ac],
+                                          [true, true, true])
+            @test res.status == PASS
+        end
+
+        @testset "Scenario A — V-006 alone: LL-024 authenticity wiring rejects spike" begin
+            s_attacked = inject_v006_spike(s_thermal;
+                                            spike_at_idx=600,
+                                            magnitude=50.0)
+            # LL-024 wires LL-016 authenticity into the per-platform
+            # reader path; modeled by sensor_authenticity_check.
+            @test sensor_authenticity_check(s_attacked) == false
+            # The other two Tier-3 components are blind to V-006
+            # individually:
+            cl = classify_families([s_attacked, s_battery, s_ac];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3   # LL-029 doesn't see single-sensor spike
+            res = probe_sensor_freshness([s_attacked, s_battery, s_ac],
+                                          [true, true, true])
+            @test res.status == PASS    # LL-028 freshness probe sees variability
+        end
+
+        @testset "Scenario B — V-018 alone: LL-029 collapses coupled families" begin
+            s_battery_coupled = couple_v018(s_thermal; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            cl = classify_families([s_thermal, s_battery_coupled, s_ac];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 2
+            # The other two Tier-3 components are blind to V-018:
+            @test sensor_authenticity_check(s_battery_coupled)  # values still in envelope
+            res = probe_sensor_freshness([s_thermal, s_battery_coupled, s_ac],
+                                          [true, true, true])
+            @test res.status == PASS    # both streams still appear "dynamic"
+        end
+
+        @testset "Scenario C — V-019 alone: LL-028 sensor-freshness probe FAILs on cached stream" begin
+            # V-019 attack: deployer substitutes a static cached value
+            # for what should be a dynamic sensor (e.g. cached random
+            # bytes for getrandom; a constant thermal reading reported
+            # repeatedly). LL-028's probe_sensor_freshness detects this
+            # because the stream's variance drops below the floor for
+            # streams declared `expected_dynamic = true`.
+            s_cached = constant_stream(0.5; t_max=120.0)
+            res = probe_sensor_freshness([s_cached, s_battery, s_ac],
+                                          [true, true, true])
+            @test res.status == FAIL
+            @test occursin("possible cached/scripted source", res.detail)
+            # The other two Tier-3 components are blind to V-019:
+            @test sensor_authenticity_check(s_cached)   # constant-in-envelope passes
+            cl = classify_families([s_cached, s_battery, s_ac];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3   # constant stream is orthogonal-to-everything
+                                       # by LL-029's _pearson convention
+        end
+
+        @testset "Ablation 1 — disable LL-024: V-006 succeeds via unauthenticated reads" begin
+            # Without LL-024 per-platform-reader-strategy, deployment
+            # uses raw values. Skipping sensor_authenticity_check
+            # entirely.
+            s_attacked = inject_v006_spike(s_thermal;
+                                            spike_at_idx=600,
+                                            magnitude=50.0)
+            # Skip LL-024 authenticity: spike sails through.
+            cl = classify_families([s_attacked, s_battery, s_ac];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3   # LL-029 still alone, can't see V-006
+            # Single-point-failure: V-006 unblocked.
+        end
+
+        @testset "Ablation 2 — disable LL-028: V-019 succeeds via cached reads passing static checks" begin
+            # Without LL-028 runtime-conformance probes, deployer
+            # substitutes a cached value for a dynamic sensor. The
+            # static API surface (LL-024 readers + LL-029 cross-
+            # validation) doesn't catch it because per-stream values
+            # are within envelope and constant streams classify as
+            # orthogonal.
+            s_cached = constant_stream(0.5; t_max=120.0)
+            # LL-024 per-stream check passes:
+            @test sensor_authenticity_check(s_cached)
+            # LL-029 cross-validation classifies constant as
+            # independent (per the LL-029 spec convention):
+            cl = classify_families([s_cached, s_battery, s_ac];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3
+            # Skip LL-028: V-019 attack not detected.
+            # Single-point-failure: V-019 unblocked.
+        end
+
+        @testset "Ablation 3 — disable LL-029: V-018 succeeds via coupled streams" begin
+            # Without LL-029, coupled streams classify as independent
+            # — V-018 succeeds. (Same shape as LL-030 Ablation 3.)
+            s_battery_coupled = couple_v018(s_thermal; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            # Skip LL-029: per-stream LL-024 check passes both:
+            @test sensor_authenticity_check(s_thermal)
+            @test sensor_authenticity_check(s_battery_coupled)
+            # LL-028 freshness passes both (both look "dynamic"):
+            res = probe_sensor_freshness([s_thermal, s_battery_coupled, s_ac],
+                                          [true, true, true])
+            @test res.status == PASS
+            # Single-point-failure: V-018 unblocked.
+        end
+
+        @testset "No-single-point-failure summary: bijective V-NNN coverage" begin
+            # Each component is *the only* defense against its
+            # primary V-NNN. Demonstrate the bijection numerically.
+
+            # V-006 → only LL-024 catches it.
+            s_v006 = inject_v006_spike(s_thermal; spike_at_idx=600,
+                                        magnitude=50.0)
+            v006_blocked_by_ll024 = !sensor_authenticity_check(s_v006)
+            v006_blocked_by_ll028 =
+                probe_sensor_freshness([s_v006, s_battery, s_ac],
+                                        [true, true, true]).status == FAIL
+            v006_blocked_by_ll029 =
+                classify_families([s_v006, s_battery, s_ac];
+                                   ρ_threshold=0.3, window_s=60.0,
+                                   n_samples=600).n_families < 3
+            @test v006_blocked_by_ll024
+            @test !v006_blocked_by_ll028
+            @test !v006_blocked_by_ll029
+
+            # V-018 → only LL-029 catches it.
+            s_v018 = couple_v018(s_thermal; α=0.95, noise_σ=0.3,
+                                  rng=Random.Xoshiro(2018))
+            v018_blocked_by_ll024 = !sensor_authenticity_check(s_v018)
+            v018_blocked_by_ll028 =
+                probe_sensor_freshness([s_thermal, s_v018, s_ac],
+                                        [true, true, true]).status == FAIL
+            v018_blocked_by_ll029 =
+                classify_families([s_thermal, s_v018, s_ac];
+                                   ρ_threshold=0.3, window_s=60.0,
+                                   n_samples=600).n_families < 3
+            @test v018_blocked_by_ll029
+            @test !v018_blocked_by_ll024
+            @test !v018_blocked_by_ll028
+
+            # V-019 → only LL-028 catches it.
+            s_v019 = constant_stream(0.5; t_max=120.0)
+            v019_blocked_by_ll024 = !sensor_authenticity_check(s_v019)
+            v019_blocked_by_ll028 =
+                probe_sensor_freshness([s_v019, s_battery, s_ac],
+                                        [true, true, true]).status == FAIL
+            v019_blocked_by_ll029 =
+                classify_families([s_v019, s_battery, s_ac];
+                                   ρ_threshold=0.3, window_s=60.0,
+                                   n_samples=600).n_families < 3
+            @test v019_blocked_by_ll028
+            @test !v019_blocked_by_ll024   # constant-in-envelope passes
+            @test !v019_blocked_by_ll029   # constant treated as orthogonal
+        end
+    end
+
 end
