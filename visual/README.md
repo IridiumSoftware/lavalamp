@@ -43,7 +43,6 @@ See:
 - `../README.md` "Architectural separation" section — invariant
   statement (LL-002) and the visual ↔ security decoupling
   rationale.
-- `../dashboard.md` "asymmetry-trap watch" — discipline note.
 
 ## Decoupling assertions
 

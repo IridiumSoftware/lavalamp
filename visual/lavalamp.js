@@ -9,8 +9,8 @@
  *
  * If the visual ever needs to derive from the security primitive
  * (it should not), the basin-spoofing attack surface flagged in
- * round-1 synthesis-team review (V-002) returns. See LL-002 spec
- * entry + dashboard.md "asymmetry-trap watch."
+ * round-1 synthesis-team review (V-002) returns. See the
+ * top-level README "Architectural separation" section.
  *
  * Convention: all randomness via Math.random(). No imports, no
  * modules, no shared globals with the security primitive.

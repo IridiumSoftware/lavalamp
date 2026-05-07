@@ -120,7 +120,6 @@ on every push (202 assertions pass in ~53s).
 
 See:
 - `THEOREMS.md` — Lean 4 / Mathlib theorems with statements + proofs
-- `dashboard.md` — current status + priority stack + open questions
 - `src/julia/demo/lavalamp_demo.jl` — clone-and-run end-to-end walkthrough
 - `src/lean4/README.md` — Lean track build instructions + theorem plan
 
@@ -130,7 +129,6 @@ See:
 lavalamp/
 ├── README.md                                    ← you are here
 ├── THEOREMS.md                                  ← Lean theorems summary
-├── dashboard.md                                 ← current status + priorities
 ├── .github/workflows/test.yml                   ← Julia CI (Pkg.test + demo verify on push)
 ├── .github/workflows/lean.yml                   ← Lean CI (lake build on push)
 ├── visual/                                     ← decoupled visual layer (LL-002)

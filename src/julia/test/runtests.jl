@@ -842,8 +842,8 @@ end
         #
         # If any assertion fails, the visual and security layers
         # have re-coupled and the basin-spoofing attack surface
-        # (V-002) returns. See LL-002 spec entry + dashboard.md
-        # asymmetry-trap-watch note.
+        # (V-002) returns. See top-level README "Architectural
+        # separation" section.
 
         repo_root = joinpath(@__DIR__, "..", "..", "..")
         visual_dir = joinpath(repo_root, "visual")
