@@ -386,10 +386,112 @@ theorem LL006_bound_monotone_in_T
     mul_le_mul_of_nonneg_left h_exp h_K_nn
   linarith
 
+/-- LL-006 detection-bound joint monotonicity — both axes together.
+
+    Composition of theorems 6 + 7 by transitivity. When *both*
+    the observation window and the adversary magnitude
+    improve, the bound tightens in both directions. The
+    statement covers the operational case where a deployment
+    upgrades on multiple axes at once: longer observation
+    *and* a tighter calibration that bounds the worst-case
+    `δ²` more sharply.
+
+    Hypotheses:
+    - `0 ≤ K` (prefactor non-negative).
+    - `0 ≤ c` (exponent rate non-negative).
+    - `0 ≤ T₁` (lower-bound observation window non-negative;
+      needed to give `0 ≤ c·T₁` for theorem 6's hypothesis).
+    - `0 ≤ s₁` (lower-bound squared magnitude non-negative;
+      `s₂ ≥ 0` follows from `s₁ ≤ s₂` by transitivity).
+    - `T₁ ≤ T₂`, `s₁ ≤ s₂` — the monotonicity claim itself.
+
+    Proof: chain through the intermediate point `(T₁, s₂)`.
+    First, theorem 6 gives bound at `(T₁, s₁) ≤ (T₁, s₂)`.
+    Then, theorem 7 gives bound at `(T₁, s₂) ≤ (T₂, s₂)`.
+    Compose by `linarith`. -/
+theorem LL006_bound_monotone_joint
+    {s₁ s₂ K c T₁ T₂ : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_c_nn : 0 ≤ c)
+    (h_T₁_nn : 0 ≤ T₁)
+    (h_s₁_nn : 0 ≤ s₁)
+    (h_T_le : T₁ ≤ T₂)
+    (h_s_le : s₁ ≤ s₂) :
+    1 - K * Real.exp (-(c * T₁) * s₁)
+      ≤ 1 - K * Real.exp (-(c * T₂) * s₂) := by
+  have h_cT₁_nn : 0 ≤ c * T₁ := mul_nonneg h_c_nn h_T₁_nn
+  have h_step1 : 1 - K * Real.exp (-(c * T₁) * s₁)
+                  ≤ 1 - K * Real.exp (-(c * T₁) * s₂) :=
+    LL006_bound_monotone_in_squared_magnitude h_K_nn h_cT₁_nn h_s_le
+  have h_s₂_nn : 0 ≤ s₂ := le_trans h_s₁_nn h_s_le
+  have h_step2 : 1 - K * Real.exp (-(c * T₁) * s₂)
+                  ≤ 1 - K * Real.exp (-(c * T₂) * s₂) :=
+    LL006_bound_monotone_in_T h_K_nn h_c_nn h_s₂_nn h_T_le
+  linarith
+
+/-- LL-006 detection-bound *strict* monotonicity in squared
+    adversary magnitude.
+
+    Strict version of theorem 6. When `0 < K`, `0 < c·T`, and
+    `s₁ < s₂` (strict), the bound is strictly tighter at `s₂`
+    than at `s₁`. Operationally: any *real* improvement in the
+    adversary-magnitude bound produces a *real* improvement in
+    the detection bound — the bound has no "plateau" regions
+    along the adversary axis.
+
+    Hypotheses are strict where the non-strict version had
+    `≤` — `0 < K`, `0 < c·T`, `s₁ < s₂`. The proof mirrors
+    theorem 6 with strict-variant Mathlib lemmas
+    (`mul_lt_mul_of_pos_left`, `Real.exp_lt_exp.mpr`,
+    `mul_lt_mul_of_pos_left`). -/
+theorem LL006_bound_strict_monotone_in_squared_magnitude
+    {s₁ s₂ K c T : ℝ}
+    (h_K_pos : 0 < K)
+    (h_cT_pos : 0 < c * T)
+    (h_s_lt : s₁ < s₂) :
+    1 - K * Real.exp (-(c * T) * s₁)
+      < 1 - K * Real.exp (-(c * T) * s₂) := by
+  have h_inner_pos : c * T * s₁ < c * T * s₂ :=
+    mul_lt_mul_of_pos_left h_s_lt h_cT_pos
+  have h_inner : -(c * T) * s₂ < -(c * T) * s₁ := by nlinarith [h_inner_pos]
+  have h_exp : Real.exp (-(c * T) * s₂) < Real.exp (-(c * T) * s₁) :=
+    Real.exp_lt_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T) * s₂) < K * Real.exp (-(c * T) * s₁) :=
+    mul_lt_mul_of_pos_left h_exp h_K_pos
+  linarith
+
+/-- LL-006 detection-bound *strict* monotonicity in observation
+    window T.
+
+    Strict version of theorem 7. When `0 < K`, `0 < c`, `0 < s`,
+    and `T₁ < T₂`, the bound is strictly tighter at `T₂` than
+    at `T₁`. Operationally: extending observation duration —
+    even by an infinitesimal — produces a *real* improvement
+    in detection bound, provided there's actually adversary
+    signal to detect (`0 < s`) and the bound has nonzero
+    sensitivity (`0 < c`). -/
+theorem LL006_bound_strict_monotone_in_T
+    {s K c T₁ T₂ : ℝ}
+    (h_K_pos : 0 < K)
+    (h_c_pos : 0 < c)
+    (h_s_pos : 0 < s)
+    (h_T_lt : T₁ < T₂) :
+    1 - K * Real.exp (-(c * T₁) * s)
+      < 1 - K * Real.exp (-(c * T₂) * s) := by
+  have h_cT_lt : c * T₁ < c * T₂ := mul_lt_mul_of_pos_left h_T_lt h_c_pos
+  have h_inner_pos : c * T₁ * s < c * T₂ * s :=
+    mul_lt_mul_of_pos_right h_cT_lt h_s_pos
+  have h_inner : -(c * T₂) * s < -(c * T₁) * s := by nlinarith [h_inner_pos]
+  have h_exp : Real.exp (-(c * T₂) * s) < Real.exp (-(c * T₁) * s) :=
+    Real.exp_lt_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T₂) * s) < K * Real.exp (-(c * T₁) * s) :=
+    mul_lt_mul_of_pos_left h_exp h_K_pos
+  linarith
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.64 — LL-006 detection-bound monotonicity-in-T + monotonicity-in-squared-magnitude landed"
+  "0.0.65 — LL-006 joint monotonicity + strict variants landed"
 
 end LavaLamp

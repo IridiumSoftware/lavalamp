@@ -18,12 +18,12 @@ Expected: `Build completed successfully (1901 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
 Lean kernel verifies every proof at compile time.
 
-**Status.** All seven theorems below are kernel-verified
+**Status.** All ten theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
 evidence-type discipline).
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
-theorem 1 below. Theorems 2–7 are composition lemmas building
+theorem 1 below. Theorems 2–10 are composition lemmas building
 toward a future LL-006 `:proved` status; they currently land as
 `lean-proved` content supporting LL-021 + LL-006 entries without
 themselves being entry-promoting.
@@ -41,6 +41,9 @@ themselves being entry-promoting.
 | 5 | `LL006_bound_nonneg` | range | — (supports LL-006) |
 | 6 | `LL006_bound_monotone_in_squared_magnitude` | monotonicity | — (supports LL-006) |
 | 7 | `LL006_bound_monotone_in_T` | monotonicity | — (supports LL-006) |
+| 8 | `LL006_bound_monotone_joint` | composition | — (supports LL-006) |
+| 9 | `LL006_bound_strict_monotone_in_squared_magnitude` | strict monotonicity | — (supports LL-006) |
+| 10 | `LL006_bound_strict_monotone_in_T` | strict monotonicity | — (supports LL-006) |
 
 ---
 
@@ -333,9 +336,134 @@ the isotropic bound *value* on the same `(K, c, T)` calibration.
 
 ---
 
+## 8 — `LL006_bound_monotone_joint` (joint axes — composition)
+
+**Statement.** Bound improves when *both* the observation
+window and the squared adversary magnitude improve
+simultaneously. Pure composition of theorems 6 and 7 by
+transitivity — exists as a single citation point for
+operational deployments that upgrade on multiple axes at once
+(longer observation *and* tighter calibration of `δ²`).
+
+```lean
+theorem LL006_bound_monotone_joint
+    {s₁ s₂ K c T₁ T₂ : ℝ}
+    (h_K_nn : 0 ≤ K)
+    (h_c_nn : 0 ≤ c)
+    (h_T₁_nn : 0 ≤ T₁)
+    (h_s₁_nn : 0 ≤ s₁)
+    (h_T_le : T₁ ≤ T₂)
+    (h_s_le : s₁ ≤ s₂) :
+    1 - K * Real.exp (-(c * T₁) * s₁)
+      ≤ 1 - K * Real.exp (-(c * T₂) * s₂) := by
+  have h_cT₁_nn : 0 ≤ c * T₁ := mul_nonneg h_c_nn h_T₁_nn
+  have h_step1 : 1 - K * Real.exp (-(c * T₁) * s₁)
+                  ≤ 1 - K * Real.exp (-(c * T₁) * s₂) :=
+    LL006_bound_monotone_in_squared_magnitude h_K_nn h_cT₁_nn h_s_le
+  have h_s₂_nn : 0 ≤ s₂ := le_trans h_s₁_nn h_s_le
+  have h_step2 : 1 - K * Real.exp (-(c * T₁) * s₂)
+                  ≤ 1 - K * Real.exp (-(c * T₂) * s₂) :=
+    LL006_bound_monotone_in_T h_K_nn h_c_nn h_s₂_nn h_T_le
+  linarith
+```
+
+**Proof.** Three-step composition: theorem 6 gives
+`bound(T₁, s₁) ≤ bound(T₁, s₂)`; theorem 7 gives
+`bound(T₁, s₂) ≤ bound(T₂, s₂)`; `linarith` chains them.
+Hypothesis bookkeeping: `0 ≤ T₁` plus `0 ≤ c` give the
+`0 ≤ c·T₁` that theorem 6 wants; `0 ≤ s₂` follows from
+`0 ≤ s₁ ≤ s₂` by transitivity for theorem 7's hypothesis.
+
+**Why this exists.** Real deployments don't pick one axis to
+improve. A move from "calibrated at N=20 / T=60" to
+"calibrated at N=80 / T=300" tightens both `δ²` and `T`
+simultaneously; this theorem says the bound on the new
+calibration dominates the bound on the old one without
+needing the operator to reason axis-by-axis.
+
+---
+
+## 9 — `LL006_bound_strict_monotone_in_squared_magnitude` (strict, δ²-axis)
+
+**Statement.** Strict version of theorem 6: when `0 < K`,
+`0 < c·T`, and `s₁ < s₂` (all strict), the bound is
+*strictly* tighter at `s₂`. Operationally: any *real*
+improvement in the adversary-magnitude bound produces a
+*real* improvement in the detection bound — the bound has
+no plateau regions along the adversary axis.
+
+```lean
+theorem LL006_bound_strict_monotone_in_squared_magnitude
+    {s₁ s₂ K c T : ℝ}
+    (h_K_pos : 0 < K)
+    (h_cT_pos : 0 < c * T)
+    (h_s_lt : s₁ < s₂) :
+    1 - K * Real.exp (-(c * T) * s₁)
+      < 1 - K * Real.exp (-(c * T) * s₂) := by
+  have h_inner_pos : c * T * s₁ < c * T * s₂ :=
+    mul_lt_mul_of_pos_left h_s_lt h_cT_pos
+  have h_inner : -(c * T) * s₂ < -(c * T) * s₁ := by nlinarith [h_inner_pos]
+  have h_exp : Real.exp (-(c * T) * s₂) < Real.exp (-(c * T) * s₁) :=
+    Real.exp_lt_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T) * s₂) < K * Real.exp (-(c * T) * s₁) :=
+    mul_lt_mul_of_pos_left h_exp h_K_pos
+  linarith
+```
+
+**Proof.** Same five-step shape as theorem 6 with strict-
+variant Mathlib lemmas: `mul_lt_mul_of_pos_left` instead of
+`mul_le_mul_of_nonneg_left`, `Real.exp_lt_exp.mpr` instead of
+`Real.exp_le_exp.mpr`. Strict propagation requires `0 < K`
+and `0 < c·T` (otherwise zero factors collapse the strict
+inequality to equality).
+
+**Why this exists.** Non-strict monotonicity (theorem 6)
+allows that a "trivial" improvement (e.g. `s₁ = s₂`) gives
+*at most* a tightening of the bound — but doesn't say
+strictly more. Theorem 9 closes that gap when the underlying
+inequality is genuinely strict.
+
+---
+
+## 10 — `LL006_bound_strict_monotone_in_T` (strict, T-axis)
+
+**Statement.** Strict version of theorem 7: extending the
+observation window — even by an infinitesimal — produces a
+*strict* improvement in the detection bound, provided
+there's actually adversary signal to detect (`0 < s`) and
+the bound has nonzero sensitivity (`0 < c`).
+
+```lean
+theorem LL006_bound_strict_monotone_in_T
+    {s K c T₁ T₂ : ℝ}
+    (h_K_pos : 0 < K)
+    (h_c_pos : 0 < c)
+    (h_s_pos : 0 < s)
+    (h_T_lt : T₁ < T₂) :
+    1 - K * Real.exp (-(c * T₁) * s)
+      < 1 - K * Real.exp (-(c * T₂) * s) := by
+  have h_cT_lt : c * T₁ < c * T₂ := mul_lt_mul_of_pos_left h_T_lt h_c_pos
+  have h_inner_pos : c * T₁ * s < c * T₂ * s :=
+    mul_lt_mul_of_pos_right h_cT_lt h_s_pos
+  have h_inner : -(c * T₂) * s < -(c * T₁) * s := by nlinarith [h_inner_pos]
+  have h_exp : Real.exp (-(c * T₂) * s) < Real.exp (-(c * T₁) * s) :=
+    Real.exp_lt_exp.mpr h_inner
+  have h_mul : K * Real.exp (-(c * T₂) * s) < K * Real.exp (-(c * T₁) * s) :=
+    mul_lt_mul_of_pos_left h_exp h_K_pos
+  linarith
+```
+
+**Proof.** Same shape as theorem 7 with strict variants:
+`mul_lt_mul_of_pos_left/right` and `Real.exp_lt_exp.mpr`.
+All four strict hypotheses (`0 < K`, `0 < c`, `0 < s`,
+`T₁ < T₂`) are needed; relaxing any one collapses strict
+inequality to non-strict.
+
+---
+
 ## What this collectively proves
 
-The seven theorems chain to give:
+The ten theorems chain to give:
 
 - **LL-021 worst-case bound** (theorem 1) — projected adversary
   magnitude is bounded by unprojected magnitude.
@@ -349,6 +477,17 @@ The seven theorems chain to give:
   `δ²` tightens the detection bound.
 - **Monotonicity in observation window** (theorem 7) — larger
   `T` tightens the detection bound.
+- **Joint monotonicity** (theorem 8) — bound improves when
+  *both* axes improve simultaneously; single citation point
+  for multi-axis deployment upgrades.
+- **Strict monotonicity in `δ²`** (theorem 9) — under positive
+  prefactor and exponent, any *real* improvement in adversary-
+  magnitude bound produces a *real* improvement in detection
+  bound; no plateau regions.
+- **Strict monotonicity in `T`** (theorem 10) — under positive
+  prefactor, exponent, and adversary signal, extending
+  observation by any positive duration produces a strict
+  detection improvement.
 
 ## What this does NOT prove
 
@@ -363,7 +502,7 @@ requires:
 - The lower-bound proof itself (probabilistic concentration
   inequality on the spectrum residue).
 
-Each is a multi-session research investment. The seven
+Each is a multi-session research investment. The ten
 theorems above prove every *algebraic* and *real-analysis*
 property the eventual `:proved` proof will compose with —
 the missing piece is the probability-space side.
@@ -376,7 +515,7 @@ top-level README §"Try it" or in `src/lean4/README.md`.
 ## Honest framing reminder
 
 Per the project's evidence-type discipline: a theorem with
-`sorry` in its body is **not** a proof. All seven theorems
+`sorry` in its body is **not** a proof. All ten theorems
 above are kernel-verified with no `sorry`. The build is configured so any `sorry` regression
 would surface as a `declaration uses 'sorry'` linter warning —
 the current build returns zero warnings, so the proofs are
