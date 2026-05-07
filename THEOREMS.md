@@ -19,7 +19,8 @@ warnings** — no `sorry`, no unused-variable, no deprecation. The
 Lean kernel verifies every proof at compile time.
 
 **Status.** All five theorems below are kernel-verified
-(`lean-proved` evidence type per `CLAUDE.md` §Evidence types).
+(`lean-proved` evidence type per the project's
+evidence-type discipline).
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
 theorem 1 below. Theorems 2–5 are composition lemmas building
@@ -274,10 +275,9 @@ top-level README §"Try it" or in `src/lean4/README.md`.
 
 ## Honest framing reminder
 
-Per `LAVALAMP_SPEC.md` and the project's evidence-type
-discipline: a theorem with `sorry` in its body is **not** a
-proof. All five theorems above are kernel-verified with no
-`sorry`. The build is configured so any `sorry` regression
+Per the project's evidence-type discipline: a theorem with
+`sorry` in its body is **not** a proof. All five theorems
+above are kernel-verified with no `sorry`. The build is configured so any `sorry` regression
 would surface as a `declaration uses 'sorry'` linter warning —
 the current build returns zero warnings, so the proofs are
 honest.

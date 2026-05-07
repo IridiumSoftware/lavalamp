@@ -119,63 +119,20 @@ on every push (202 assertions pass in ~53s).
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 See:
-- `LAVALAMP_SPEC.md` — authoritative claim ledger
 - `THEOREMS.md` — Lean 4 / Mathlib theorems with statements + proofs
-- `artifact_registry.md` — spec-to-evidence map
-- `dashboard.md` — current status + priority stack + open
-  questions
-- `changelog.md` — per-version diffs
-- `docs/*_companion.md` — per-session permanent records
+- `dashboard.md` — current status + priority stack + open questions
+- `src/julia/demo/lavalamp_demo.jl` — clone-and-run end-to-end walkthrough
+- `src/lean4/README.md` — Lean track build instructions + theorem plan
 
 ## Layout
 
 ```
 lavalamp/
 ├── README.md                                    ← you are here
-├── LAVALAMP_SPEC.md                             ← claim ledger
 ├── THEOREMS.md                                  ← Lean theorems summary
-├── artifact_registry.md                         ← spec-to-evidence map
-├── dashboard.md                                 ← status + priorities
-├── changelog.md                                 ← versioned entries
-├── .github/workflows/test.yml                   ← Julia CI (Pkg.test on push)
+├── dashboard.md                                 ← current status + priorities
+├── .github/workflows/test.yml                   ← Julia CI (Pkg.test + demo verify on push)
 ├── .github/workflows/lean.yml                   ← Lean CI (lake build on push)
-├── docs/                                        ← per-session companion docs
-│   ├── concept_origin_companion.md
-│   ├── synthesis_team_round1_companion.md
-│   ├── synthesis_team_round2_brief.md
-│   ├── synthesis_team_round2_companion.md
-│   ├── attack_surface_enumeration.md
-│   ├── architecture_design_companion.md
-│   ├── language_plan_catlab_tier_companion.md
-│   ├── qkd_pqc_complementarity_companion.md
-│   ├── p3_baseline_companion.md
-│   ├── p3a_sensor_coupling_companion.md
-│   ├── p3b_residue_audit_companion.md
-│   ├── p3c_chaos_guard_companion.md
-│   ├── p_r2a_side_channel_hardening_companion.md
-│   ├── p_r2b_calibration_confidentiality_companion.md
-│   ├── p_r2c_worst_case_adversary_companion.md
-│   ├── p3_bound_companion.md
-│   ├── ll021_benchmarked_companion.md
-│   ├── ll019_benchmarked_companion.md
-│   ├── spec_closure_pass_companion.md
-│   ├── audit_2026-05-03.md
-│   ├── ll020_strategy_2_epsilon_dp_companion.md
-│   ├── p3_nyq_companion.md
-│   ├── p3d_sde_selection_companion.md
-│   ├── os_identity_security_scoping_companion.md
-│   ├── audit_2026-05-04.md
-│   ├── ll020_strategy_2_benchmarked_companion.md
-│   ├── ll021_high_res_companion.md
-│   ├── ll019_high_res_companion.md
-│   ├── p3e_n_scaling_companion.md
-│   ├── p3f_per_sde_detection_power_companion.md
-│   ├── ll005_part_a_companion.md
-│   ├── pharos_scoping_companion.md
-│   ├── audit_2026-05-04_full.md
-│   ├── p_real_sensor_scoping_companion.md
-│   ├── synthesis_team_round3_brief.md
-│   └── threat_landscape_companion.md
 ├── visual/                                     ← decoupled visual layer (LL-002)
 │   ├── index.html                              ← canvas entry point
 │   ├── lavalamp.js                             ← Math.random() bubble simulator

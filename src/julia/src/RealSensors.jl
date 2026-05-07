@@ -9,7 +9,7 @@ in 0.0.38: API stubs are present but their bodies error with a
 clear pointer to the scoping companion. Per-platform FFI
 implementations (Linux sysfs/procfs first, then macOS IOKit,
 then Windows WMI) land in subsequent commits per the
-`docs/p_real_sensor_scoping_companion.md` §2.5 roadmap.
+the project-internal companion §2.5 roadmap.
 
 Conventions in force:
 - API surface mirrors LL-004's sensor categories: thermal,
@@ -64,7 +64,7 @@ function _scaffold_error(sensor_name::String)
         RealSensors.$sensor_name not yet implemented on platform :$platform.
         This is scaffold tier (LL-024 :argued at 0.0.38); per-platform
         FFI implementations land per the §2.5 roadmap in
-        `docs/p_real_sensor_scoping_companion.md` (Linux first, then
+        the project-internal companion (Linux first, then
         macOS, then Windows).
 
         For development or testing, use a synthetic substitute from

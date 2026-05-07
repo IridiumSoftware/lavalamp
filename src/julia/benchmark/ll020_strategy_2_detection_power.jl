@@ -39,7 +39,7 @@ Reproducibility: deterministic via fixed seeds. The DP-realization
 seeds are derived from a fixed base seed so the same ε_DP value
 produces the same noise draws across runs.
 
-Companion: `docs/ll020_strategy_2_benchmarked_companion.md`.
+Companion: the project-internal companion.
 """
 
 using Random
@@ -390,7 +390,7 @@ function run_benchmark()
             # deployment can choose ε_DP to land at an acceptable point
             # on the privacy / detection / FPR three-way trade-off.
             #
-            # Companion: docs/ll020_strategy_2_benchmarked_companion.md
+            # Companion: the project-internal companion
             """)
     end
     println("Done.")

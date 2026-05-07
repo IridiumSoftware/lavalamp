@@ -29,7 +29,8 @@
 
   Conventions in force:
     - `:proved` requires `lean-proved`, `type-checked`, or
-      `algebraic` evidence (CLAUDE.md §Evidence types).
+      `algebraic` evidence per the project's evidence-type
+      discipline.
     - A theorem with `sorry` in its body is NOT a proof; the
       corresponding LL entry stays at its pre-Lean status until
       `sorry` is removed.
@@ -37,8 +38,7 @@
       the corresponding LL entry's evidence type moves to
       `lean-proved` and status to `:proved`.
 
-  Round-3 amendments (per LL-021 round-3 amendment in
-  `LAVALAMP_SPEC.md`):
+  Round-3 amendments to LL-021:
     - Scope-limit to finite-N regime (operationally N ≤ 80).
     - Adaptive-adversary bound stated explicitly.
   These amendments are spec-text refinements; the Lean theorem
@@ -71,8 +71,7 @@ namespace LavaLamp
 
     The empirical fit constants from 0.0.18 + 0.0.28 are
     `K = 1, c′ = 0.0288, T = 60.0` at N = 20 (validated at
-    n = 15 trials per (direction, magnitude) point per
-    `docs/ll021_high_res_companion.md`).
+    n = 15 trials per (direction, magnitude) point).
 
     Round-3 amendments per LL-021 spec entry:
     - Scope-limit to finite-N regime (this theorem applies in

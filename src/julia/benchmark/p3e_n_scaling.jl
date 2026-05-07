@@ -41,7 +41,7 @@ Run from `src/julia/`:
 julia --project=. benchmark/p3e_n_scaling.jl
 ```
 
-Companion: `docs/p3e_n_scaling_companion.md`.
+Companion: the project-internal companion.
 """
 
 using Random
@@ -252,7 +252,7 @@ function run_benchmark()
         write(io, """
 
             # ===
-            # LL-003 N-scaling finding (per docs/p3e_n_scaling_companion.md):
+            # LL-003 N-scaling finding:
             # Lorenz-96 at F=8 exhibits the expected extensive-chaos scaling
             # h_KS ∝ N within sampling-variance bounds. Per-N intensities
             # converge to a constant `h_KS / N ≈ ...` (Lyapunov density per

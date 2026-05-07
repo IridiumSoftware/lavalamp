@@ -3,7 +3,7 @@ LL-019-high-res — Higher-resolution refresh of the timing-
 distribution benchmark for the LL-019 :benchmarked-tier
 verdict.
 
-The 0.0.19 :benchmarked fit (`docs/ll019_benchmarked_companion.md`)
+The 0.0.19 :benchmarked fit (the project-internal companion)
 used 200 samples per bucket × α=0.05, giving:
 - KS critical at α=0.05: 0.170
 - verify_constant_time KS_stat: 0.109 → INDISTINGUISHABLE
@@ -64,7 +64,7 @@ Wall clock: ~250-300s on Apple Silicon (100 spectrum
 estimations + 2000 timed verify_constant_time calls at
 target=0.1s + 2000 plain verify calls).
 
-Companion: `docs/ll019_high_res_companion.md`.
+Companion: the project-internal companion.
 """
 
 using Random

@@ -340,7 +340,7 @@ Gaussian noise on σ (the obvious application of the Gaussian
 mechanism) can push σ near zero or negative, requiring a floor
 that operationally collapses the verifier's threshold to ~0 and
 forces every candidate trajectory to be rejected (including the
-genuine device — see `docs/audit_2026-05-04.md` for the negative
+genuine device — see the project-internal audit companion for the negative
 result that surfaced this). The variance-convolution form sidesteps
 the issue by computing the σ a verifier *needs* to see: the
 expected variance of the residual `λ_genuine - spectrum_pub`,
@@ -393,10 +393,10 @@ slip through more easily; detection power decreases monotonically
 as ε decreases.
 
 This implements LL-020 Strategy 2 from
-`docs/p_r2b_calibration_confidentiality_companion.md` §2.2,
+the project-internal companion §2.2,
 with the variance-convolution σ refinement landed 2026-05-04
 in response to the diagnostic finding documented in
-`docs/audit_2026-05-04.md`. Other LL-020 strategies (TPM-sealed
+the project-internal audit companion. Other LL-020 strategies (TPM-sealed
 storage; multi-party threshold scheme) require platform /
 cryptographic-library coupling and live in P7 hardening / P5
 Haskell tracks.

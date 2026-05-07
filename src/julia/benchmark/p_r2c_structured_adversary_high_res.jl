@@ -2,7 +2,7 @@
 P-R2c-high-res — Higher-resolution refresh of the structured-adversary
 detection benchmark for LL-021.
 
-The 0.0.18 :benchmarked fit (`docs/ll021_benchmarked_companion.md`)
+The 0.0.18 :benchmarked fit (the project-internal companion)
 used 5 trials per (direction, magnitude) point, which produced
 Wilson 95% CIs of width ~0.43 around 0/5 sample frequencies and
 ~0.65 around 3/5. The fit's binding constraint was MIXED at
@@ -40,7 +40,7 @@ Run from `src/julia/`:
 julia --project=. benchmark/p_r2c_structured_adversary_high_res.jl
 ```
 
-Companion: `docs/ll021_high_res_companion.md`.
+Companion: the project-internal companion.
 """
 
 using Random
@@ -205,7 +205,7 @@ function run_benchmark()
 
             # ===
             # Refit and Wilson 95% CI analysis live in the
-            # companion: docs/ll021_high_res_companion.md.
+            # companion: the project-internal companion.
             #
             # Expected outcome shape (per ll021_benchmarked_companion.md
             # §2.5 follow-up note): Wilson CI width on 0/n sample

@@ -40,10 +40,10 @@ basin-spoofing attack surface (V-002 — multi-basin reaction-
 diffusion regimes the visual layer would want to use) returns.**
 
 See:
-- `../LAVALAMP_SPEC.md` LL-002 — invariant statement
-- `../docs/synthesis_team_round1_companion.md` — decoupling
-  resolution
-- `../dashboard.md` "asymmetry-trap watch" — discipline note
+- `../README.md` "Architectural separation" section — invariant
+  statement (LL-002) and the visual ↔ security decoupling
+  rationale.
+- `../dashboard.md` "asymmetry-trap watch" — discipline note.
 
 ## Decoupling assertions
 

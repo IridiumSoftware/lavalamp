@@ -166,7 +166,7 @@ f_sensor >     bandwidth          (sensor captures the substrate's noise band)
 This predicate is **parameter-side LL-005 evidence only**. It does
 *not* certify that the residue audit detects sub-Nyquist sensor
 adversaries — that adversary-side question was answered NEGATIVE
-in 0.0.24 P3-Nyq (`docs/p3_nyq_companion.md`); zero-mean noise has
+in 0.0.24 P3-Nyq (the project-internal companion); zero-mean noise has
 the same time-averaged statistics under sub-sampling, so the
 Lyapunov-spectrum residue audit is *invariant* to sub-Nyquist
 reconstruction. A fully-`:tested` LL-005 entry would require

@@ -75,7 +75,7 @@ Summary
 • Wall-clock — verify (adversary) : <TIMING> s
 
 ✅ All three pillars of the LavaLamp pipeline behave as specified.
-   See LAVALAMP_SPEC.md for the canonical claim ledger; src/lean4/
-   for the Lean 4 / Mathlib v4.29.1 formal-verification track.
+   See THEOREMS.md for the Lean 4 / Mathlib v4.29.1 formal-
+   verification track; src/lean4/ for the Lake project itself.
 
 Demo complete.

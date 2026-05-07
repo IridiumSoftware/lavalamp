@@ -53,7 +53,7 @@ julia --project=. benchmark/p3f_per_sde_detection_power.jl
 Wall clock: ~5 min on Apple Silicon (mostly Lorenz-96 N=20 runs;
 Lorenz-63 / Rössler are 3-D and very fast).
 
-Companion: `docs/p3f_per_sde_detection_power_companion.md`.
+Companion: the project-internal companion.
 """
 
 using Random
@@ -317,7 +317,7 @@ function run_benchmark()
             # characterises detection power for parameter-space
             # adversaries against each engine candidate.
             #
-            # Companion: docs/p3f_per_sde_detection_power_companion.md
+            # Companion: the project-internal companion
             """)
     end
 

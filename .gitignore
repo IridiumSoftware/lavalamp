@@ -46,3 +46,9 @@ CLAUDE.md
 # paper-index hook artifacts (local navigation aids; not project content)
 .paper-index.json
 **/.paper-index.json
+
+# Project-internal governance / process records — kept local, not tracked publicly
+LAVALAMP_SPEC.md
+artifact_registry.md
+changelog.md
+docs/

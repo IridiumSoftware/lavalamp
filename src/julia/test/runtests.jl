@@ -128,7 +128,7 @@ end
         # the adversary-side (residue audit detects sub-Nyquist
         # adversaries) was answered NEGATIVE in 0.0.24 P3-Nyq, so
         # LL-005 entry-level status remains :argued. See
-        # `docs/p3_nyq_companion.md` and `docs/ll005_part_a_companion.md`.
+        # the project-internal companion and the project-internal companion.
 
         # Prototype defaults satisfy compliance for plausible BW.
         # Δt=0.05 → f_SDE=20 Hz; gaussian_noise_stream default
@@ -783,7 +783,7 @@ end
     @testset "Real-sensor scaffold (LL-024)" begin
         # Scaffold-tier API surface exists but errors meaningfully.
         # Per LL-024 :argued at 0.0.38; per-platform FFI implementations
-        # land per the docs/p_real_sensor_scoping_companion.md §2.5
+        # land per the the project-internal companion §2.5
         # roadmap (Linux first, then macOS, then Windows). These tests
         # confirm the module imports + the API surface + the error
         # discipline (scaffold stubs error rather than silently

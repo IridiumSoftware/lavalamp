@@ -2,9 +2,8 @@
 LavaLamp — substrate-bound identity primitive (Julia prototype core).
 
 Project status: design-stage → prototype-stage. This module is the P3
-prototype core entry point. Architectural design is fixed in
-`docs/architecture_design_companion.md`; this module implements that
-design under the discipline declared in `LAVALAMP_SPEC.md`.
+prototype core entry point. Architectural design is fixed by the
+project's spec discipline; this module implements that design.
 
 Conventions in force:
 - Real-valued mathematics throughout (LL-009 boundary).

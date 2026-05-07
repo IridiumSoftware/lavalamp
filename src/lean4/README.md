@@ -31,7 +31,7 @@ h_proj_le_one` (a direct application of the Mathlib lemma
   breaks `LL021_worst_case_bound` will fail the build via
   `.github/workflows/lean.yml`. CI on the Lean track now
   has teeth.
-- **Evidence-type discipline.** Per CLAUDE.md §Honest framing,
+- **Evidence-type discipline.** Per the project's honest-framing discipline,
   a sorry-stubbed theorem is not a proof. The L1 → L2 split
   in 0.0.47 → 0.0.48 made this rule operational: L1's
   sorry-stub left LL-021 at `:benchmarked`; only when L2
@@ -59,7 +59,7 @@ warning. The Lean kernel verified the proof at compile time;
 the build is now a real correctness check on
 `LL021_worst_case_bound`.
 
-Per CLAUDE.md package-management discipline, every commit
+Per the package-management discipline, every commit
 landing in this directory verifies a clean checkout +
 `lake update` + `lake exe cache get` + `lake build` cycle
 before commit.
@@ -123,7 +123,7 @@ historical reference):
 
 ## Package-management discipline
 
-Per CLAUDE.md:
+Discipline:
 
 > Lean4 | `lean-toolchain` + `lake-manifest.json`
 >
@@ -145,7 +145,7 @@ Current state at 0.0.47:
   scaffold tier when no deps existed). Pins Mathlib v4.29.1 +
   8 transitive deps with full commit hashes; `lake update`
   regenerates the manifest deliberately on dependency-update
-  commits per CLAUDE.md.
+  commits per the lockfile-update discipline.
 
 ## Round-3 trigger conditions
 

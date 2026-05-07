@@ -233,8 +233,8 @@ println()
 
 if all_ok
     println("\n✅ All three pillars of the LavaLamp pipeline behave as specified.")
-    println("   See LAVALAMP_SPEC.md for the canonical claim ledger; src/lean4/")
-    println("   for the Lean 4 / Mathlib v4.29.1 formal-verification track.")
+    println("   See THEOREMS.md for the Lean 4 / Mathlib v4.29.1 formal-")
+    println("   verification track; src/lean4/ for the Lake project itself.")
 else
     println("\n❌ One or more pipeline stages diverged from spec. Investigate before shipping.")
     exit(1)
