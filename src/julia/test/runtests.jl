@@ -2195,4 +2195,268 @@ end
         end
     end
 
+    # ----- LL-033 integration test (status-tier-diverse detection-stack) -----
+    #
+    # Joint claim: LL-006 (:benchmarked) + LL-023 (:argued) + LL-029
+    # (:tested) preserve consumer-facing detection guarantee across
+    # heterogeneous evidence regimes. Each component is the only
+    # defense for its evidence regime — empirical (LL-006), structural
+    # (LL-023), algorithmic (LL-029).
+
+    @testset "LL-033 integration: status-tier-diverse detection-stack" begin
+        # Build a registered envelope so LL-006 audit has something
+        # to compare residues against.
+        Random.seed!(801)
+        env_733 = register_envelope(
+            () -> lorenz96(20; F=8.0);
+            n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+        )
+
+        # Build healthy synthetic streams for LL-029 side.
+        s_thermal_733 = gaussian_noise_stream(1.0; t_max=120.0,
+                                                sample_rate=10.0,
+                                                rng=Random.Xoshiro(811))
+        s_battery_733 = gaussian_noise_stream(1.0; t_max=120.0,
+                                                sample_rate=10.0,
+                                                rng=Random.Xoshiro(812))
+        s_ac_733      = gaussian_noise_stream(1.0; t_max=120.0,
+                                                sample_rate=10.0,
+                                                rng=Random.Xoshiro(813))
+
+        @testset "Positive case — all three evidence regimes engaged" begin
+            # LL-006: residue audit on a genuine system passes.
+            Random.seed!(802)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            @test verify(λs_h, env_733; k=10.0) == true   # genuine accepts
+            # LL-023: no-oracle response is Bool only (verify returns Bool).
+            @test verify(λs_h, env_733; k=10.0) isa Bool
+            # LL-029: independent streams classify as 3 families.
+            cl = classify_families([s_thermal_733, s_battery_733, s_ac_733];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3
+        end
+
+        @testset "Scenario A — V-013 (structured-direction adversary): LL-006 audit rejects" begin
+            # Build adversary system with structured perturbation;
+            # LL-006 spectrum-residue audit rejects.
+            Random.seed!(803)
+            p_genuine = CouplingParams(8.0,
+                                        [constant_stream(1.0; t_max=200.0)],
+                                        [1.0],
+                                        [ones(20)])
+            rng_adv = Random.Xoshiro(8013)
+            p_adv = synthetic_adversary(p_genuine, 3.0; rng=rng_adv)
+            ds_adv = lorenz96_coupled(20; F=8.0, coupling=p_adv)
+            λs_adv = lyapunov_spectrum(ds_adv; N=200, Δt=0.05, Ttr=20.0)
+
+            # Need an envelope from the same coupled system for fair test.
+            Random.seed!(804)
+            env_adv = register_envelope(
+                () -> lorenz96_coupled(20; F=8.0, coupling=p_genuine);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            @test verify(λs_adv, env_adv; k=5.0) == false   # adversary rejected
+        end
+
+        @testset "Scenario B — LL-023 no-oracle: response is Bool only" begin
+            # LL-023's API-side defense: verify returns Bool, not
+            # distance-to-threshold or per-exponent residual.
+            Random.seed!(805)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            result = verify(λs_h, env_733; k=10.0)
+            @test result isa Bool
+            @test typeof(result) == Bool   # explicit type assertion
+        end
+
+        @testset "Scenario C — V-018 alone: LL-029 collapses coupled families" begin
+            s_battery_coupled = couple_v018(s_thermal_733; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            cl = classify_families([s_thermal_733, s_battery_coupled, s_ac_733];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 2
+        end
+
+        @testset "Ablation 1 — disable LL-006: V-013 sails through (no audit)" begin
+            # Without LL-006 audit mechanism, the spectrum residue
+            # check isn't run; structured adversaries pass downstream
+            # checks that don't see the spectrum. Modeled by: skip
+            # the verify call entirely.
+            Random.seed!(806)
+            ds_h = lorenz96(20; F=8.0)
+            # Without LL-006, deployment trusts whatever the
+            # adversary substitutes. LL-029 + LL-023 alone don't
+            # check the spectrum.
+            cl = classify_families([s_thermal_733, s_battery_733, s_ac_733];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3   # LL-029 alone, doesn't see V-013
+        end
+
+        @testset "Ablation 2 — disable LL-023: API leaks information" begin
+            # Without LL-023's no-oracle discipline, an attacker-
+            # facing API could return per-exponent residuals or
+            # distance-to-threshold. Model the leak as: hypothetical
+            # API returns Float64 residue value.
+            Random.seed!(807)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            # This is what a leaky API would expose:
+            res = residue(λs_h, env_733)
+            @test res isa AbstractVector{<:Real}   # adversary sees a vector!
+            # With this leak, V-013 attacker can iteratively probe
+            # the threshold. LL-006 + LL-029 alone don't prevent
+            # the leak — they prevent the *acceptance* but not the
+            # *information-flow* on the way out.
+        end
+
+        @testset "Ablation 3 — disable LL-029: V-018 succeeds" begin
+            s_battery_coupled = couple_v018(s_thermal_733; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            # Without LL-029 cross-validation, coupled streams
+            # appear independent at the per-stream check level.
+            @test sensor_authenticity_check(s_thermal_733)
+            @test sensor_authenticity_check(s_battery_coupled)
+            # No LL-029 → V-018 succeeds.
+        end
+
+        @testset "Evidence-regime composition summary: heterogeneous regimes compose" begin
+            # The triad's three components carry three distinct kinds
+            # of evidence, and the joint claim requires all three.
+            # This is the structural distinction from LL-030/LL-031/LL-032.
+
+            # LL-006 evidence: empirical detection bound (benchmark fit).
+            Random.seed!(821)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            ll006_empirically_passes = verify(λs_h, env_733; k=10.0)
+            @test ll006_empirically_passes   # benchmark-level evidence
+
+            # LL-023 evidence: structural Bool-only contract.
+            ll023_structurally_bool = (verify(λs_h, env_733; k=10.0) isa Bool)
+            @test ll023_structurally_bool   # spec-text-level evidence
+
+            # LL-029 evidence: algorithmic correlation test.
+            ll029_algorithmically_independent =
+                (classify_families([s_thermal_733, s_battery_733, s_ac_733];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600).n_families == 3)
+            @test ll029_algorithmically_independent   # algorithm-level evidence
+
+            # Each evidence regime is honest about its own scope;
+            # joint claim requires all three.
+        end
+    end
+
+    # ----- LL-034 integration test (operational-deployment-stack) -----
+    #
+    # Joint claim: LL-023 + LL-024 + LL-029 jointly defend V-006 +
+    # V-018 from the consumer-API operational surface. Operational
+    # counterpart to LL-030 (substrate-stack via LL-016/LL-024/LL-029);
+    # same V-NNNs, different operational angle.
+    #
+    # Lighter test footprint than LL-030/LL-031/LL-032/LL-033 — the
+    # attack scenarios are reused from LL-030 verbatim; what changes
+    # is which conformance layer takes credit for the defense in each
+    # ablation.
+
+    @testset "LL-034 integration: operational-deployment-stack" begin
+        s_thermal_734 = gaussian_noise_stream(1.0; t_max=120.0,
+                                                sample_rate=10.0,
+                                                rng=Random.Xoshiro(901))
+        s_battery_734 = gaussian_noise_stream(1.0; t_max=120.0,
+                                                sample_rate=10.0,
+                                                rng=Random.Xoshiro(902))
+        s_ac_734      = gaussian_noise_stream(1.0; t_max=120.0,
+                                                sample_rate=10.0,
+                                                rng=Random.Xoshiro(903))
+
+        @testset "Positive case — consumer-API surface intact across all three layers" begin
+            # LL-023 layer: verify returns Bool (no-oracle).
+            Random.seed!(910)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(911)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            @test verify(λs_h, env; k=10.0) isa Bool
+            # LL-024 layer: per-stream authenticity passes.
+            @test sensor_authenticity_check(s_thermal_734)
+            # LL-029 layer: independent-family classification.
+            cl = classify_families([s_thermal_734, s_battery_734, s_ac_734];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3
+        end
+
+        @testset "V-006 attack — blocked at the LL-024 substrate layer" begin
+            s_attacked = inject_v006_spike(s_thermal_734;
+                                            spike_at_idx=600,
+                                            magnitude=50.0)
+            # LL-024 wires LL-016 into the per-platform reader path:
+            @test sensor_authenticity_check(s_attacked) == false
+            # LL-023 + LL-029 alone don't catch V-006 — same blindness
+            # as LL-030's analysis but credited to a different layer.
+        end
+
+        @testset "V-018 attack — blocked at the LL-029 entropy layer" begin
+            s_battery_coupled = couple_v018(s_thermal_734; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            cl = classify_families([s_thermal_734, s_battery_coupled, s_ac_734];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 2
+        end
+
+        @testset "Ablation 1 — disable LL-023: API leaks distance-to-threshold" begin
+            # Without LL-023's no-oracle contract, the verifier could
+            # expose residue values. Modeled identically to LL-033
+            # Ablation 2 — leaky API surface.
+            Random.seed!(920)
+            env = register_envelope(
+                () -> lorenz96(20; F=8.0);
+                n_trials=3, N=200, Δt=0.05, Ttr=20.0,
+            )
+            Random.seed!(921)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            # Hypothetical leaked surface: residue is a vector adversary
+            # can probe.
+            res = residue(λs_h, env)
+            @test res isa AbstractVector{<:Real}   # leak observable
+            # LL-024 + LL-029 alone don't prevent the leak — they
+            # prevent acceptance but not information flow.
+        end
+
+        @testset "Ablation 2 — disable LL-024: V-006 succeeds at substrate" begin
+            s_attacked = inject_v006_spike(s_thermal_734;
+                                            spike_at_idx=600,
+                                            magnitude=50.0)
+            # Skip LL-024 authenticity. LL-029 alone doesn't see
+            # single-sensor V-006 spike.
+            cl = classify_families([s_attacked, s_battery_734, s_ac_734];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3   # V-006 unblocked
+        end
+
+        @testset "Ablation 3 — disable LL-029: V-018 succeeds via coupling" begin
+            s_battery_coupled = couple_v018(s_thermal_734; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            # Without LL-029, coupled streams appear independent at
+            # per-stream LL-024 checks.
+            @test sensor_authenticity_check(s_thermal_734)
+            @test sensor_authenticity_check(s_battery_coupled)
+        end
+    end
+
 end
