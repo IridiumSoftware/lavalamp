@@ -1,6 +1,6 @@
 # artifact_registry.md — LavaLamp
 
-Version: 0.0.56 (top-level `THEOREMS.md` lands as auto-citable summary of all 5 Lean theorems with statements + proofs; readable without Lean install; README trimmed — version-by-version "Trajectory" + Round 3 narrative blocks removed (changelog has the durable record); README "See:" list and Layout block updated — `THEOREMS.md` added, `CLAUDE.md` removed (untracked since 0.0.53); counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
+Version: 0.0.57 (CI status badges (Julia + Lean) added to top README — visible-from-clone proof of green build; canonical demo output captured at `src/julia/demo/expected_output.txt` (wall-clock timings normalized to `<TIMING>`; everything else asserted exact-match); `src/julia/demo/verify_demo.sh` helper runs demo + diffs against expected; `.github/workflows/test.yml` gains a "Verify demo against canonical output" step so cross-machine reproducibility is asserted on every push; demo's hardcoded version-string dropped from output (so reference file isn't locked to a version); README "Try it" section gains a reproducibility-check paragraph; counts unchanged at 29/1/3/0/4/20/1; 2026-05-06)
 Bridges every entry in `LAVALAMP_SPEC.md` to its evidence file.
 
 ## Coverage rule

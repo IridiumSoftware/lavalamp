@@ -1,6 +1,9 @@
 # LavaLamp
 
-A device-bound identity primitive. Prototype-stage; private repo.
+[![Julia CI](https://github.com/IridiumSoftware/lavalamp/actions/workflows/test.yml/badge.svg)](https://github.com/IridiumSoftware/lavalamp/actions/workflows/test.yml)
+[![Lean CI](https://github.com/IridiumSoftware/lavalamp/actions/workflows/lean.yml/badge.svg)](https://github.com/IridiumSoftware/lavalamp/actions/workflows/lean.yml)
+
+A device-bound identity primitive. Prototype-stage.
 
 ## What it is
 
@@ -77,9 +80,19 @@ The demo exits with `✅ All three pillars of the LavaLamp pipeline
 behave as specified.` if the LL-003 / LL-004 / LL-006 / LL-007 /
 LL-019 / LL-021 layers are all working as the spec requires.
 
-For the formal-verification side, see `src/lean4/` — Lean 4 +
-Mathlib v4.29.1 with `LL021_worst_case_bound` proved at 0.0.48
-(the first-ever LavaLamp `:proved` entry).
+**Cross-machine reproducibility check.** The demo's deterministic
+output (numerical values, state transitions, accept/reject
+decisions) is captured at `src/julia/demo/expected_output.txt`.
+Run `bash src/julia/demo/verify_demo.sh` from the repo root to
+execute the demo and assert the output matches; wall-clock
+timings are normalized before diffing. CI runs this on every
+push (see `Julia CI` badge above).
+
+For the formal-verification side, see `THEOREMS.md` for a
+single-file summary of the five Lean 4 theorems (with statements
++ proofs); `src/lean4/` for the Lake project itself; Mathlib
+v4.29.1 with `LL021_worst_case_bound` proved at 0.0.48 — the
+first-ever LavaLamp `:proved` entry.
 
 ## Status
 
@@ -180,7 +193,9 @@ lavalamp/
         ├── Project.toml + Manifest.toml         ← lockfile-pinned deps
         ├── src/{LavaLamp,Sensors,Engine,Audit,ChaosGuard,RealSensors}.jl
         ├── test/runtests.jl                     ← 202 assertions, run via Pkg.test()
-        ├── demo/lavalamp_demo.jl                ← clone-and-run end-to-end walkthrough (0.0.51)
+        ├── demo/lavalamp_demo.jl                ← clone-and-run end-to-end walkthrough
+        ├── demo/expected_output.txt             ← canonical demo output (timings normalized)
+        ├── demo/verify_demo.sh                  ← cross-machine reproducibility check
         └── benchmark/
             ├── p3b_detection_probability.jl
             ├── p_r2c_structured_adversary.jl

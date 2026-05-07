@@ -56,7 +56,7 @@ using LavaLamp.ChaosGuard: Guard, default_config, update!, is_valid,
                             WARMUP, VALID
 
 println("="^72)
-println("LavaLamp end-to-end demo — 0.0.51")
+println("LavaLamp end-to-end demo")
 println("Substrate-bound identity primitive; chaotic-SDE residue audit")
 println("="^72)
 

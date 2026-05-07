@@ -5,6 +5,132 @@ messages match entry summaries.
 
 ---
 
+## 0.0.57 — 2026-05-06 — CI badges + demo cross-machine reproducibility check
+
+Two infrastructure improvements visible from the public
+README's first screen.
+
+**1. Julia + Lean CI status badges.** Three-line markdown
+addition at the top of README (between the title and the
+description), using GitHub Actions' standard
+`actions/workflows/{file}/badge.svg` URLs. A reader sees
+green / red / in-progress before scrolling. The article's
+"machine-verified worst-case bound" claim gains visible-
+from-clone proof — readers don't have to trust the README
+text; they see the build is green right now.
+
+**2. Demo cross-machine reproducibility check.** Promotes
+the demo from "it ran on Aaron's laptop" to "it produces
+this exact output across machines." Three pieces:
+
+- **`src/julia/demo/expected_output.txt`** — the demo's
+  canonical stdout, wall-clock timings normalized to
+  `<TIMING>`. Six timing lines total: one
+  `registered in` line, two `verify_full ... in` lines,
+  and three `Wall-clock —` summary lines. Everything else
+  (residue/σ ratios `2.97` honest / `14.47` adversary; λ
+  values; state transitions; accept/reject decisions) is
+  deterministic per seed + Julia version + Mathlib /
+  DifferentialEquations.jl version, asserted by exact
+  match.
+
+- **`src/julia/demo/verify_demo.sh`** — bash helper that
+  runs the demo, normalizes timings via a single sed
+  expression, diffs against `expected_output.txt`. Exits
+  `0` on match (`✅ Demo output matches expected_output.txt
+  (cross-machine reproducible).`); exits `1` on divergence
+  with a clear regenerate-on-intentional-change message:
+
+  ```
+  ❌ Demo output differs from expected_output.txt
+     Actual (normalized) output saved at: <tmp>
+
+     If this divergence is intentional (e.g. Julia or
+     DifferentialEquations.jl version bump shifted numerical
+     values within tolerance), regenerate expected_output.txt:
+
+         julia --project=src/julia src/julia/demo/lavalamp_demo.jl 2>&1 \
+           | sed -E '<NORMALIZE_SED>' > src/julia/demo/expected_output.txt
+  ```
+
+- **CI integration.** `.github/workflows/test.yml` gains a
+  "Verify demo against canonical output" step that runs
+  after `julia-actions/julia-runtest`. Every push to master
+  + every PR asserts both the test suite *and* the demo
+  produce expected output. Public CI status surfaces both
+  via the badge.
+
+**Bug fix bundled in.** The demo's hardcoded version-string
+(`— 0.0.51`) was dropped from stdout — locking
+`expected_output.txt` to a specific project version would
+mean every version bump requires regenerating the
+reference file (defeating the point of having one). The
+version line now reads `LavaLamp end-to-end demo` without
+a version suffix; the version is documented in the source
+file's header comment, not in the runtime output.
+
+**README "Try it" section update.** New paragraph between
+the demo description and the formal-verification pointer:
+
+> **Cross-machine reproducibility check.** The demo's
+> deterministic output (numerical values, state
+> transitions, accept/reject decisions) is captured at
+> `src/julia/demo/expected_output.txt`. Run
+> `bash src/julia/demo/verify_demo.sh` from the repo root
+> to execute the demo and assert the output matches;
+> wall-clock timings are normalized before diffing. CI
+> runs this on every push (see `Julia CI` badge above).
+
+The "for the formal-verification side" pointer is updated
+to reference `THEOREMS.md` (the 0.0.56 single-file summary)
+as the entry point, not just `src/lean4/`.
+
+**README Layout block update.** `demo/expected_output.txt`
+and `demo/verify_demo.sh` rows added to the file
+inventory; `demo/lavalamp_demo.jl` row no longer pinned
+to a specific version.
+
+**Verification status.** `verify_demo.sh` runs locally
+green: `✅ Demo output matches expected_output.txt
+(cross-machine reproducible).` (~4-5 seconds wall-clock).
+First push to master will trigger CI; the badge will
+update from "no status" to green / red.
+
+**Article credibility.** The two badges + the
+reproducibility check together strengthen the X article's
+LavaLamp paragraph: a reader can see the build is green,
+clone the repo, run `bash src/julia/demo/verify_demo.sh`,
+and verify the demo's output exactly matches the canonical
+reference — without having to trust Aaron's laptop.
+
+Counts unchanged at 29/1/3/0/4/20/1.
+
+**Files touched this version:**
+
+- `README.md` — Julia + Lean CI badges added between
+  title and description; "private repo" wording (stale
+  since 0.0.52 public flip) replaced with "Prototype-
+  stage."; "Try it" section gains a Cross-machine
+  reproducibility check paragraph; formal-verification
+  pointer references `THEOREMS.md`; Layout block adds
+  `expected_output.txt` + `verify_demo.sh` rows; demo
+  Layout entry no longer pinned to "0.0.51".
+- `src/julia/demo/expected_output.txt` — **new file**;
+  ~80 lines; demo's canonical stdout with timings
+  normalized.
+- `src/julia/demo/verify_demo.sh` — **new file**;
+  ~50 lines; executable; runs demo + diffs.
+- `src/julia/demo/lavalamp_demo.jl` — version-string
+  dropped from print statement (header comment unchanged).
+- `.github/workflows/test.yml` — added "Verify demo
+  against canonical output" step.
+- `artifact_registry.md` — version line bump.
+- `dashboard.md` — last-updated stamp; Recent companion
+  docs section gets new top entry.
+- `changelog.md` — this entry.
+
+---
+
 ## 0.0.56 — 2026-05-06 — `THEOREMS.md` at repo root + README trim
 
 Lands two readability-tier improvements for the public repo:

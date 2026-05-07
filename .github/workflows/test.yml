@@ -41,3 +41,5 @@ jobs:
       - uses: julia-actions/julia-runtest@v1
         with:
           project: src/julia
+      - name: Verify demo against canonical output
+        run: bash src/julia/demo/verify_demo.sh

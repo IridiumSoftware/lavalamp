@@ -1,6 +1,6 @@
 # Dashboard — LavaLamp
 
-Last updated: 2026-05-06 (0.0.56 — top-level `THEOREMS.md` lands; auto-citable summary of all 5 Lean theorems with statements + proofs, readable without Lean install; README trimmed — Trajectory + Round 3 narrative blocks removed; `CLAUDE.md` removed from See list and Layout (untracked since 0.0.53); counts unchanged at 29/1/3/0/4/20/1).
+Last updated: 2026-05-06 (0.0.57 — CI status badges (Julia + Lean) added to top README; canonical demo output at `src/julia/demo/expected_output.txt` (timings normalized) + `verify_demo.sh` helper + CI step assert cross-machine reproducibility on every push; counts unchanged at 29/1/3/0/4/20/1).
 
 ## Status summary
 
@@ -591,6 +591,34 @@ Remaining `:open` entries fall into two classes:
   deployments must specify which A4 capability level they assume.
 
 ## Recent companion docs / formal artefacts
+
+- **CI badges + demo cross-machine reproducibility check**
+  (0.0.57, 2026-05-06) — Two infrastructure improvements
+  visible from the public README's first screen:
+  - **Julia CI + Lean CI status badges** at the top of
+    README — three-line markdown using
+    `actions/workflows/{file}/badge.svg` URLs. A reader
+    sees green/red/in-progress before scrolling. Article
+    gains visible-from-clone proof of green build.
+  - **Demo cross-machine reproducibility.** Canonical demo
+    output captured at `src/julia/demo/expected_output.txt`
+    with wall-clock timings normalized to `<TIMING>` (the
+    only non-deterministic content; six lines total —
+    `register`, two `verify_full`, three `Wall-clock —`
+    summary). Helper script `src/julia/demo/verify_demo.sh`
+    runs the demo, normalizes timings, diffs against
+    expected; exits 0 on match, 1 on divergence with a
+    clear regenerate-on-intentional-change message. CI
+    workflow `.github/workflows/test.yml` gains a "Verify
+    demo against canonical output" step that runs after
+    `Pkg.test()` — every push asserts both the test suite
+    *and* the demo produce expected output.
+  Bug fix bundled: demo's hardcoded version-string
+  (`— 0.0.51`) dropped from stdout so `expected_output.txt`
+  isn't locked to a specific project version. README "Try
+  it" section gains a reproducibility-check paragraph
+  pointing at the helper. Counts unchanged at
+  29/1/3/0/4/20/1.
 
 - **`THEOREMS.md` lands at repo root** (0.0.56, 2026-05-06)
   — Auto-citable summary of every theorem proved in
