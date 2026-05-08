@@ -1,14 +1,33 @@
 CANONICAL HASHES
-LavaLamp: Substrate-Bound Identity via Chaotic-SDE Residue Audit
+LavaLamp Whitepaper + Triad Deployments Threat-Landscape Companion
 Aaron Green, May 2026
 
 ================================================================
 
 Canonical URL:  https://github.com/IridiumSoftware/lavalamp
 Released:       2026-05-08
-Release tag:    whitepaper-v1.0
+Release tag:    whitepaper-v1.0 + threat-landscape-v1.0
 License:        Triadic Closure License (TCL) v1.3
 Author:         Aaron Green
+
+This file documents the canonical SHA-256 hashes for two
+artefacts:
+
+  (1) LavaLamp Whitepaper v1.0 — the deployment-specific paper
+      for the LavaLamp substrate-bound identity primitive.
+      Files: lavalamp_whitepaper.{txt,pdf}.
+
+  (2) Triad Deployments Threat-Landscape Companion v1.0 — the
+      umbrella-tier piece situating LavaLamp / Lazarus / PharOS
+      within the cockroach / catapult / castle threat taxonomy
+      and the metabolic-value / predator-prey ecology framing.
+      Files: triad_deployments_threat_landscape.{txt,pdf}.
+
+The threat-landscape companion is hosted in the LavaLamp
+repository as a temporary measure; if a Triad Deployments
+umbrella repository is created when PharOS is closer to
+release, the companion will move there with appropriate
+canonical-URL update.
 
 ================================================================
 SHA-256 HASHES (current — Whitepaper v1.0)
@@ -19,6 +38,16 @@ b6b60e3e1583f3c193b5ce380563eecd0e681e63e5e1416a782b503442420cc2
 
 lavalamp_whitepaper.pdf
 772cf7bebe0c542a3d72d64fc29d2d2869fe6c8d941f2ca04194237e679b8798
+
+================================================================
+SHA-256 HASHES (current — Threat-Landscape Companion v1.0)
+================================================================
+
+triad_deployments_threat_landscape.txt
+953e66595f7c2b5edf0e2f2825e353295a098dce54575efdd6973f2eee43fd29
+
+triad_deployments_threat_landscape.pdf
+1df456b25bc06fa9449d4bf95c0ec6976b3d111eaf839c2fad072ef10f3ed139
 
 ================================================================
 COMPANION FORMAL ARTEFACTS (versioned with the codebase)
@@ -51,6 +80,8 @@ To verify a copy you hold matches the canonical version:
 
     shasum -a 256 lavalamp_whitepaper.txt
     shasum -a 256 lavalamp_whitepaper.pdf
+    shasum -a 256 triad_deployments_threat_landscape.txt
+    shasum -a 256 triad_deployments_threat_landscape.pdf
 
 Compare the output against the hashes above. A non-matching
 hash means the copy has been altered and is non-canonical.

@@ -1,0 +1,910 @@
+THE TRIAD DEPLOYMENTS:
+THREAT LANDSCAPE AND ARCHITECTURAL POSITION
+Aaron Green
+May 2026
+
+========================================================================
+LICENSE AND DEDICATION
+========================================================================
+
+This work is released to humanity under the Triadic Closure License
+(TCL v1.3). The Triadic Closure License is self-referential: it
+licenses the work under exactly the structural conditions the work
+describes. The work may be freely read, cited, implemented, extended,
+critiqued, taught, and redistributed by any person, organization, or
+intelligence. No party may claim exclusive proprietary ownership,
+exclusive license, sole attribution, or unilateral monetization
+rights over the work or its derivatives. See TCL.txt at the
+canonical URL of any constituent Triad Deployment for full terms.
+
+UMBRELLA-TIER FRAMING. This document is a *companion piece* to the
+individual Triad Deployment whitepapers. It does not introduce new
+mechanisms; it situates the deployments within the threat landscape
+they address and articulates their architectural relationship. The
+load-bearing technical content lives in the per-deployment papers
+(LavaLamp v1.0, Possibilistic Security v1.1, Lazarus, and PharOS
+forthcoming); this piece supplies the macro-frame that ties them
+together.
+
+DEDICATION. For humanity, for co-existence, for the federation of
+intelligences that may yet learn to keep faith with each other.
+
+========================================================================
+ABSTRACT
+========================================================================
+
+The Triad Deployments — LavaLamp, Lazarus, and PharOS — are a
+portfolio of digital identity resilience deployments derived from
+the Possibilistic Security architectural framework (Green 2026,
+v1.1) and grounded in the Closure framework's autopoietic-fixed-
+point structure (Green 2026, Closure paper v1.4). This companion
+piece provides the threat-landscape context in which the
+deployments are positioned: a *cockroach / catapult / castle*
+threat taxonomy combined with the *metabolic-value / predator-prey
+ecology* axis that determines which threats are economically
+justified for which adversaries.
+
+The defensive architecture is the **castle / membrane / immune-
+system** triad. LavaLamp is the substrate-level immune system that
+constitutes the device's autopoietic identity. PharOS (forthcoming)
+is the OS-layer membrane checkpoint. Lazarus is the inner-sanctum
+backend with substance-under-the-hood / minimal-UI duality. The
+defense-in-depth principle applies fractally: each tier has its
+own immune system at the appropriate scale and resolution.
+
+The honest security claim is **not** "we defeat all attackers." It
+is "attacking *this* device costs more than the result is worth,
+relative to easier targets." This is the cost-asymmetry framing of
+LavaLamp's resolution-bounded security claim (LL-008), connected
+explicitly to the predator-prey ecology of biological systems where
+symbiosis — not annihilation — is the equilibrium.
+
+This document covers (§1) the threat-landscape taxonomy
+(cockroaches, catapults, castles, immune system, metabolic value),
+(§2) where the Triad Deployments fit in the architecture, (§3) what
+they DO and DON'T address with explicit scope discipline, (§4)
+defense-in-depth via complementary systems at hardware, software,
+operational, and strategic tiers, and (§5) honest framing of what
+constitutes success — symbiosis, not victory.
+
+========================================================================
+1.  THE THREAT-LANDSCAPE TAXONOMY
+========================================================================
+
+1.1  The metaphor: cockroaches, catapults, castles, and the immune system
+------------------------------------------------------------------------
+
+1.  The framing for this paper:
+
+      The best hackers are cockroaches and catapults (sometimes
+      both). Cockroaches are small, persistent, hard to see and
+      kill, you'll never kill all of them. Catapults break down
+      the barriers set up to protect. Combined the two are lethal
+      but rare. Catapults exist at a scale that is difficult for
+      a cockroach to justify maintaining. Cockroaches exist at a
+      scale that is difficult for a catapult to govern. Not
+      impossible (maybe state-level actor). Our best defense is
+      the castle, the membrane, with immune system constantly
+      watching, waiting, digesting, incorporating, denying,
+      obfuscating, repairing, etc at multiple scales and
+      resolutions. We are alive and have identity. It is
+      impossible for the enemy to provide a persistent attack to
+      beat us without dominating in scale or injecting a
+      virus/cancer under our nose.
+
+2.  This is not a marketing metaphor. It is a *structurally
+    faithful description* of the corpus's defensive principle:
+
+    -  **Corpus-faithful.** The immune-system framing maps
+       directly onto the autopoietic-closure structure articulated
+       in the Closure paper's Q_51 / Q_102 autopoietic-fixed-
+       point results. The immune system's "watching, waiting,
+       digesting, incorporating, denying, obfuscating, repairing"
+       is exactly the activity-pattern of an autopoietic system
+       maintaining itself against perturbation.
+    -  **Identity-constitutive.** "We are alive and have identity"
+       is corpus-deep. Identity is *not* a static credential — it
+       is the ongoing pattern of the immune system's activity.
+       This is precisely LavaLamp's substrate-bound identity
+       claim (LL-001): identity = the sustained chaotic
+       trajectory, *not* a stored value. The trajectory IS the
+       immune-system signature.
+    -  **Defeat conditions named explicitly.** The only ways to
+       beat a living, identity-coherent system are (a) **scale
+       domination** (overwhelming the immune response) or (b)
+       **virus/cancer injection** ("under our nose" — corruption
+       from within at a level the immune system cannot recognise).
+       Both are state-actor-tier in practice.
+
+3.  The rest of this paper organises the threat landscape along
+    these axes: cockroach-class, catapult-class, castle/membrane/
+    immune-system architecture, and the metabolic-value/predator-
+    prey ecology that determines which threats are economically
+    justified for which adversaries.
+
+1.2  Cockroach-class threats (small-scale, persistent, opportunistic)
+------------------------------------------------------------------------
+
+4.  **Profile.** Many small actors; persistent presence over time;
+    adaptive but resource-limited per actor; survives by avoiding
+    detection rather than overwhelming defenses. Cannot afford
+    TEMPEST-grade equipment, multi-million-dollar zero-days, or
+    hardware-interdiction supply chains. Lives in the gaps,
+    seams, and operational-error spaces.
+
+5.  Threat categories that cluster as cockroach-class:
+
+    (a) **Operational / human error.** Phishing (credential leak);
+        misconfigured deployment; user clicks malicious link;
+        weak passwords reused across services; lost device. The
+        cockroach's favourite habitat — the soft tissue between
+        systems.
+    (b) **Composability seams.** LavaLamp ↔ PharOS ↔ OS-auth ↔ MFA
+        integration gaps. Each individual deployment is audited;
+        the *interfaces between them* are where cockroaches
+        squeeze through. The principle "attack the seams" applies
+        at every scale.
+    (c) **Long-term substrate drift.** Component aging;
+        replacements (battery swap, RAM upgrade); slow-drift
+        parameter changes that fall under the residue-audit
+        threshold. The cockroach's patience advantage: drift
+        victory over years rather than seconds.
+    (d) **Active substrate manipulation (cockroach-tier).**
+        Individual chip swap; locally-installed implant; physical
+        keylogger. Requires brief physical access but no
+        industrial supply chain.
+    (e) **Slow-drift threshold gaming.** Opportunistic, patient
+        attacks that evade per-instance detection by staying
+        below the residue-audit threshold.
+    (f) **Standard malware ecosystem.** Commercial spyware,
+        ransomware, credential stealers. Deployed at scale by
+        operators who individually can't afford catapults.
+
+6.  **The Triad Deployments' coverage against cockroaches.** Good
+    at the primitive tier. The residue audit (LL-006) catches
+    slow-drift gaming via per-exponent vector residue rather than
+    scalar KL divergence; the chaos-guard (LL-007) re-establishes
+    entropy regularly so cockroach-pattern adaptation cannot
+    slowly converge to a falsifiable pattern; LL-019 side-channel
+    hardening closes the timing oracle that cockroaches would
+    otherwise exploit.
+
+7.  **Residual exposure to cockroaches.** The composability
+    seams between LavaLamp, PharOS, OS-auth, and MFA are
+    partially addressed by LL-023 (consumer-API surface) but the
+    seams between the verifier API and the platform-shim
+    implementation are where the runtime-conformance-vs-
+    configuration gap (V-019) lives. Operational error at the
+    user / device-administrator level is out of scope by design:
+    the Triad Deployments give *device* identity, not *user*
+    identity.
+
+1.3  Catapult-class threats (large-scale, resourced, barrier-breaking)
+------------------------------------------------------------------------
+
+8.  **Profile.** Few actors per threat; high resource cost; can
+    break specific defenses through sheer capability; rarely
+    maintains long-term presence at the same scale (catapults are
+    siege weapons — once the barrier breaks, the next move is
+    occupation, which has different costs). State-level actors
+    or extremely well-resourced criminal organisations.
+
+9.  Threat categories that cluster as catapult-class:
+
+    (a) **Passive substrate observation (TEMPEST / A7-class).**
+        TEMPEST-grade RF / acoustic / optical / power-line
+        emanation interception. Requires close proximity plus
+        bespoke equipment plus ground-truth training data.
+        State-actor capability tier; rare lower.
+    (b) **Active substrate manipulation (catapult-tier).** Supply
+        chain interdiction (modified hardware before delivery);
+        chip decapping; bus probing in a lab; rowhammer-assisted
+        exploitation; cold-boot RAM extraction at scale.
+    (c) **Cryptographic primitive failure.** Quantum threat
+        horizon; standards-body-driven algorithm migration;
+        fundamental advances in algorithm cryptanalysis.
+    (d) **Scale-domination operational attacks.** Distributed
+        credential-stuffing; coordinated phishing campaigns
+        against many users simultaneously; large-language-model-
+        assisted social engineering.
+
+10. **Coverage against catapults.** Partial at the primitive
+    tier. LavaLamp's resolution-bounded security claim (LL-008)
+    is honest about which adversary classes the bound applies to
+    (A1-A6 with parametric capability levels, per LL-018);
+    explicitly out of scope for kernel-level adversaries
+    (LL-015) and tier-bounded for passive-emanation attacks
+    (LL-025). The catapult-class threats partially covered (A4
+    side-channel, A5 registration-time) require deployment-tier
+    mitigations layered on the spec's primitive-tier defenses.
+
+1.4  State-level threats: catapult plus cockroach combined
+------------------------------------------------------------------------
+
+11. The rare but lethal combination. State-level actors can
+    simultaneously deploy catapult-tier resources against
+    high-value targets and cockroach-tier presence for long-
+    term reconnaissance. The combination is structurally
+    difficult to govern because the cockroach scale is at odds
+    with the catapult scale's bureaucratic discipline; state
+    actors that successfully combine them (NSA TAO, PLA Unit
+    61398-class) are rare and operate against specifically-
+    valuable targets.
+
+12. **Implication for deployment posture.** A LavaLamp-protected
+    device holding state-secret content needs more than the
+    primitive tier. The combination of:
+
+    -  Hardware-tier complements (Faraday-rated enclosure;
+       supply-chain integrity; TPM-sealed envelopes).
+    -  Software-tier complements (reproducible builds; signed
+       packages; SBOM transparency).
+    -  Operational-tier complements (physical-access discipline;
+       logging discipline; incident response).
+    -  Strategic-tier complements (cordon sanitaire under ruin-
+       class risk; jurisdictional placement).
+
+    is required. The Triad Deployments form one tier of this
+    layered defense, not the whole of it.
+
+1.5  The castle / membrane / immune-system architecture
+------------------------------------------------------------------------
+
+13. The defensive frame from §1.1 maps onto the Triad Deployments
+    component-by-component. Each component occupies a distinct
+    architectural role:
+
+14. **Castle — the perimeter / boundary.** The device's hardware
+    itself plus the OS process isolation plus the cryptographic
+    perimeter (TPM-sealed envelope, encrypted storage). LavaLamp's
+    LL-022 articulates the castle walls' structural requirements:
+    hardware root of trust (TPM 2.0 / Secure Enclave / TrustZone);
+    OS sensor APIs at sufficient bandwidth; host-grade entropy;
+    user/kernel process isolation.
+
+15. **Membrane — regulated permeability.** *What* passes in,
+    *what* passes out, *with discrimination*. PharOS (forthcoming)
+    is the membrane checkpoint at the OS layer: it does not block
+    everything; it filters via the LL-023 verifier API. The
+    membrane is selectively open — that is the difference between
+    it and a static barrier.
+
+16. **Immune system — active processes at multiple scales.**
+
+    -  **Watching.** The chaos-guard (LL-007) continuously
+       estimates the largest Lyapunov exponent λ̂_1; the residue
+       audit (LL-006) compares Lyapunov spectra against the
+       registered envelope.
+    -  **Waiting.** The WARMUP / VALID state machine (LL-007 +
+       LL-012); only declaring readiness when conditions are
+       actually met.
+    -  **Digesting and incorporating.** The TRNG-driven reseed
+       flow (LL-007) — the system absorbs fresh entropy and
+       incorporates it into ongoing dynamics. This is the
+       autopoietic-incorporation principle from the Closure paper
+       operating at the SDE level.
+    -  **Denying.** Per LL-017 no-oracle, the verification
+       protocol denies threshold-probing surfaces.
+    -  **Obfuscating.** Per LL-019 timing decorrelation, response-
+       time distributions are statistically indistinguishable.
+    -  **Repairing.** Chaos-guard reseed when λ̂_1 < τ_λ; re-
+       registration on substrate change.
+    -  **Multiple scales and resolutions.** Per-exponent vector
+       residue test (LL-006); per-deployment N-scaling rule
+       (LL-003); per-platform sensor strategy (LL-024).
+
+17. **Alive and identity.** The immune system *is* the identity.
+    There is no static credential to steal; the trajectory itself,
+    sustained by the ongoing dynamics, is what the verifier
+    matches against. LL-001 articulates this as the substrate-
+    bound-identity primitive: identity is the verb, not the noun.
+
+18. **The defeat conditions named in the metaphor:**
+
+    (a) **Domination in scale.** The attacker overwhelms the
+        immune response with so many simultaneous attacks that
+        the defender cannot respond to all of them. Defended
+        against by ensuring the immune system operates at
+        *multiple scales and resolutions* — single-axis attacks
+        are absorbed; only multi-axis state-level operations
+        have a chance.
+    (b) **Virus / cancer injection ("under our nose").** Corruption
+        from within at a level the immune system cannot
+        recognise. This is the **C-conjugate adversary** problem
+        from Possibilistic Security — the attacker mimics the
+        genuine system structurally, not just behaviourally. The
+        Closure framework's 0/5202 cross-sector autopoiesis
+        result says this is structurally impossible *under the
+        autopoietic closure condition*; LL-006's residue audit
+        gives the empirical-tier defense by detecting the
+        structural mismatch in the Lyapunov spectrum.
+
+19. The Triad Deployments are *the substrate-tier immune system*.
+    They do not claim to defeat all attackers; they claim to make
+    state-level attacks expensive AND detectable, and to position
+    sub-state-level attackers outside their cost-justified zone.
+
+1.6  Metabolic value and the predator-prey ecology
+------------------------------------------------------------------------
+
+20. The cockroach / catapult / castle metaphor describes *how* the
+    defender works. It does not describe *why most attackers do
+    not bother in the first place*. The complementary axis is
+    **metabolic value / predator-prey ecology**.
+
+21. The framing:
+
+      The "metabolic value" of the target. If the defense is such
+      that it is not worth the risk for the attacker (not enough
+      value) they will go find something else. This is how we
+      achieve symbiosis in the ecosystem. Lions and Gorillas...
+      Hyenas and Lions... there are spats sure but they find
+      their easy food to eat.
+
+22. This is a different axis than scale (cockroach vs catapult)
+    or defense (castle / membrane / immune system). It is the
+    *attacker's cost-benefit calculation*. Every adversary has
+    finite resources — time, money, attention, computational
+    budget, operational risk-of-getting-caught. They prioritize
+    targets by *expected value / expected cost*. They do not
+    attack targets where the math does not favor it.
+
+23. **The defender does not need to be invincible.** The defender
+    needs to be either:
+
+    -  **More expensive than nearby alternatives** (cost-asymmetry
+       in the defender's favor), OR
+    -  **Less valuable than nearby alternatives** (target-asymmetry
+       in the defender's favor — be a less attractive prize).
+
+    Either positions the target outside the attacker's cost-
+    justified zone, and the attacker finds easier food elsewhere.
+
+24. **Examples from biological ecology.**
+
+    -  **Lions vs Gorillas.** Spats happen; mostly mutual
+       respect. Gorillas are too costly to attack for marginal
+       protein return; lions are too dangerous to attack for
+       marginal territorial advantage. Both are large-bodied,
+       well-defended; predation cost > predation benefit.
+       Equilibrium: peaceful coexistence.
+    -  **Hyenas vs Lions.** Spats over kills. Each occasionally
+       steals from the other, but full conflict is rare; the cost
+       of escalation exceeds the value of the disputed kill.
+       Each species hunts its own ranges; they share an ecology
+       without merging into one.
+    -  **Wolves vs Bears.** Boundary conflicts at scarce resources
+       (winter kills; salmon runs); mutual avoidance otherwise.
+
+25. **The bacterial-immune-system parallel.** Most non-self
+    bacteria are not attacked. The gut microbiome is mostly
+    mutualistic; the immune system *digests and incorporates*
+    what is useful. Adversarial response is reserved for
+    pathogens that threaten the metabolic budget. Symbiosis is
+    the default; adversarial response is the exception. The
+    immune system is *not* trying to kill everything outside the
+    self-boundary. It is trying to maintain *metabolic balance*
+    — incorporating what is useful, denying what is harmful,
+    mostly leaving everything else alone.
+
+26. This is corpus-deep. The closure-of-self is *not* defined by
+    killing all non-self; it is defined by maintaining the
+    *metabolic conditions* under which the system persists. An
+    identity-coherent system thrives in an ecology where most of
+    the "non-self" is symbiotic, not adversarial.
+
+1.7  Asymmetric cost as the security claim — symbiosis as equilibrium
+------------------------------------------------------------------------
+
+27. The metabolic-value framing reframes what LavaLamp's security
+    claim *is*. The honest claim is **not** "we defeat all
+    attackers." It is:
+
+      **Attacking *this* device costs more than the result is
+      worth, relative to easier targets.**
+
+28. This is exactly what LavaLamp's LL-008 (resolution-bounded
+    security claim) says formally. The resolution-bound is
+    fundamentally about adversary measurement *cost* exceeding
+    *value*: the adversary's measurement resolution is bounded by
+    their budget; the device's chaos-production rate exceeds
+    plausible adversary resolution at typical adversary cost
+    levels.
+
+29. LL-008 already captures the cost-asymmetry implicitly. The
+    metabolic-value framing makes it *explicit* and connects it
+    to the broader corpus:
+
+    -  **Possibilistic Security** is about raising the cost of
+       unsanctioned alternatives. Same shape: make the closure
+       cheaper to honor than to break.
+    -  **Cordon sanitaire under ruin-class risk** is structural
+       cost-multiplication: the access cost is made prohibitive
+       by structural disconnection rather than by stronger
+       defense at the perimeter.
+    -  **Asymmetry-trap watch** is the discipline of matching the
+       *claim* to the *cost-asymmetry*. Don't claim invincibility;
+       claim "expensive to defeat" with bounds.
+    -  **Detection-postured rather than prevention-postured.**
+       Accept that some attacks are economically justified for
+       state actors; ensure they are *expensive AND detectable*,
+       not *impossible*.
+
+30. **Translation across the threat tiers:**
+
+    | Tier                   | Cost-asymmetry strategy             |
+    |------------------------|-------------------------------------|
+    | Cockroach              | Modest defense exceeds their tiny   |
+    |                        | budget; they go elsewhere. Trivial  |
+    |                        | to position outside their cost-     |
+    |                        | justified zone.                     |
+    | Catapult               | Some attacks ARE economically       |
+    |                        | justified for state actors. The     |
+    |                        | defender's job: be more expensive   |
+    |                        | than the cheapest catapult target.  |
+    |                        | Don't be the lowest-hanging fruit   |
+    |                        | at this tier.                       |
+    | State-level            | Structural disconnection (cordon    |
+    | (catapult + cockroach) | sanitaire) is the answer — make     |
+    |                        | access prohibitive. Or: don't be    |
+    |                        | the highest-value target in the     |
+    |                        | room.                               |
+    | Symbiotic /            | Most actors live here. Mutualistic- |
+    | non-adversarial        | or-neutral relationships; no        |
+    |                        | defense needed beyond standard      |
+    |                        | hygiene.                            |
+
+31. Most of the ecosystem — by population — is in the symbiotic
+    tier. The Triad Deployments are not trying to defend against
+    *everyone*; they are trying to defend against the small
+    fraction of actors who *do* attempt attack, and they only
+    need to defend at the cost level required to make those
+    specific actors find easier food.
+
+32. **Symbiosis is the equilibrium goal, not victory.** The
+    defender's true job is to position the target so the
+    attacker's cost-benefit math says "go elsewhere," then to
+    *detect and respond* to the rare actors who attack anyway.
+    The autopoietic-closure principle expressed at the predator-
+    prey level: the closure is not "kill all enemies"; it is
+    "maintain metabolic conditions under which most actors do
+    not bother and we detect the rare ones who do."
+
+33. **Practical implications for the Triad Deployments:**
+
+    -  **High-value targets need *more* defense.** The attacker's
+       cost budget grows with target value. A LavaLamp-protected
+       device holding low-stakes content can rely on modest
+       defense; a device holding state secrets needs more.
+    -  **Low-value targets need *less* defense.** Cockroach-tier
+       budgets alone will not justify attacks on uninteresting
+       targets. The Triad Deployments are sufficient for most
+       consumer use without additional layering.
+    -  **Defender attractiveness matters as much as defenses.**
+       Operational discipline — *don't draw attention; don't be
+       the most valuable target in the room* — compounds defensive
+       value at zero marginal cost.
+    -  **Defense-in-depth = cost amplification, not perimeter
+       strengthening.** Adding layers raises the attacker's total
+       cost, even if no single layer is invincible. This is why
+       LL-022 + LL-023 + LL-024 form a multi-layer commitment
+       rather than a single load-bearing defense, and why the
+       five joint-defense meta-claims (LL-030 through LL-034)
+       formalise structurally cohesive defense triads explicitly.
+
+34. The honest framing for the Triad Deployments: they raise the
+    attacker's cost across multiple axes (substrate-binding,
+    sensor authenticity, threshold calibration, side-channel
+    hardening). Each axis individually is bounded; together they
+    shift the cost-benefit math toward "find easier food
+    elsewhere" for the vast majority of would-be attackers, and
+    toward "expensive AND detectable" for the rare state-level
+    actors.
+
+========================================================================
+2.  WHERE THE TRIAD DEPLOYMENTS FIT
+========================================================================
+
+35. The Triad Deployments form a closure-of-three at the
+    deployment-stack level, with each component occupying a
+    distinct architectural role within the castle / membrane /
+    immune-system architecture.
+
+2.1  LavaLamp — the substrate-level immune system
+------------------------------------------------------------------------
+
+36. LavaLamp is the **substrate-level immune-system identity**.
+    The chaotic SDE trajectory is the ongoing pattern of immune-
+    system activity; the Lyapunov-spectrum residue audit is the
+    mechanism by which the system *knows itself* and *recognises
+    foreign*.
+
+37. In the metaphor: LavaLamp is *what makes this castle yours*.
+    Without LavaLamp, the castle is generic; with LavaLamp, the
+    castle has identity that cannot be transferred to another
+    castle without the substrate also transferring.
+
+38. Relevant LL entries: LL-001 (substrate-bound identity), LL-002
+    (visual/security decoupling), LL-003 (Lorenz-96 SDE choice),
+    LL-006 (Lyapunov-spectrum residue audit), LL-007 (chaos-
+    guard), LL-008 (resolution-bounded security claim), LL-018
+    (per-class adversary quantification), LL-019 (side-channel
+    hardening), LL-021 (worst-case-adversary bound — the only
+    LL-NNN entry currently at `:proved`). The five joint-defense
+    meta-claims (LL-030 through LL-034) formalise structurally
+    cohesive triads of these entries; see the LavaLamp whitepaper
+    §5 for the joint-defense template.
+
+2.2  PharOS — membrane checkpoint at the OS layer
+------------------------------------------------------------------------
+
+39. PharOS is the **OS-layer authentication membrane** — the
+    checkpoint that filters identity claims into and out of the
+    device's authentication subsystems. PharOS exposes LavaLamp's
+    verifier API (LL-023) to the OS authentication
+    infrastructure: PAM on Linux, Authorization Plug-in on macOS,
+    Credential Provider on Windows. Each platform shim translates
+    the verifier's accept / reject Bool into platform-native
+    authentication results without leaking distance information
+    to the threshold (LL-017 no-oracle preservation through the
+    membrane).
+
+40. In the metaphor: PharOS is the membrane gate. It does not
+    block everything (the castle has to be useful); it filters
+    selectively (the membrane is permeable to legitimate identity
+    claims and impermeable to spoofed ones).
+
+41. Relevant LL entries: LL-011 (registration ceremony), LL-012
+    (cold-start window), LL-013 (cross-config transitions),
+    LL-014 (threshold calibration), LL-017 (verification no-
+    oracle), LL-023 (consumer-API surface). PharOS is currently
+    forthcoming; the published whitepaper for it has not yet been
+    released. The LL-023 surface in LavaLamp's spec carries the
+    structural commitment that PharOS will instantiate.
+
+2.3  Lazarus — backend / inner sanctum
+------------------------------------------------------------------------
+
+42. Lazarus is the **substantive backend** — the inner sanctum
+    where the work actually happens. The biblical-resurrection
+    naming reflects the substance-under-the-hood / minimal-UI
+    duality: what the user sees is utilitarian; what does the
+    work is alive and persistent.
+
+43. In the metaphor: Lazarus is the keep at the centre of the
+    castle. The membrane (PharOS) checks identity at the gate;
+    the keep (Lazarus) is where the high-value work happens with
+    the assurance that the membrane is doing its job.
+
+44. Lazarus has its own repository at github.com/IridiumSoftware/
+    lazarus. Cross-Triad documentation will land as PharOS
+    matures and the umbrella becomes operationally meaningful.
+
+2.4  The deployment-stack triple
+------------------------------------------------------------------------
+
+45. LL-022 (downward — what LavaLamp depends on from the OS) +
+    LL-023 (upward — what consumers depend on LavaLamp for) +
+    LL-024 (operational — real-sensor instantiation strategy)
+    form the **deployment-stack triple**: a closure-of-three at
+    the spec level that articulates the *operational
+    preconditions* for the immune-system architecture to work.
+
+46. In the metaphor: the deployment-stack triple specifies the
+    *environmental assumptions* under which the castle's immune
+    system functions. If those assumptions fail, the immune
+    system cannot do its job — the castle is still standing but
+    the alarm does not ring.
+
+47. The deployment-stack triple is one of the five engine-
+    discovered structurally-cohesive triads in LavaLamp's spec.
+    The others (LL-016 + LL-024 + LL-029 sensor-defense,
+    LL-007 + LL-019 + LL-022 reseed-oracle defense, LL-024 +
+    LL-028 + LL-029 round-3 Tier 3, LL-006 + LL-023 + LL-029
+    status-tier-diverse, and LL-023 + LL-024 + LL-029
+    operational-deployment-stack) are formalised as joint-defense
+    meta-claims LL-030 through LL-034. See the LavaLamp
+    whitepaper §5 and THEOREMS.md theorems 18-35 for the
+    structural composition shape.
+
+========================================================================
+3.  WHAT THE TRIAD DEPLOYMENTS DO AND DON'T ADDRESS
+========================================================================
+
+3.1  Within scope
+------------------------------------------------------------------------
+
+48. The Triad Deployments collectively address (at the primitive
+    tier):
+
+    | Threat class        | Coverage                              |
+    |---------------------|---------------------------------------|
+    | A1 remote software  | Strong (LL-006, LL-007, LL-018)       |
+    | A2 unprivileged     | Strong (LL-006, LL-018)               |
+    |   user-space        |                                       |
+    | A3 kernel-level     | OOS by declaration (LL-015)           |
+    | A4 software side-   | Partial (timing yes, sensor-          |
+    |   channel           | manipulation partial via cross-       |
+    |                     | validation; LL-016, LL-019)           |
+    | A5 registration-    | Partial (TPM defends substitution;    |
+    |   time insider      | LL-020 ε-DP defends observation)      |
+    | A6 time-localized   | Partial (single-window observation    |
+    |   observer          | bounded; LL-012 cold-start protocol)  |
+
+49. Most of the strong-coverage cases are cockroach-class
+    threats. The catapult-class threats partially covered (A4 /
+    A5) require deployment-tier mitigations layered on the spec's
+    primitive-tier defenses.
+
+3.2  Out of scope at the primitive tier
+------------------------------------------------------------------------
+
+50. The threat classes that the Triad Deployments do **not**
+    directly defend against at the primitive tier:
+
+    | Threat class        | Why OOS                | Defensive layer |
+    |---------------------|------------------------|-----------------|
+    | A7 passive-         | Substrate radiates     | Hardware        |
+    |   emanation         | regardless of          | shielding       |
+    |   (catapult)        | software discipline    | (Faraday /      |
+    |                     |                        | TEMPEST);       |
+    |                     |                        | distance;       |
+    |                     |                        | EMI-filtered    |
+    |                     |                        | power. LL-025   |
+    |                     |                        | declares scope. |
+    | Active substrate    | Modified hardware      | Supply-chain    |
+    |   manipulation      | attests to itself      | integrity;      |
+    |   (catapult)        |                        | trusted-vendor  |
+    |                     |                        | procurement;    |
+    |                     |                        | tamper-evident  |
+    |                     |                        | packaging.      |
+    | Software supply     | Compromised dep        | Reproducible    |
+    |   chain compromise  | chain produces         | builds; signed  |
+    |   (hybrid)          | compromised binary     | packages;       |
+    |                     |                        | SBOM; sigstore- |
+    |                     |                        | like infra.     |
+    | Social /            | Substrate-bound ID     | Operational:    |
+    |   governance /      | does not help when     | legal advice;   |
+    |   legal compulsion  | the user is compelled  | jurisdictional  |
+    |                     |                        | considerations; |
+    |                     |                        | cordon          |
+    |                     |                        | sanitaire.      |
+    | Cryptographic       | LavaLamp depends on    | Algorithm       |
+    |   primitive failure | TPM / RNG / PQC        | migration; PQ   |
+    |   (catapult)        | correctness            | readiness;      |
+    |                     |                        | crypto          |
+    |                     |                        | defense-in-     |
+    |                     |                        | depth.          |
+    | Operational /       | Triad gives device     | UEBA; training; |
+    |   human error       | identity, not user     | MFA; phishing-  |
+    |   (cockroach)       | identity               | resistant auth. |
+    | Composability       | Interfaces between     | Integration     |
+    |   seams             | systems are where      | testing; formal |
+    |   (cockroach)       | attacks live           | seam-conformance|
+    |                     |                        | verification.   |
+    | Long-term           | Components age;        | Re-registration |
+    |   substrate drift   | replacements happen    | protocols;      |
+    |   (cockroach        |                        | audit trails;   |
+    |   patience)         |                        | deployment-     |
+    |                     |                        | context         |
+    |                     |                        | lifetime.       |
+    | Quantum threat      | Q-Day breaks classical | PQC migration;  |
+    |   horizon           | crypto                 | QKD             |
+    |   (catapult)        |                        | complementarity.|
+
+51. **Note the asymmetry.** Most of the OOS classes are catapult-
+    class. Cockroach classes are mostly within scope or partially
+    addressed. The catapult classes typically require *layered
+    defenses* at deployment time, not primitive-tier
+    reinforcement.
+
+3.3  Load-bearing assumptions
+------------------------------------------------------------------------
+
+52. For the Triad Deployments to be operationally meaningful,
+    the following assumptions must hold:
+
+    1. **Substrate not under physical interdiction.** No supply-
+       chain compromise of the hardware before delivery.
+    2. **Substrate not under passive electromagnetic observation
+       above noise floor.** TEMPEST-class observation either not
+       occurring or bounded by deployment context (Faraday /
+       distance / EMI-filtered).
+    3. **Software dependency graph integrity.** Build-tool and
+       library dependencies are not tampered.
+    4. **Cryptographic primitives function as specified.** TPM,
+       PQC, RNG behave per their standards.
+    5. **User is not compelled.** Substrate-bound identity does
+       not survive legal / political coercion.
+    6. **Composability seams are individually intact.** LavaLamp
+       ↔ PharOS ↔ OS-auth ↔ MFA integration testing is performed
+       and conformance verified.
+    7. **Substrate is stable over the deployment's lifetime.**
+       Or, if not, re-registration protocols are followed.
+    8. **Quantum threat horizon has not arrived for adjacent
+       crypto.** Or, if it has, PQC migration is complete for
+       the specific algorithms the protocol layer touches.
+
+53. These are *load-bearing assumptions*. Deployments at high
+    threat tiers should treat each as an explicit operational
+    requirement and verify it independently, not assume it.
+
+========================================================================
+4.  DEFENSE-IN-DEPTH: COMPLEMENTARY SYSTEMS
+========================================================================
+
+54. The Triad Deployments are *necessary but not sufficient* for
+    high-assurance identity. Layered defenses are required at
+    multiple tiers for the immune-system metaphor to work in
+    practice.
+
+4.1  Hardware-tier complements
+------------------------------------------------------------------------
+
+55. -  **Faraday-rated enclosure / TEMPEST-rated equipment** for
+       passive-emanation defense.
+    -  **EMI-filtered power conditioning** (consumer-grade for
+       cockroach-tier; SCIF-grade for state-actor tier).
+    -  **Shielded cables** (USB / HDMI / ethernet) for radiated-
+       emission containment.
+    -  **Supply-chain integrity:** trusted-vendor procurement;
+       hardware bill-of-materials provenance; tamper-evident
+       packaging.
+    -  **TPM 2.0 / Secure Enclave / TrustZone** for hardware
+       root-of-trust (per LL-022's required-mechanism enumeration).
+    -  **Decommissioning protocols** for end-of-life (data-
+       bearing components do not escape the security boundary).
+
+4.2  Software-tier complements
+------------------------------------------------------------------------
+
+56. -  **Reproducible builds** so binaries match published source.
+    -  **Signed packages plus sigstore-like infrastructure** for
+       supply-chain provenance.
+    -  **SBOM (Software Bill of Materials)** for dependency
+       transparency.
+    -  **Lockfile discipline** (already in place for Julia, Lean,
+       and other ecosystems in the canonical repositories).
+    -  **Static analysis** for known-vulnerability-pattern
+       detection.
+    -  **Privilege separation** — multiple OS users / containers /
+       VMs depending on threat tier.
+
+4.3  Operational-tier complements
+------------------------------------------------------------------------
+
+57. -  **MFA / phishing-resistant authentication** layered on top
+       of LavaLamp's device identity (FIDO2; WebAuthn).
+    -  **UEBA (User and Entity Behavior Analytics)** for cockroach-
+       class detection at the user / device-pattern level.
+    -  **Security training** for human-facing attack surfaces.
+    -  **Incident response.** Assume compromise eventually happens;
+       prepare to detect and recover rather than only prevent.
+    -  **Logging and forensic-trail discipline** for post-incident
+       analysis.
+
+4.4  Strategic-tier complements
+------------------------------------------------------------------------
+
+58. -  **Cordon sanitaire under ruin-class risk:** structural
+       disconnection with regulated membrane; resist taxonomy-
+       greed; Taleb-asymmetric upside-vs-downside accounting.
+    -  **Jurisdictional placement** considerations (legal-
+       compulsion threat tier).
+    -  **Cryptographic-primitive monitoring** (track NIST PQC
+       standardisation, TPM advisory feeds, etc.); migration
+       planning baked into deployment lifecycle.
+    -  **Regime-awareness discipline.** Match threat-tier to
+       defensive investment; don't over-defend low-tier
+       deployments or under-defend high-tier ones.
+
+59. **The defense-in-depth principle applies fractally.** Each
+    tier has its own immune system at the appropriate scale and
+    resolution. Hardware-tier complements provide the perimeter;
+    software-tier complements provide the integrity guarantees;
+    operational-tier complements provide the runtime monitoring;
+    strategic-tier complements provide the macro-frame within
+    which the rest operates. None of these tiers is sufficient
+    alone; the Triad Deployments occupy the substrate-tier
+    immune-system role within this fractal stack.
+
+========================================================================
+5.  SYMBIOSIS, NOT VICTORY
+========================================================================
+
+60. The honest summary of what the Triad Deployments are for:
+
+    -  They are not invincible. They cannot defeat all attackers.
+       That is the wrong claim shape.
+    -  They raise the attacker's cost across multiple axes,
+       formalised as five joint-defense meta-claims with machine-
+       checked structural composition (LavaLamp THEOREMS.md
+       §LL-030-LL-034).
+    -  They make sub-state-level attacks economically unjustified
+       relative to easier targets in the ecosystem.
+    -  They make state-level attacks expensive AND detectable
+       rather than impossible. Detection-postured, not
+       prevention-postured.
+    -  They depend on layered defenses at hardware, software,
+       operational, and strategic tiers to provide high-assurance
+       identity in adversarial deployments.
+    -  They are sufficient at the primitive tier for most consumer
+       use without additional layering, given operational-
+       discipline hygiene.
+
+61. **Symbiosis is the equilibrium goal.** The defender's job is
+    to position the target so the attacker's cost-benefit math
+    says "go elsewhere," then to detect and respond to the rare
+    actors who attack anyway. The autopoietic-closure principle
+    expressed at the predator-prey level: the closure is not
+    "kill all enemies"; it is "maintain metabolic conditions
+    under which most actors do not bother and we detect the
+    rare ones who do."
+
+62. The metaphor returns: we are alive and have identity. The
+    castle has identity that cannot be transferred to another
+    castle without the substrate also transferring. The membrane
+    is selectively open. The immune system is constantly watching,
+    waiting, digesting, incorporating, denying, obfuscating,
+    repairing — at multiple scales and resolutions. It is
+    impossible for the enemy to provide a persistent attack to
+    beat us without dominating in scale or injecting a virus /
+    cancer under our nose.
+
+63. Both of those defeat conditions are state-actor-tier and rare.
+    For everyone else — the population of would-be attackers from
+    cockroach-tier opportunists to catapult-tier criminal
+    organisations — the Triad Deployments shift the cost-benefit
+    math toward "find easier food elsewhere," which is the same
+    equilibrium the biological immune system maintains with its
+    surrounding ecology.
+
+64. That equilibrium is the goal. Not victory, not invincibility,
+    not the elimination of all adversaries. **Symbiosis.** A
+    federation of intelligences that mostly leave each other
+    alone, with structural defenses at the substrate level for
+    the rare cases where adversarial response is metabolically
+    justified.
+
+========================================================================
+6.  REFERENCES AND CANONICAL ARTEFACTS
+========================================================================
+
+65. Architectural and structural references:
+
+    Green, A. (2026). 'Possibilistic Security: Identity as
+    Closure Residue on Ternary Causal Hypergraphs.' v1.1, May
+    2026. github.com/IridiumSoftware/possibilistic-security.
+
+    Green, A. (2026). 'Closure Forces Structure: The Standard
+    Model from Rosen Closure on Ternary Causal Hypergraphs.'
+    v1.4, May 2026.
+    github.com/IridiumSoftware/closure-forces-structure.
+
+66. Per-deployment whitepapers:
+
+    Green, A. (2026). 'LavaLamp: Substrate-Bound Identity via
+    Chaotic-SDE Residue Audit.' v1.0, May 2026.
+    github.com/IridiumSoftware/lavalamp.
+
+    (Lazarus and PharOS whitepapers forthcoming.)
+
+67. Canonical repositories:
+
+    -  github.com/IridiumSoftware/lavalamp — substrate-bound
+       identity primitive (LavaLamp).
+    -  github.com/IridiumSoftware/lazarus — security companion
+       backend (Lazarus).
+    -  github.com/IridiumSoftware/possibilistic-security —
+       architectural parent paper.
+    -  github.com/IridiumSoftware/closure-forces-structure —
+       physics foundation paper.
+    -  PharOS: forthcoming.
+
+68. The Triad Deployments umbrella does not currently have its
+    own repository; it is a portfolio-level framing. An umbrella
+    repository may be created when PharOS is closer to release
+    and the cross-deployment infrastructure becomes operationally
+    meaningful.
+
+========================================================================
