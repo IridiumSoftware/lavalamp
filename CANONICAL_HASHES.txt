@@ -1,0 +1,94 @@
+CANONICAL HASHES
+LavaLamp: Substrate-Bound Identity via Chaotic-SDE Residue Audit
+Aaron Green, May 2026
+
+================================================================
+
+Canonical URL:  https://github.com/IridiumSoftware/lavalamp
+Released:       2026-05-08
+Release tag:    whitepaper-v1.0
+License:        Triadic Closure License (TCL) v1.3
+Author:         Aaron Green
+
+================================================================
+SHA-256 HASHES (current — Whitepaper v1.0)
+================================================================
+
+lavalamp_whitepaper.txt
+b6b60e3e1583f3c193b5ce380563eecd0e681e63e5e1416a782b503442420cc2
+
+lavalamp_whitepaper.pdf
+772cf7bebe0c542a3d72d64fc29d2d2869fe6c8d941f2ca04194237e679b8798
+
+================================================================
+COMPANION FORMAL ARTEFACTS (versioned with the codebase)
+================================================================
+
+The whitepaper synthesises engineering and formal-verification
+artefacts that live in the canonical repository at the
+release-tagged commit corresponding to this paper. The companion
+artefacts are versioned with the source tree, not separately:
+
+  - LAVALAMP_SPEC.md               — formal spec (gitignored;
+                                     readers contact the author).
+  - THEOREMS.md                    — Lean theorem catalog (public).
+  - src/lean4/LavaLamp/Theorems.lean — load-bearing Lean source.
+  - src/julia/test/runtests.jl     — integration test suite.
+  - src/julia/demo/lavalamp_demo.jl — clone-and-run demo.
+  - src/julia/demo/verify_demo.sh   — cross-machine reproducibility
+                                     check.
+
+To verify the whitepaper matches the codebase at this release,
+clone at the whitepaper-v1.0 tag and confirm the lake build
+returns 1901 jobs with zero sorry warnings, Pkg.test() returns
+424/424 pass, and verify_demo.sh exits 0.
+
+================================================================
+VERIFICATION
+================================================================
+
+To verify a copy you hold matches the canonical version:
+
+    shasum -a 256 lavalamp_whitepaper.txt
+    shasum -a 256 lavalamp_whitepaper.pdf
+
+Compare the output against the hashes above. A non-matching
+hash means the copy has been altered and is non-canonical.
+
+On macOS:  shasum -a 256 <filename>
+On Linux:  sha256sum <filename>
+On Windows: CertUtil -hashfile <filename> SHA256
+
+================================================================
+PUBLICATION CHANNELS
+================================================================
+
+This hash file is published at the canonical URL alongside the
+whitepaper. The hashes above should be publicly posted to at
+least one independent channel (e.g., social media, author's
+public website, pinned post) at the time of release, so any
+third party can verify the canonical value without trusting only
+the canonical URL.
+
+================================================================
+REFERENCES
+================================================================
+
+Possibilistic Security (architectural parent):
+  Green, A. (2026). 'Possibilistic Security: Identity as Closure
+  Residue on Ternary Causal Hypergraphs.' v1.1, May 2026.
+  github.com/IridiumSoftware/possibilistic-security
+
+Closure framework (structural foundation):
+  Green, A. (2026). 'Closure Forces Structure: The Standard
+  Model from Rosen Closure on Ternary Causal Hypergraphs.'
+  v1.4, May 2026.
+  github.com/IridiumSoftware/closure-forces-structure
+
+================================================================
+LICENSE
+================================================================
+
+The whitepaper is released under the Triadic Closure License
+(TCL v1.3). See the whitepaper's LICENSE AND DEDICATION section
+for full terms. This hash file is also released under TCL v1.3.

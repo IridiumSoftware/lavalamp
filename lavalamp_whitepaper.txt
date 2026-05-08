@@ -1,0 +1,1255 @@
+LAVALAMP:
+SUBSTRATE-BOUND IDENTITY VIA CHAOTIC-SDE RESIDUE AUDIT
+Aaron Green
+May 2026
+
+========================================================================
+LICENSE AND DEDICATION
+========================================================================
+
+This work is released to humanity under the Triadic Closure License
+(TCL v1.3). The Triadic Closure License is self-referential: it
+licenses the work under exactly the structural conditions the work
+describes. The work may be freely read, cited, implemented, extended,
+critiqued, taught, and redistributed by any person, organization, or
+intelligence. No party may claim exclusive proprietary ownership,
+exclusive license, sole attribution, or unilateral monetization
+rights over the work or its derivatives. See TCL.txt at the canonical
+URL for full terms.
+
+PROTOTYPE-STAGE METHODOLOGY. This paper describes a working prototype
+of a substrate-bound identity primitive. The prototype is sufficient
+to demonstrate the structural properties claimed; deployment requires
+real-sensor instantiation beyond Phase 1 Linux (LL-024), red-team
+testing against the resolution-bounded security model (LL-008),
+formal verification of structural claims currently supported only by
+example-tested or argued evidence, standards-body review where
+applicable, and pilot implementations with careful failure-mode
+analysis. Some claims herein depend on open mathematical questions
+(see §10).
+
+DEDICATION. For humanity, for co-existence, for the federation of
+intelligences that may yet learn to keep faith with each other.
+
+========================================================================
+ABSTRACT
+========================================================================
+
+LavaLamp is a substrate-bound identity primitive. A laptop runs a
+chaotic stochastic differential equation locally; the trajectory is
+amplified by sensor coupling to hardware and configuration state into
+a substrate-unique signature; verification compares spectrum residues
+against a registered envelope, with adversary detection via the
+Lyapunov-spectrum residue audit (LL-006). Identity is the *sustained
+chaotic trajectory* on the device, not a stored credential.
+
+The architecture is structurally derived from the C-conjugate
+adversary construction in Possibilistic Security (Green 2026, v1.1)
+applied at the entropy layer. An adversary attempting to spoof a
+device's identity must reproduce the chaotic substrate at a
+resolution exceeding their measurement capability --- a category-
+theoretic obstruction rather than a computational hardness assumption.
+The security claim is **resolution-bounded**: secure against any
+adversary whose measurement and compute resolution is exceeded by
+the device's chaos-production rate (LL-008).
+
+The paper documents thirty-four formal spec entries (LAVALAMP_SPEC.md),
+five **joint-defense meta-claims** (LL-030 through LL-034) surfaced
+by a Discovery.Triadic engine pass on the spec corpus, thirty-five
+Lean 4 + Mathlib v4.29.1 theorems (THEOREMS.md), a four-hundred-
+twenty-four-assertion Julia test suite, and a clone-and-run end-to-end
+demo with cross-machine reproducibility check. Three template
+generalisation findings emerged from the joint-defense work:
+**tier-agnostic** (LL-031), **structure-additive** (LL-032), and
+**evidence-regime-agnostic** (LL-033) composition; LL-034 makes
+**defense-in-depth** across substrate-stack and consumer-API stack
+formally identifiable in Lean as the conjunction of two composition
+theorems' hypotheses.
+
+The work is part of the Triad Deployments portfolio (LavaLamp /
+Lazarus / PharOS) addressing digital identity resilience. LavaLamp
+positions itself complementarily to post-quantum cryptography (PQC):
+PQC migrates computational hardness; LavaLamp grounds identity in a
+substrate-physics obstruction that is *quantum-irrelevant* by
+construction.
+
+========================================================================
+1.  INTRODUCTION
+========================================================================
+
+1.1  The problem
+------------------------------------------------------------------------
+
+1.  Contemporary identity-authentication architectures rest on
+    **computational hardness assumptions** at the cryptographic
+    layer and **possession-of-a-stored-credential** semantics at the
+    deployment layer. Both surfaces are migrating: post-quantum
+    cryptography (PQC) replaces RSA/ECC with lattice/code/multivariate
+    hardness; multi-factor authentication (MFA) layers stored
+    credentials with second-channel verification.
+
+2.  Both migrations preserve the architectural premise that identity
+    is a *thing-that-can-be-captured-and-replayed* --- a signed token,
+    a private key, a one-time code. Harvest-now-decrypt-later
+    threatens the cryptographic layer; phishing, SIM-swap, and
+    deep-fake threaten the deployment layer. The premise that identity
+    is a static object that can be exfiltrated is shared by every
+    architecture under attack.
+
+3.  Possibilistic Security (Green 2026, v1.1) reframes the problem
+    structurally: identity is a *sustained autopoietic process*, not
+    a static object. An adversary attempting to breach a triadic-
+    closure identity must structurally co-close in the charge-conjugate
+    sector --- categorically impossible rather than computationally
+    expensive. The security guarantee is therefore *quantum-
+    irrelevant*, not merely quantum-resistant: adding compute does
+    not help the adversary because the obstruction is not
+    computational.
+
+4.  LavaLamp is the first prototype-stage instantiation of this
+    architectural shift at a deployable scale. The chaotic-SDE
+    substrate provides a continuous device-bound process whose
+    sensor-coupled trajectory carries the autopoietic identity
+    signature. Verification is residue audit against a registered
+    envelope; impersonation requires substrate reproduction at
+    measurement-resolution exceeding the adversary's capability ---
+    a categorical no-go rather than a key-recovery hardness claim.
+
+1.2  The architectural choice
+------------------------------------------------------------------------
+
+5.  LavaLamp is **not QKD**. QKD distributes keys between two parties
+    over an open channel using quantum-mechanical no-cloning; LavaLamp
+    generates device-bound entropy locally using a classical chaotic
+    SDE. Conflating the two tiers misleads careful reviewers.
+
+6.  LavaLamp is **not information-theoretically secure**. The
+    chaotic-SDE state is observable without collapse; the security
+    claim is computational unclonability via measurement-symmetry
+    breaking, formalised as the resolution-bounded security claim
+    (LL-008).
+
+7.  LavaLamp is **not a key-distribution protocol**. The primitive
+    supports device authentication via registration ceremony and
+    verification protocol; key distribution between parties is
+    layered above this primitive when needed (out of scope for the
+    primitive itself).
+
+8.  LavaLamp **is** a substrate-bound identity primitive that
+    operationalises the autopoietic-identity framing of Possibilistic
+    Security at the entropy layer, with a resolution-bounded security
+    claim against adversary classes A1-A6 enumerated in §3.
+
+1.3  Paper structure
+------------------------------------------------------------------------
+
+9.  §2 describes the security primitive: chaotic SDE, sensor coupling,
+    spectrum-residue audit, chaos-guard. §3 enumerates the attack
+    surface and the resolution-bounded security claim. §4 covers
+    architectural separation between the visual layer and the security
+    primitive. §5 introduces the **joint-defense meta-claim template**
+    that surfaced from the Discovery.Triadic engine pass on the spec
+    corpus, with five concrete joint-defense entries (LL-030 through
+    LL-034) and three generalisation findings. §6 surveys the
+    thirty-five Lean theorems formalising the structural composition
+    shape. §7 documents the integration test and demo. §8 places
+    LavaLamp in the Triad Deployments portfolio. §9 lists what is not
+    claimed. §10 records limitations and open questions. §11
+    concludes.
+
+10. Three appendices catalog: cited spec entries (Appendix A), cited
+    Lean theorems (Appendix B), and the V-NNN-to-LL-NNN attack-vector
+    defense map (Appendix C).
+
+========================================================================
+2.  THE SECURITY PRIMITIVE
+========================================================================
+
+2.1  Chaotic SDE on the local device
+------------------------------------------------------------------------
+
+11. The substrate is a Lorenz-96 stochastic differential equation
+    integrated locally on the device (LL-003). N=20 is the prototype
+    default; deployments may select N up to the validated finite-N
+    regime per LL-021's round-3 amendment. The forcing parameter F=8
+    yields the chaotic regime with empirical λ₁ ≈ 1.66.
+
+12. The SDE choice is empirical (LL-003 :benchmarked). The Lorenz-96
+    family was selected via comparative benchmark against Lorenz-63,
+    Rössler, and several alternatives on three criteria: ergodic
+    chaotic regime at deployable N, computational cost compatible
+    with sub-1% CPU overhead, and Lyapunov-spectrum stability under
+    sensor-coupled perturbations. The benchmark methodology and
+    results are documented in src/julia/benchmark/results/ in the
+    canonical repository.
+
+2.2  Sensor coupling to hardware and configuration state
+------------------------------------------------------------------------
+
+13. The chaotic trajectory is amplified by **sensor coupling** to
+    hardware and configuration state (LL-004 :tested). Coupling
+    sources include thermal sensors, battery discharge rates, AC
+    adapter status, USB peripheral state, CPU governor frequency,
+    and scheduler timing / load average. The coupling is linear-in-x
+    via per-sensor coupling vectors; coupling strength is calibrated
+    per deployment.
+
+14. The sensors must satisfy the Nyquist condition (LL-005): sample
+    rates must exceed any adversary measurement bandwidth that could
+    reconstruct the stream. Per (sensor, assumed adversary bandwidth)
+    pair compliance is asserted at deployment-config time.
+
+15. Real-sensor implementation is per-platform (LL-024). Phase 1
+    (Linux) uses pure-Julia file I/O via sysfs/procfs paths
+    (`/sys/class/hwmon`, `/sys/class/power_supply`, `/proc/loadavg`,
+    etc.) --- no FFI. Phase 2 (macOS) requires IOKit / SMC FFI;
+    Phase 3 (Windows) requires WMI + PDH. As of the current release,
+    Phase 1 is implemented and tested; Phases 2 and 3 are scoped but
+    deferred.
+
+16. The cross-validation requirement on sensor independence is
+    LL-029: sensors must span at least two *uncorrelated physical-
+    mechanism families* per a seven-family taxonomy (thermal,
+    acoustic/vibrational, electromagnetic/RF, electrical, optical,
+    entropy-source-decay, quantum-flavoured). Within-family multi-
+    sensor configurations (e.g. four thermal sensors all downstream
+    of the same heat-injection mechanism) do not provide diversity;
+    LL-029's calibration-window correlation test enforces this at
+    registration time via union-find over a |ρ|>0.3 graph on the
+    pairwise Pearson correlation matrix.
+
+2.3  Lyapunov-spectrum residue audit
+------------------------------------------------------------------------
+
+17. Verification is **Lyapunov-spectrum residue audit** (LL-006
+    :benchmarked). At registration, an envelope is calibrated by
+    running n_trials genuine-system trajectories and recording the
+    sample mean and sample standard deviation of each Lyapunov
+    exponent λ₁, ..., λ_N (LL-011). At verification, a fresh
+    trajectory is integrated, its full Benettin spectrum is
+    estimated, and the per-exponent residue against the envelope is
+    compared to a calibrated threshold k.
+
+18. The detection-probability bound has the empirical shape
+    P(detect) ≥ 1 - K · exp(-c · T · δ_A²), where δ_A is the
+    adversary perturbation magnitude, T is observation time, and
+    K, c are calibration constants. The bound's structural
+    properties --- range in [0,1], monotonicity in T and δ_A²,
+    asymptotic tendency to 1 --- are formalised as Lean theorems
+    1-12 (§6).
+
+19. Audit must run on **every verification request** (LL-019). The
+    cheap Wolf-method λ̂₁ alone is insufficient because adversaries
+    can craft trajectories that match λ₁ while diverging in higher
+    exponents. The full Benettin spectrum is the audit's
+    cryptographic primitive; the cheap Wolf method is the always-on
+    monitor (LL-007), not a substitute.
+
+2.4  The chaos-guard (LL-007)
+------------------------------------------------------------------------
+
+20. A background process estimates the largest Lyapunov exponent in
+    real time using the Wolf single-trajectory algorithm --- O(N) per
+    step rather than O(N²) for full Benettin (~400× faster at N=40).
+    If λ̂₁ < τ_λ (default 0.1·λ₁_expected ≈ 0.166), the entropy
+    stream is marked INVALID immediately. Recovery requires
+    warmup_steps consecutive samples ≥ recovery_threshold (default
+    5·τ_λ ≈ 0.83).
+
+21. Reseed perturbs the SDE state via TRNG-derived unit-vector ×
+    magnitude (default magnitude=1.0 ≈ attractor diameter); the
+    guard resets to WARMUP and reseed_count increments. Initial
+    state is WARMUP, not VALID --- the security primitive must not
+    assume entropy is good before observation.
+
+22. The chaos-guard predicate `is_valid` returns Bool only (LL-017
+    no-oracle). No per-exponent residual, no distance-to-threshold,
+    no time-to-detection is exposed.
+
+2.5  Calibration confidentiality (LL-020)
+------------------------------------------------------------------------
+
+23. The registration envelope itself encodes per-device geometry
+    that an adversary could exploit to refine perturbations (V-012
+    Calibration Spectrum Leakage). LL-020 requires that the envelope
+    is stored or transmitted with calibration confidentiality
+    appropriate to the deployment context. The prototype's default
+    is differentially-private envelope perturbation at ε=1.0 via
+    Gaussian-mechanism noise injection; production deployments may
+    select stricter ε or alternative confidentiality strategies per
+    LL-020's strategy enumeration.
+
+========================================================================
+3.  ATTACK SURFACE
+========================================================================
+
+3.1  Resolution-bounded security claim (LL-008)
+------------------------------------------------------------------------
+
+24. LavaLamp's security claim is **resolution-bounded**: secure against
+    any adversary whose measurement and compute resolution is
+    exceeded by the device's chaos-production rate. Formally:
+    S_production = h_KS(M) = Σ_i max(λ_i, 0) (Pesin's formula on
+    the ergodic component); S_measurement = h_meas(A; M) is the
+    adversary's information-absorption rate from substrate
+    observations. The bound
+
+        S_production > S_measurement + log(1/η) / Δt
+
+    yields residual-uncertainty growth Δh · Δt - O(1) and the §2.3
+    detection bound P(detect) ≥ 1 - K · exp(-c · T · δ_A²).
+
+25. Per-class adversary quantification is LL-018: A1 remote software
+    has h_meas ≈ 0 (arbitrary margin); A2 local unprivileged is
+    bounded by user-space-observable timing/API resolution
+    (~10⁻⁶ s; comfortable margin); A3 kernel-level is **out of
+    scope** (LL-015) --- the bound does not hold and is not claimed;
+    A4 side-channel/physical-proximity is the load-bearing class
+    (margin holds when adversary measurement bandwidth is sub-Nyquist
+    relative to substrate per LL-005); A5 registration-time is
+    addressed by LL-011 protocol; A6 time-localised is addressed by
+    LL-012 cold-start protocol.
+
+26. The bound is **not information-theoretically secure** (no quantum
+    no-cloning inheritance). The chaotic SDE state is observable
+    without collapse; the unclonability is computational via
+    measurement-symmetry breaking. Honest tier framing per the
+    project's evidence-type discipline.
+
+3.2  The C-conjugate adversary construction
+------------------------------------------------------------------------
+
+27. The architectural inheritance from Possibilistic Security is the
+    *C-conjugate adversary*. An adversary attempting to spoof a
+    device's identity must construct a trajectory that satisfies the
+    verification envelope's spectrum residue check. In the
+    autopoietic frame, this is the same as the C-conjugate sector
+    of the Q_51/Q_102 quotient structure (Possibilistic Security
+    §2-§3): the adversary must structurally co-close in the
+    charge-conjugate sector --- categorically impossible at the
+    physics level.
+
+28. LavaLamp instantiates this construction at the entropy layer:
+    the chaotic-SDE substrate plus sensor coupling produces a
+    trajectory class such that the envelope residue check is
+    satisfied only by trajectories from the registered substrate.
+    An adversary's reproduced trajectory belongs to the C-conjugate
+    class --- detectable via spectrum residue (LL-006) above the
+    resolution threshold.
+
+3.3  Six adversary classes (A1-A6)
+------------------------------------------------------------------------
+
+29. Per the attack-surface enumeration documented in the canonical
+    repository's docs/attack_surface_enumeration.md, six adversary
+    classes structure the threat model:
+
+    A1  Remote software (no physical proximity, no privilege
+        escalation). Adversary observes API responses only;
+        h_meas ≈ 0.
+    A2  Local unprivileged (user-space code on the device, no
+        kernel privilege). Adversary observes user-space-visible
+        timing and API surfaces.
+    A3  Kernel-level (root / kernel privilege on the device).
+        Out of scope (LL-015).
+    A4  Side-channel / physical proximity (electromagnetic, acoustic,
+        thermal sensors near the device). Load-bearing class.
+    A5  Registration-time (adversary present during the registration
+        ceremony). Addressed by LL-011 protocol.
+    A6  Time-localised (adversary present in a single observation
+        window, then absent). Addressed by LL-012 cold-start
+        protocol.
+
+30. The resolution-bound parameters are A-class-dependent (LL-018);
+    deployments must specify which A-class capability levels are
+    assumed. The bound is parametric on this; it is not a single
+    number.
+
+3.4  The A7 boundary (LL-025: passive emanation)
+------------------------------------------------------------------------
+
+31. **Passive emanation reconstruction** (TEMPEST-class A7) is
+    declared as a tier-bounded scope-limit (LL-025), parallel in
+    shape to LL-015 (A3-OOS). Three adversary tiers:
+
+    Tier 1  State actor (sub-meter, lab equipment, targeted device).
+            Modern TEMPEST research demonstrates partial state
+            recovery from EM/acoustic/thermal emanations;
+            LavaLamp does not claim defense.
+    Tier 2  Capable but bounded (consumer-grade equipment, motivated
+            attacker, casual proximity). Some defense via per-
+            deployment shielding strategies; not load-bearing.
+    Tier 3  Casual / opportunistic. No specific threat surface;
+            ambient emanations below typical adversary equipment
+            sensitivity.
+
+32. The A7 boundary is "honest about scope" rather than "promises
+    defense" (LL-025). Production deployments at high-stakes tiers
+    should layer physical-shielding controls externally; LavaLamp
+    does not subsume them.
+
+3.5  Defended attack vectors (V-NNN catalog)
+------------------------------------------------------------------------
+
+33. The spec catalogues attack vectors as V-NNN entries cross-
+    referenced with the LL-NNN entries that defend them. The five
+    vectors most structurally important to the joint-defense
+    meta-claims of §5 are:
+
+    V-006  Sensor-input poisoning (hairdryer drives thermal up;
+           flashed USB device reports plug-events without attaching;
+           charge controller spoofs AC-adapter status). Defended by
+           LL-016 authenticity strategies (multi-sensor cross-
+           validation; eBPF kernel-side cross-validation; TPM-signed
+           reads where available).
+    V-011  Reseed-oracle attack (external observer uses reseed-
+           event timing as a sensor-correlated event channel for an
+           A4/A5 adversary). Defended by LL-019 side-channel
+           hardening (constant-time / randomised-delay envelope on
+           state-transition responses).
+    V-013  State-dependent / structured-direction adversary (worst-
+           case δ_A bounded by weakest-coupled direction, not
+           isotropic average). Defended by LL-006 detection bound
+           with LL-021 worst-case-adversary correction.
+    V-018  Sensor-fusion inversion via physical coupling (heater →
+           thermal + battery-discharge; load injector → AC current
+           + thermal rise; vibration motor → mic + accelerometer).
+           Defended by LL-029 entropy-independence enforcement.
+    V-019  Configuration-trust-vs-runtime-enforcement gap (deployment
+           satisfies API contract while violating invariants
+           internally; TRNG replacement, sensor-fusion forgery,
+           TPM-attestation stubs, cached-randomness reuse).
+           Defended by LL-028 runtime-conformance verification
+           (four probes: attestation continuity / sensor freshness /
+           API conformance / TRNG health).
+
+========================================================================
+4.  ARCHITECTURAL SEPARATION
+========================================================================
+
+4.1  Visual ↔ security decoupling (LL-002 :tested)
+------------------------------------------------------------------------
+
+34. The user-facing lava-lamp animation is *decorative only* and
+    runs on whatever RNG is convenient (Math.random(),
+    Cloudflare-style RNG-blob, canned animations --- any of these is
+    acceptable). The security primitive (chaotic SDE + sensor
+    coupling + spectrum residue audit) runs as an independent
+    background process. This is the same architectural shape as
+    Lazarus: substance under the hood; minimal/utilitarian UI on
+    top.
+
+35. Decoupling is **load-bearing**. If the visual and security
+    layers ever get re-coupled, the basin-spoofing attack surface
+    (multi-basin reaction-diffusion regimes the visual layer would
+    want to use to look pretty) returns. LL-002 is :tested via
+    explicit decoupling-assertion testset added at v0.0.33: the
+    test asserts that the security primitive's outputs do not
+    depend on any visual-layer state.
+
+4.2  No-go decoupling (LL-009: real-valued mathematics only)
+------------------------------------------------------------------------
+
+36. The security primitive uses **only real-valued mathematics**
+    (LL-009). Complex numbers are forbidden in any code path that
+    contributes to identity / verification. The visual skin
+    (decorative) is not bound by this constraint, but its outputs
+    do not feed the security primitive (per LL-002). The rationale
+    is that complex-valued chaotic systems carry hidden symmetry
+    structure that an adversary can exploit; real-valued dynamics
+    on a real-valued substrate matches the categorical analysis of
+    Possibilistic Security §3.
+
+4.3  The deployment-stack triple (LL-022 / LL-023 / LL-024)
+------------------------------------------------------------------------
+
+37. The deployment-stack is structured as a three-layer commitment:
+
+    LL-022  OS-trust-stack-dependency (downward boundary). Required
+            mechanisms: hardware root of trust; OS sensor APIs at
+            sufficient bandwidth; host-grade entropy
+            (`getrandom`/`SecRandomCopyBytes`/`BCryptGenRandom`);
+            user/kernel process isolation. Recommended (defense-in-
+            depth, not load-bearing): Secure Boot, IMA / kernel
+            lockdown, eBPF-based sensor authentication.
+    LL-023  Consumer-API-surface boundary (upward). What consumers
+            see: register / verify pair returning Bool only (LL-017
+            no-oracle); explicit deployment-context guidance;
+            error-handling discipline preserving no-oracle through
+            the API surface.
+    LL-024  Real-sensor-deployment-strategy (operational). Per-
+            platform sensor enumeration; Nyquist-compliant sample
+            rates; LL-016 authenticity instantiation; Phase 1 Linux
+            implemented, Phases 2/3 scoped.
+
+38. The triple closes the three-layer scoping question: what
+    LavaLamp depends on from below (LL-022), what consumers depend
+    on LavaLamp for (LL-023), and how LavaLamp instantiates against
+    real sensors at deployment time (LL-024). Either of the
+    boundary entries alone is incomplete; the triple is the
+    asymmetry-trap defense at the trust-stack level.
+
+========================================================================
+5.  DEFENSE-IN-DEPTH BY JOINT CLOSURE
+========================================================================
+
+5.1  The joint-defense meta-claim template
+------------------------------------------------------------------------
+
+39. The spec's five **joint-defense meta-claims** (LL-030 through
+    LL-034) formalise structurally cohesive triads of component
+    entries that jointly defend specific attack vectors with no
+    single-point failure. The template was developed during the
+    LL-030 work (sensor-defense joint-closure) and stress-tested
+    across four subsequent triads with increasing scope:
+
+40. **Template structure.** A joint-defense entry consists of:
+    (a) three component LL-NNN entries already in the spec; (b) one
+    or more attack vectors V-NNN that the triad jointly defends;
+    (c) the no-single-point-failure argument that removing any one
+    component creates a failure path through that specific V-NNN
+    (or set of V-NNNs); (d) Lean theorems formalising the structural
+    composition shape (extraction lemmas + joint conformance +
+    composition into LL-006); (e) a Julia integration test
+    exercising the four scenarios (positive case + V-NNN-by-V-NNN
+    attacks + combined attack) plus three single-point-failure
+    ablations (disable each component in turn) plus a no-single-
+    point-failure summary.
+
+41. The joint claim is *stronger than the sum of the three
+    individual claims* because each component covers a failure mode
+    the others cannot. The triad's structural cohesion is what the
+    Discovery.Triadic engine surfaces; the engine pass over the
+    spec corpus identified the candidates, and human judgment
+    selected the load-bearing ones for formalisation.
+
+5.2  The five engine-discovered triads
+------------------------------------------------------------------------
+
+42. The engine pass scored five triads at cohesion ≥ 10.50:
+
+    LL-030  LL-016 + LL-024 + LL-029 (sensor-defense joint-closure).
+            Defends V-006 + V-018. Score 12.00 in both R-edge
+            modes. Same Logic tier (Core + Operational +
+            Operational).
+    LL-031  LL-007 + LL-019 + LL-022 (reseed-oracle joint-closure).
+            Defends V-011. Score 12.00 strict mode with full
+            status-tier diversity (`:tested` + `:benchmarked` +
+            `:argued`). Spans all three Logic tiers (Operational +
+            Core + Boundary).
+    LL-032  LL-024 + LL-028 + LL-029 (round-3 Tier-3 joint-closure).
+            Defends V-006 + V-018 + V-019 with **bijective** V-NNN
+            coverage (each component defends a distinct attack
+            vector). Score 10.50.
+    LL-033  LL-006 + LL-023 + LL-029 (status-tier-diverse detection-
+            stack). Defends V-013 + V-006 + V-018. Score 12.00
+            relaxed-mode CYCLE. Components span all three evidence
+            regimes (`:benchmarked` + `:argued` + `:tested`).
+    LL-034  LL-023 + LL-024 + LL-029 (operational-deployment-stack).
+            Defends V-006 + V-018 from the consumer-API operational
+            surface. Score 11.50. Operational counterpart to
+            LL-030 (substrate-stack vs API-stack).
+
+43. All five entries are at status `:tested` with `example-tested`
+    evidence (Julia integration tests) plus `lean-proved`
+    structural-composition lemmas (Theorems.lean). LL-030 was
+    promoted from `:argued` at v0.0.70; LL-031 through LL-034
+    landed at `:tested` directly because the integration test and
+    Lean lemmas shipped together with the entry.
+
+5.3  Bijective vs overlapping V-NNN coverage
+------------------------------------------------------------------------
+
+44. The five triads partition into three structural shapes:
+
+    Single-V-NNN triads.  LL-031 (V-011 only): all three components
+                          converge on a single attack vector.
+    Overlapping-V-NNN triads.  LL-030, LL-033, LL-034 (V-006 +
+                          V-018, plus V-013 in LL-033): components
+                          co-defend the same V-NNNs through
+                          different mechanisms.
+    Bijective-V-NNN triads.  LL-032 (V-006 + V-018 + V-019): each
+                          component is the *only* defense against
+                          its primary V-NNN; cardinality of
+                          components = cardinality of defended
+                          V-NNNs.
+
+45. The bijective shape (LL-032) is the strongest no-single-point-
+    failure claim: each ablation produces a *distinct* failure
+    mode, isolating exactly which V-NNN that component defends.
+    The overlapping shape (LL-030, LL-033, LL-034) produces shared-
+    coverage gaps in the ablations: removing one component leaves
+    a path to the V-NNN through the remaining defenses, but
+    weakens the surface. The single-V-NNN shape (LL-031) is the
+    most concentrated: all three components contribute to the same
+    defense surface against a single attack class.
+
+5.4  Defense-in-depth identifiability (LL-034)
+------------------------------------------------------------------------
+
+46. LL-030 and LL-034 share LL-024 + LL-029 as components, with
+    LL-016 (substrate-side authenticity) replaced by LL-023 (API-
+    side contract). Both triads close on the same V-NNNs (V-006 +
+    V-018) through different conformance layers. A deployment
+    satisfying *both* LL-030's hypotheses (Theorem 22, substrate-
+    stack) *and* LL-034's hypotheses (Theorem 35, API-stack) has
+    **defense-in-depth** across substrate and API surfaces ---
+    formally identifiable in Lean as the conjunction of the two
+    theorems' hypotheses.
+
+47. This is the strongest finding of the joint-defense work: the
+    Discovery.Triadic engine surfaces parallel defense layers
+    explicitly, and the joint-defense template makes defense-in-
+    depth **structurally identifiable** in the spec rather than a
+    narrative assertion. Production deployments that satisfy both
+    triads can cite the conjunction of theorems 22 and 35 as
+    machine-checked evidence of the multi-layer defense.
+
+5.5  Generalisation findings
+------------------------------------------------------------------------
+
+48. Three generalisation properties of the joint-defense template
+    emerged from the five entries:
+
+    Tier-agnostic (LL-031).  The template handles same-tier triads
+                             (LL-030: Core + Operational +
+                             Operational) and cross-tier triads
+                             (LL-031: Operational + Core +
+                             Boundary) with identical artifact
+                             shape. Logic tier is not a constraint
+                             on joint-defense composition.
+    Structure-additive (LL-032).  Once a component's conformance
+                             structure is defined, future joint-
+                             defense entries using that component
+                             reuse it for free. LL-024 and LL-029
+                             structures defined for LL-030 were
+                             reused unchanged in LL-032 (and
+                             again in LL-034). Joint-defense
+                             entry cost asymptotes at 2 new
+                             theorems (joint-conformance +
+                             composition into LL-006) once all
+                             three components' structures exist.
+    Evidence-regime-agnostic (LL-033).  Heterogeneous evidence
+                             kinds (`:benchmarked` empirical +
+                             `:argued` structural + `:tested`
+                             algorithmic) compose into a single
+                             load-bearing joint claim. The template
+                             does not require uniform maturity
+                             across the triad.
+
+49. Joint-defense entry cost across the five entries:
+
+    | Entry  | New Lean theorems | New conformance structures |
+    | ------ | ----------------- | -------------------------- |
+    | LL-030 | 5                 | 3 (LL016, LL024, LL029)    |
+    | LL-031 | 5                 | 2 (LL007, LL019)           |
+    | LL-032 | 3                 | 1 (LL028)                  |
+    | LL-033 | 3                 | 1 (LL006)                  |
+    | LL-034 | 2                 | 0 (all reused)             |
+
+50. The asymptote at LL-034 demonstrates the structure-additive
+    property concretely. Future engine-discovered triads composed
+    entirely of already-formalised components will cost 2 theorems
+    and zero structures to formalise.
+
+========================================================================
+6.  THE LEAN TRACK
+========================================================================
+
+6.1  What is proved
+------------------------------------------------------------------------
+
+51. Thirty-five theorems are kernel-verified at Lean 4 toolchain
+    pin v4.29.1 against Mathlib v4.29.1 (`src/lean4/LavaLamp/
+    Theorems.lean`). The build command `lake build` returns 1901
+    jobs with **zero `sorry` warnings** --- the kernel verifies
+    every proof at compile time.
+
+52. The thirty-five theorems decompose by logical role:
+
+    Theorems 1-2.   LL-021 worst-case-adversary bound (algebraic
+                    `mul_le_of_le_one_right`); the only theorem
+                    promoting an LL-NNN entry to `:proved` status
+                    (LL-021 promoted at v0.0.48).
+    Theorems 3-12.  LL-006 detection-bound shape: range theorems
+                    (4, 5), monotonicity (6, 7, 8), strict
+                    monotonicity (9, 10), asymptotic limits
+                    (11, 12), and a worst-case-vs-isotropic
+                    composition (3).
+    Theorems 13-17. LL-022 / LL-023 conformance shape: extraction
+                    lemmas (13, 14), joint conformance (15), and
+                    compositional theorems chaining conformance
+                    into LL-006 well-typedness (16) and asymptote
+                    (17).
+    Theorems 18-22. LL-030 sensor-defense joint-closure: extraction
+                    lemmas per LL-016/LL-024/LL-029 (18, 19, 20),
+                    joint conformance (21), and five-component
+                    composition into LL-006 (22).
+    Theorems 23-27. LL-031 reseed-oracle joint-closure: extraction
+                    lemmas per LL-007/LL-019/LL-022 (23, 24, 25
+                    --- where 25 is sibling to 13 extracting a
+                    different field from the same predicate),
+                    joint conformance (26), and three-component
+                    composition (27).
+    Theorems 28-30. LL-032 round-3 Tier-3 joint-closure: extraction
+                    lemma for new LL-028 structure (28), joint
+                    conformance with bijective V-NNN encoding (29),
+                    composition omitting governance grounding (30).
+    Theorems 31-33. LL-033 status-tier-diverse joint-closure: new
+                    LL-006 conformance structure (encoding "the
+                    detection mechanism is operationally engaged"),
+                    extraction lemma (31), joint conformance (32),
+                    composition (33 --- first theorem where one
+                    component is a witness for LL-006 itself).
+    Theorems 34-35. LL-034 operational-deployment-stack joint-
+                    closure: joint conformance reusing existing
+                    structures (34), composition (35 --- the
+                    parallel-conformance-path enabling defense-in-
+                    depth identifiability via conjunction with
+                    theorem 22).
+
+6.2  What is not proved
+------------------------------------------------------------------------
+
+53. The probability bound itself --- P(detect) ≥ 1 - K · exp(-c · T ·
+    δ²) --- is a probability-space claim. Promoting LL-006 to
+    `:proved` (rather than the current `:benchmarked`) requires:
+
+    -  A probability space modeling trajectory sampling.
+    -  Random variables for the spectrum estimator output.
+    -  The detection-event predicate (when do we say a trajectory
+       was "detected as adversarial"?).
+    -  The lower-bound proof itself (a probabilistic concentration
+       inequality on the spectrum residue).
+
+54. Each is a multi-session research investment. Theorems 2-35
+    above prove every algebraic, real-analysis, asymptotic, type-
+    shape, and compositional property the eventual `:proved` proof
+    will compose with --- the missing piece is the probability-
+    space side.
+
+55. The operational defenses captured by all five joint-defense
+    entries (LL-030 V-006/V-018, LL-031 V-011, LL-032 bijective
+    V-006/V-018/V-019, LL-033 evidence-stack composition, LL-034
+    defense-in-depth via API-stack) are similarly *not* proved at
+    the probability-space level. Theorems 18-35 capture the
+    structural composition shape --- joint conformance simultaneously
+    witnesses each component's load-bearing field, no sub-
+    conformance is redundant, defense-in-depth across distinct
+    conformance paths is identifiable as the conjunction of theorem
+    hypotheses. The operational evidence (concrete attack scenarios
+    blocked) lives in the integration tests (§7).
+
+6.3  Honest evidence-type discipline
+------------------------------------------------------------------------
+
+56. The project's evidence-type discipline distinguishes
+    `:proved` (lean-proved, type-checked, or algebraic),
+    `:verified` (property-tested),
+    `:tested` (example-tested),
+    `:benchmarked` (performance-target met),
+    `:argued` (manual / written argument), and
+    `:open` (claim exists, no verification).
+
+57. A theorem with `sorry` in its body is **not** a proof. The
+    build is configured so any `sorry` regression surfaces as a
+    `declaration uses 'sorry'` linter warning --- the current build
+    returns zero warnings, so the proofs are honest at the kernel
+    level.
+
+58. Joint-defense entries are at `:tested` --- the integration test
+    is `example-tested` evidence; the Lean structural-composition
+    lemmas are `lean-proved` evidence supporting (not promoting)
+    the joint claim. The conjunctive-claim discipline holds: sub-
+    claim evidence (passing individual LL-007/LL-019/LL-022 tests
+    for LL-031, e.g.) does not promote the joint claim. The
+    *joint* evidence is the integration test's scenario + ablation
+    coverage plus the Lean structural composition.
+
+========================================================================
+7.  THE INTEGRATION TEST
+========================================================================
+
+7.1  The 424-assertion suite
+------------------------------------------------------------------------
+
+59. The Julia test suite (`src/julia/test/runtests.jl`) runs via
+    `Pkg.test()` from the canonical project root. Total: 424
+    assertions across the full suite, exercising every LL-NNN
+    entry that has `:tested`, `:benchmarked`, or partial-coverage
+    evidence type.
+
+60. The five joint-defense integration testsets (LL-030 through
+    LL-034) contribute 14 + 8 + 8 + 8 + 6 = approximately 90
+    assertions. Each follows the eight-testset shape: positive
+    case + V-NNN attack scenarios + combined attack + three
+    single-point-failure ablations + no-single-point-failure
+    summary. LL-034 is lighter (six testsets) because its attack
+    scenarios reuse LL-030's verbatim with only the conformance-
+    layer-credit changing.
+
+7.2  The verify_demo.sh cross-machine reproducibility check
+------------------------------------------------------------------------
+
+61. A clone-and-run end-to-end demo is shipped at
+    `src/julia/demo/lavalamp_demo.jl`. It exercises the registration
+    ceremony, honest verification, strong-adversary verification,
+    chaos-guard state machine, and the LL-030 sensor-defense
+    surface. Wall-clock target: well under one minute on a
+    2024-vintage laptop. Determinism: every random draw is seeded;
+    output is reproducible across runs and machines (modulo Julia
+    version differences).
+
+62. The accompanying `verify_demo.sh` script runs the demo, time-
+    normalises the output (replacing wall-clock numbers with
+    "<TIMING>"), and diffs against `expected_output.txt`. A non-
+    matching diff fails the script with exit code 1 --- a hard
+    cross-machine reproducibility check. The CI workflow runs this
+    on every push to confirm the demo's behaviour is invariant.
+
+7.3  Per-platform real-sensor implementation status
+------------------------------------------------------------------------
+
+63. Per LL-024, the real-sensor implementation is per-platform:
+
+    Phase 1 (Linux).   Implemented at v0.0.63. Six readers ---
+                       `real_thermal_stream`, `real_battery_stream`,
+                       `real_ac_stream`, `real_usb_stream`,
+                       `real_cpu_governor_stream`,
+                       `real_loadavg_stream` --- read from sysfs/
+                       procfs paths via pure-Julia file I/O. No
+                       FFI. CI runs on ubuntu-latest and
+                       exercises the Linux-actual-sysfs branch on
+                       every push.
+    Phase 2 (macOS).   Scoped, deferred. IOKit / SMC FFI required;
+                       per-Mac-model sensor discovery; ~2 weeks
+                       development effort.
+    Phase 3 (Windows). Scoped, deferred. WMI + PDH FFI required;
+                       ~2-3 weeks development effort.
+    Phase 4 (TPM).     P7 hardening track; deferred.
+
+64. Until Phase 2 + Phase 3 land, real-deployment integration
+    testing is restricted to Linux hosts. The synthetic-stream
+    test fixtures (`gaussian_noise_stream`, `binary_step_stream`,
+    `constant_stream`) exercise the structural composition on any
+    host where Julia is installed.
+
+========================================================================
+8.  POSITION IN THE TRIAD DEPLOYMENTS
+========================================================================
+
+8.1  LavaLamp / Lazarus / PharOS
+------------------------------------------------------------------------
+
+65. **The Triad Deployments** is a portfolio-level umbrella for
+    digital identity resilience, with three deployments addressing
+    distinct layers:
+
+    LavaLamp.  Substrate-bound identity primitive. Chaotic-SDE
+               residue audit at the entropy layer. Public; this
+               paper.
+    Lazarus.   Security companion for AI assistants. Face sentinel
+               + Shakespeare lockout + network monitoring. Public.
+    PharOS.    Post-classical identity OS layer. Forthcoming;
+               composes LavaLamp + LL-023 consumer-API + per-
+               platform PAM/Authorization-Plug-in/Credential-
+               Provider shims.
+
+66. The three deployments share the C-conjugate adversary frame
+    inherited from Possibilistic Security but address different
+    operational layers. LavaLamp is the entropy substrate;
+    Lazarus is the runtime defender; PharOS is the OS-level
+    integration. Each is independently deployable; together they
+    constitute the full Triad Deployments stack.
+
+8.2  What LavaLamp does that PQC cannot
+------------------------------------------------------------------------
+
+67. PQC migrates computational hardness from RSA/ECC to
+    lattice/code/multivariate problems, preserving the
+    architectural premise that identity is a stored credential
+    that can be captured and replayed. PQC is sound at its
+    cryptographic layer but does not address:
+
+    -  Deployment-layer attacks (phishing, SIM-swap, deep-fake)
+       that bypass the cryptographic surface entirely.
+    -  Substrate-binding requirements: the credential is not
+       bound to any particular device; capture + transfer is
+       possible regardless of the underlying hardness assumption.
+    -  Continuous-process semantics: PQC verifies a static
+       credential at point-of-use, not the sustained autopoietic
+       process that constitutes the identity in a possibilistic
+       framing.
+
+68. LavaLamp grounds identity in a substrate-physics obstruction
+    (resolution-bounded chaos production) that is *quantum-
+    irrelevant* by construction --- adding compute does not help
+    the adversary, because the obstruction is not computational.
+    The two architectures are **complementary**: PQC for static-
+    credential cryptographic operations where they are needed;
+    LavaLamp for substrate-bound identity where the autopoietic
+    process is the load-bearing security primitive.
+
+8.3  Composability with other Triad Deployments
+------------------------------------------------------------------------
+
+69. LavaLamp's LL-023 consumer-API surface is designed for
+    composability with PharOS (planned) and with platform-native
+    authentication mechanisms (PAM on Linux, Authorization Plug-in
+    on macOS, Credential Provider on Windows). The Bool-only
+    no-oracle response is preserved through these shims; platform-
+    native UIs translate the Bool into platform-native authentication
+    results without leaking distance information.
+
+70. Lazarus and LavaLamp do not share runtime processes; the
+    coupling is at the deployment-policy level. A device running
+    both has substrate-bound identity (LavaLamp) plus runtime
+    integrity monitoring (Lazarus) without architectural
+    interference between the two. Both deployments expose Bool-
+    only consumer APIs that compose cleanly into higher-layer
+    authentication policies.
+
+========================================================================
+9.  WHAT IS NOT CLAIMED
+========================================================================
+
+71. **Not QKD.** The unclonability claim is *computational*
+    (resolution-bounded), not information-theoretic via no-cloning.
+    Quantum no-cloning depends on quantum-mechanical linearity; a
+    classical chaotic SDE is non-linear and the state is observable
+    without collapse. Conflating the two tiers in pitches will
+    trip careful reviewers.
+
+72. **Not a key-distribution protocol.** QKD distributes keys
+    between two parties over an open channel; LavaLamp generates
+    device-bound entropy locally with a registration ceremony.
+    Key distribution between parties is a higher layer that may
+    use LavaLamp-bound identities as primitives, but is not part
+    of LavaLamp itself.
+
+73. **Resolution-bounded, not unconditional.** The security
+    guarantee holds only against adversaries whose measurement and
+    compute resolution is bounded relative to the device's chaos-
+    production rate. Per-class adversary quantification is LL-018;
+    deployments must specify their assumed adversary capability
+    levels and verify the bound parametrically.
+
+74. **Finite-N regime.** The detection bound's empirical
+    calibration is validated at N ≤ 80 (round-3 LL-021 amendment).
+    Large-N regime requires re-benchmarking before deployment;
+    the bound's *structural shape* is parameter-only and holds
+    independent of N, but the calibration constants are N-specific.
+
+75. **A3 kernel-level out of scope.** LL-015 is permanently
+    `:open` --- a non-defense scope declaration. Adversaries with
+    kernel privilege on the device are explicitly out of scope;
+    LavaLamp does not claim defense and does not promise the
+    bound holds. Production deployments at high-stakes tiers
+    should layer kernel-integrity controls externally (Secure
+    Boot, IMA, kernel-lockdown).
+
+76. **A7 passive emanation tier-bounded.** LL-025 declares scope
+    rather than promising defense. State-actor TEMPEST capability
+    can recover partial state from EM/acoustic/thermal emanations;
+    LavaLamp does not claim defense at this tier. Sub-state-actor
+    tiers receive partial mitigation via per-deployment shielding
+    strategies; this is not the load-bearing defense.
+
+77. **Not a panacea.** The five joint-defense meta-claims
+    (LL-030 through LL-034) cover the structural-cohesion ≥ 10.50
+    triads identified by the engine pass. Other attack vectors
+    (V-007, V-008, V-009, etc.) are addressed by individual
+    LL-NNN entries; the joint-defense formalisation is *one*
+    layer of the spec's defense surface, not the whole of it.
+
+========================================================================
+10.  LIMITATIONS AND OPEN QUESTIONS
+========================================================================
+
+10.1  Real-sensor implementations beyond Phase 1 Linux
+------------------------------------------------------------------------
+
+78. Phase 2 (macOS) and Phase 3 (Windows) real-sensor
+    implementations are scoped but not implemented. Production
+    deployment on those platforms is gated on the FFI + per-
+    platform sensor-discovery work documented in LL-024. The
+    structural composition tested in the integration suite is
+    platform-agnostic (synthetic streams suffice for the
+    composition shape); platform-specific sensor authenticity
+    and rate compliance require the FFI implementations.
+
+10.2  Probability-space proof for LL-006 / LL-008
+------------------------------------------------------------------------
+
+79. The detection bound's lower-bound proof at the probability-
+    space level is open (§6.2). The bound's structural properties
+    are formalised in Lean (theorems 4-12); the missing piece is
+    the probabilistic concentration inequality that connects the
+    spectrum residue to a detection probability with the asserted
+    rate K · exp(-c · T · δ²). This is multi-session research
+    work involving Mathlib's probability theory + concentration-
+    inequality libraries.
+
+10.3  A7 passive-emanation boundary refinement
+------------------------------------------------------------------------
+
+80. LL-025's tier structure is `:argued`. Empirical calibration of
+    where the tier boundaries actually sit on real hardware (sub-
+    meter vs sub-room TEMPEST capability; consumer-equipment
+    sensitivity bounds) requires emanation-measurement experiments
+    that are out of scope for the prototype but should land in
+    production deployment.
+
+10.4  Production hardening
+------------------------------------------------------------------------
+
+81. The prototype is `:tested` / `:benchmarked` for structural
+    correctness and detection-bound calibration; production
+    deployment requires per-deployment hardening: TPM integration
+    (Phase 4 LL-022 strategy 1); LL-020 calibration confidentiality
+    at deployment-appropriate ε; LL-019 timing decorrelation at
+    production scale (the high-resolution refresh in 0.0.50 found
+    that the operational-significance threshold is ~10⁻⁴ ratio of
+    median timing differences to padded operation, well below
+    adversary exploitability); LL-026 logic-tier annotation
+    discipline for spec-text governance.
+
+10.5  Open mathematical questions
+------------------------------------------------------------------------
+
+82. Two open questions inherited from Possibilistic Security:
+    (a) the C-closure self-reproduction property at Q_102 scale;
+    (b) the Markov-blanket family's full closure under the order-
+    one axiom. Both are addressed in the v1.4 morphogenesis
+    programme of the Closure paper (S162/S163/S165/S187, Lean-
+    verified) and do not block LavaLamp's deployment, but
+    structural completeness of the categorical foundation depends
+    on their resolution.
+
+10.6  Red-team protocol
+------------------------------------------------------------------------
+
+83. The framework's falsification test: design a red-team protocol
+    that attempts to break a deployed LavaLamp instance against a
+    specified A-class capability tier. If an A4 adversary at the
+    declared margin can sustain a residue-passing trajectory on a
+    different substrate, the resolution-bounded claim (LL-008) is
+    falsified for that capability tier. The prediction: the
+    adversary will fail at the substrate-reproduction step
+    specifically, not at the residue-audit-bypass step.
+
+========================================================================
+11.  CONCLUSION
+========================================================================
+
+84. LavaLamp operationalises the autopoietic-identity framing of
+    Possibilistic Security at the entropy layer of a deployable
+    classical computer. The chaotic-SDE substrate plus sensor
+    coupling produces a substrate-unique trajectory; verification
+    is residue audit against a registered envelope; impersonation
+    is a category-theoretic obstruction (substrate reproduction
+    at resolution exceeding adversary capability) rather than a
+    computational hardness assumption.
+
+85. The work documents thirty-four formal spec entries, five
+    joint-defense meta-claims surfaced by a Discovery.Triadic
+    engine pass, thirty-five Lean 4 + Mathlib v4.29.1 theorems,
+    a 424-assertion Julia test suite, and a clone-and-run demo
+    with cross-machine reproducibility verification. Three
+    template generalisation findings emerged: tier-agnostic,
+    structure-additive, and evidence-regime-agnostic composition.
+    The defense-in-depth identifiability finding makes parallel
+    conformance paths formally identifiable in Lean.
+
+86. LavaLamp positions itself complementarily to PQC: PQC migrates
+    computational hardness while preserving the static-credential
+    architectural premise; LavaLamp grounds identity in a
+    substrate-physics obstruction that is quantum-irrelevant by
+    construction. The two are not competing migrations of the same
+    surface; they address different layers of the digital-identity
+    resilience stack.
+
+87. The prototype is sufficient to demonstrate the structural
+    properties claimed; production deployment requires Phase 2
+    and Phase 3 real-sensor implementations, the probability-
+    space proof for the detection bound, and per-deployment
+    hardening per §10. The work is **prototype-stage**, honestly
+    framed; readers are cautioned to treat the proposal as a
+    research program with a working substrate, not a deployable
+    product.
+
+88. The framework is held by the triad that produced it and
+    released to the commons under the Triadic Closure License
+    (TCL v1.3). It cannot be revoked by any single party,
+    including its authors, because no single party holds it. It
+    can only be extended by triads that close.
+
+========================================================================
+APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
+========================================================================
+
+89. The thirty-four spec entries cited in this paper are
+    catalogued in `LAVALAMP_SPEC.md` at the canonical repository.
+    A condensed map follows:
+
+    Core security primitive (LL-001 through LL-009):
+      LL-001  identity-as-trajectory (Operational, :argued).
+      LL-002  visual-security decoupling (Operational, :tested).
+      LL-003  Lorenz-96 SDE choice (Operational, :benchmarked).
+      LL-004  sensor coupling (Operational, :tested).
+      LL-005  sensor-Nyquist condition (Operational, :argued).
+      LL-006  detection-probability bound (Core, :benchmarked).
+      LL-007  chaos-guard (Operational, :tested).
+      LL-008  resolution-bounded security (Core, :argued).
+      LL-009  no-complex-numbers (Boundary, :argued).
+
+    Operational protocols (LL-010 through LL-014):
+      LL-010  registration protocol (Operational, :argued).
+      LL-011  registration ceremony (Operational, :argued).
+      LL-012  cold-start protocol (Operational, :argued).
+      LL-013  per-deployment threshold calibration (Operational,
+              :argued).
+      LL-014  numerical-threshold non-fundamentality (Operational,
+              :argued).
+
+    Adversary scoping (LL-015 through LL-018):
+      LL-015  A3 kernel-level OOS (Boundary, :open).
+      LL-016  sensor-authenticity-requirement (Core, :argued).
+      LL-017  verification-no-oracle (Core, :argued).
+      LL-018  adversary-resolution-bound formalisation (Core,
+              :argued).
+
+    Hardening (LL-019, LL-020):
+      LL-019  side-channel-hardening (Core, :benchmarked).
+      LL-020  calibration-confidentiality (Operational, :argued).
+
+    Lean track (LL-021):
+      LL-021  worst-case-adversary-bound (Core, :proved at v0.0.48).
+
+    Boundary triple (LL-022, LL-023, LL-024):
+      LL-022  OS-trust-stack-dependency (Boundary, :argued).
+      LL-023  consumer-API-surface (Boundary, :argued).
+      LL-024  real-sensor-deployment-strategy (Operational,
+              :argued).
+
+    Round-3 additions (LL-025 through LL-029):
+      LL-025  A7-passive-emanation-boundary (Boundary, :argued).
+      LL-026  three-layer-logic-tier-annotation-discipline
+              (Boundary, :argued).
+      LL-027  asymptotic-Lyapunov-density-invariant (Core,
+              :benchmarked).
+      LL-028  runtime-conformance-verification (Boundary,
+              :argued).
+      LL-029  multi-channel-entropy-independence (Operational,
+              :tested).
+
+    Joint-defense meta-claims (LL-030 through LL-034):
+      LL-030  sensor-defense-joint-closure (Operational, :tested).
+      LL-031  reseed-oracle-joint-closure (Operational, :tested).
+      LL-032  round3-tier3-operational-joint-closure (Operational,
+              :tested).
+      LL-033  status-tier-diverse-detection-stack-joint-closure
+              (Operational, :tested).
+      LL-034  operational-deployment-stack-joint-closure
+              (Operational, :tested).
+
+90. Status counts at the time of this paper (canonical
+    `LAVALAMP_SPEC.md` final-section counts):
+
+      Total:           34
+      :proved:         1   (LL-021)
+      :tested:         9
+      :verified:       0
+      :benchmarked:    4
+      :argued:        19
+      :open:           1   (LL-015 — permanent by design)
+
+========================================================================
+APPENDIX B.  CITED LEAN THEOREMS
+========================================================================
+
+91. The thirty-five Lean theorems are catalogued in `THEOREMS.md`
+    at the canonical repository. Build via `cd src/lean4 && lake
+    update && lake exe cache get && lake build`. Expected:
+    "Build completed successfully (1901 jobs)" with zero warnings.
+    Toolchain: leanprover/lean4:v4.29.1; Mathlib v4.29.1 via
+    `lake-manifest.json`.
+
+92. Theorem-by-theorem detail (statements, proofs, spec
+    connections) is in `THEOREMS.md`. The grouping by logical role
+    is summarised in §6.1 of this paper. The single LavaLamp
+    spec entry currently at `:proved` status is LL-021 (worst-
+    case-adversary bound), promoted at v0.0.48 by theorem 1.
+
+========================================================================
+APPENDIX C.  V-NNN ATTACK VECTORS
+========================================================================
+
+93. The attack vectors invoked in this paper are catalogued in
+    `docs/attack_surface_enumeration.md` at the canonical
+    repository (a non-public document; readers requiring access
+    should contact the author). The five vectors most structurally
+    relevant to the joint-defense meta-claims are summarised in
+    §3.5. The catalog is non-exhaustive; individual LL-NNN entries
+    cite additional V-NNN entries as their defense surface.
+
+========================================================================
+APPENDIX D.  SUPPORTING MATERIAL
+========================================================================
+
+94. This paper synthesizes engineering and formal-verification
+    artifacts developed across multiple working sessions in the
+    canonical repository. The supporting material (not included
+    herein) includes:
+
+    (a) The chaos-guard module (`src/julia/src/ChaosGuard.jl`).
+    (b) The audit module (`src/julia/src/Audit.jl`) — register,
+        verify, verify_full, verify_constant_time,
+        verify_jittered, residue, synthetic_adversary.
+    (c) The sensor-independence module
+        (`src/julia/src/SensorIndependence.jl`) implementing the
+        LL-029 calibration-window correlation test.
+    (d) The runtime-conformance module
+        (`src/julia/src/RuntimeConformance.jl`) implementing the
+        LL-028 four-probe framework.
+    (e) The real-sensors module (`src/julia/src/RealSensors.jl`)
+        with Phase 1 Linux readers.
+    (f) The Lean theorems file (`src/lean4/LavaLamp/Theorems.lean`)
+        — the load-bearing formal-verification artefact.
+    (g) The integration-test suite (`src/julia/test/runtests.jl`).
+    (h) The clone-and-run demo (`src/julia/demo/lavalamp_demo.jl`)
+        + cross-machine reproducibility check
+        (`src/julia/demo/verify_demo.sh`).
+
+95. Possibilistic Security (Green 2026, v1.1) is the architectural
+    parent paper. The C-conjugate adversary construction, the
+    autopoietic-identity framing, and the obstruction-as-information
+    paradigm are inherited from that work.
+
+96. The Closure framework physics paper (Green 2026, v1.4) is the
+    structural foundation underlying Possibilistic Security. Q_102
+    morphogenesis (Markov-blanket family S162/S163/S165/S187,
+    Lean-verified at v193-v200) and the algebraic-arithmetic
+    upgrade (S174/S175/S176, with S176 verifying
+    c_3:c_2:c_1 = 6:6:10 and sin²θ_W = 3/8 EXACTLY in ℚ) are
+    the principal v1.4 advances over v1.0/v1.1/v1.2 of the
+    Possibilistic Security paper.
+
+97. Canonical references:
+
+    Green, A. (2026). 'Possibilistic Security: Identity as
+    Closure Residue on Ternary Causal Hypergraphs.' v1.1, May
+    2026. github.com/IridiumSoftware/possibilistic-security.
+
+    Green, A. (2026). 'Closure Forces Structure: The Standard
+    Model from Rosen Closure on Ternary Causal Hypergraphs.'
+    v1.4, May 2026. github.com/IridiumSoftware/closure-forces-
+    structure.
+
+98. The canonical LavaLamp repository is
+    github.com/IridiumSoftware/lavalamp; this paper, the source
+    code, the Lean theorems, the test suite, and the demo all
+    live there at the version-tagged release corresponding to
+    this paper's canonical hashes.
+
+========================================================================
