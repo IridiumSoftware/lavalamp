@@ -1786,10 +1786,191 @@ theorem LL023_LL024_LL029_conformance_supports_LL006_well_typed
   exact ⟨LL006_bound_nonneg h_K_nn h_K_le_one h_cT_nn,
          LL006_bound_le_one h_K_nn⟩
 
+/-! ## LL-006 concentration-inequality scaffold (theorems 36–39)
+
+LL-006 status: `:benchmarked` (currently, post-strengthen-pass at
+0.0.75). The detection bound
+
+    P(detect) ≥ 1 - K · exp(-c' · T · ε_A²)
+
+has empirically-calibrated constants (slope a = 2.3891, sub-
+Gaussian rate σ²(R/σ) = 2.282, threshold k = 5, T = 60,
+conservative bound constant c' = 0.00423 from the high-res
+LSQ-fit; see `src/julia/benchmark/results/p3_bound_strengthen
+_lorenz96.txt`).
+
+**This block is the LL-006 concentration-inequality scaffold.**
+It captures:
+
+- **`LL006.CalibratedConstants`** — the abstract structure
+  parametrising the bound. Validity hypotheses (0 ≤ K ≤ 1,
+  0 < c, 0 < T) are explicit; instances can be constructed
+  with concrete empirical values via `LL006.empirical_calibration`.
+- **`LL006.detection_bound`** — the bound function evaluated at
+  a calibration. Reuses the parameter-only bound shape from
+  theorems 4-12.
+- **Theorems 36-39** — bound's range and zero-case at the
+  calibrated constants, discharging via the existing parameter-
+  only bound-shape theorems (4, 5, 9). All four theorems prove
+  cleanly without `sorry`.
+
+**THEOREM TARGET (documented but not yet stated; future Lean
+session).** The eventual concentration-inequality statement:
+
+    theorem LL006_concentration_bound
+        (cc : LL006.CalibratedConstants)
+        (X : LL006.SubGaussianResidue cc)
+        (ε_A : ℝ) (h_ε_A_pos : 0 < ε_A)
+        (h_mean_above_threshold : ...) :
+      P_detect X ε_A ≥ LL006.detection_bound cc ε_A
+
+requires:
+
+  (a) A measure-theoretic probability space (Mathlib.Probability).
+  (b) A sub-Gaussian residue random variable with mean
+      a·ε_A + b and rate σ²(R/σ).
+  (c) Mathlib's MGF-based concentration inequalities
+      (Mathlib.Probability.Moments) — Hoeffding's lemma is the
+      proof's central step, possibly relaxed to sub-exponential
+      per the strengthen-pass χ² verdict (p=0.041 against strict
+      sub-Gaussian).
+  (d) Connecting (c·T·ε_A²) to (a²/(2·σ²_R))·ε_A² · T ratio of
+      empirical constants.
+
+Promotion of LL-006 to `:proved` is gated on this proof; the
+scaffold here lays the abstract types and trivial range-property
+lemmas the eventual proof will use.
+
+**Honest framing.** No `sorry` is introduced in this scaffold.
+The five theorems below (36-40) are kernel-verified at compile
+time. The concentration-inequality statement above lives only in
+this docstring; theorem 40 is a name-reserving placeholder
+(trivially proven via theorem 36) that the future lift will
+replace with the actual concentration inequality.
+-/
+
+namespace LL006
+
+/-- LL-006 calibrated constants. Parametrises the bound
+
+        bound(ε_A) = 1 - K · exp(-c · T · ε_A²)
+
+    with empirically-calibrated values supplied by the strengthen-
+    pass benchmark (see `LL006.empirical_calibration`). The
+    validity hypotheses ensure the bound is well-typed in [0,1]
+    and the asymptote at ε_A → ∞ holds. -/
+structure CalibratedConstants where
+  K : ℝ
+  c : ℝ
+  T : ℝ
+  K_pos : 0 < K            -- subsumes K_nn (K = 0 trivialises the bound)
+  K_le_one : K ≤ 1
+  c_pos : 0 < c
+  T_pos : 0 < T
+
+/-- Derived non-negativity from the strict K_pos. -/
+theorem CalibratedConstants.K_nn (cc : CalibratedConstants) : 0 ≤ cc.K :=
+  cc.K_pos.le
+
+/-- Empirical calibration from the high-res LSQ fit
+    (`p3_bound_high_res_lorenz96.txt`; conservative target the
+    Lean concentration-inequality proof should aim at):
+
+        K = 1, c' = 0.00423, T = 60.
+
+    The strengthen-pass benchmark
+    (`p3_bound_strengthen_lorenz96.txt`) yields a tighter
+    Gaussian-tail-derived c' = 0.0208 but the LSQ-fit is the
+    one that holds across the full empirical surface within
+    Wilson 95% CIs, so it's the safe Lean target. -/
+noncomputable def empirical_calibration : CalibratedConstants where
+  K := 1
+  c := 423 / 100000
+  T := 60
+  K_pos := by norm_num
+  K_le_one := by norm_num
+  c_pos := by norm_num
+  T_pos := by norm_num
+
+/-- Detection bound at calibrated constants. Marked `noncomputable`
+    because it depends on `Real.exp`. -/
+noncomputable def detection_bound (cc : CalibratedConstants) (ε_A : ℝ) : ℝ :=
+  1 - cc.K * Real.exp (-(cc.c * cc.T) * ε_A^2)
+
+/-- **Theorem 36.** The detection bound at calibrated constants
+    is ≤ 1 for any ε_A ∈ ℝ. Discharges via theorem 4
+    (`LL006_bound_le_one`). -/
+theorem LL006_calibrated_bound_le_one
+    (cc : CalibratedConstants) (ε_A : ℝ) :
+    detection_bound cc ε_A ≤ 1 :=
+  LL006_bound_le_one cc.K_nn
+
+/-- **Theorem 37.** The detection bound at calibrated constants
+    is ≥ 0 for any ε_A ∈ ℝ. Discharges via theorem 5
+    (`LL006_bound_nonneg`).
+
+    The theorem 5 hypothesis `0 ≤ c·T` is supplied by the
+    strict positivity of c and T from the calibration. -/
+theorem LL006_calibrated_bound_nonneg
+    (cc : CalibratedConstants) (ε_A : ℝ) :
+    0 ≤ detection_bound cc ε_A :=
+  LL006_bound_nonneg cc.K_nn cc.K_le_one
+    (le_of_lt (mul_pos cc.c_pos cc.T_pos))
+
+/-- **Theorem 38.** The detection bound at ε_A = 0 simplifies to
+    1 - K (the FPR floor). At the empirical calibration K = 1,
+    this becomes the trivial 0 — the empirical FPR floor is
+    bounded above by 1 - K = 0, which the strengthen-pass
+    benchmark observes empirically (FPR ≈ 0.04 at ε_A = 0; the
+    bound's prediction is vacuous at the floor). -/
+theorem LL006_calibrated_bound_at_zero
+    (cc : CalibratedConstants) :
+    detection_bound cc 0 = 1 - cc.K := by
+  unfold detection_bound
+  simp [Real.exp_zero]
+
+/-- **Theorem 39.** The detection bound at calibrated constants is
+    strictly increasing in `ε_A²`. Discharges via theorem 9
+    (`LL006_bound_strict_monotone_in_squared_magnitude`).
+
+    Operational meaning: at the calibrated constants, larger
+    adversary perturbations are *strictly* easier to detect; this
+    is the empirical observation the strengthen-pass benchmark
+    exhibits via the linear E[R/σ] vs ε_A fit (R²=0.99). -/
+theorem LL006_calibrated_bound_strict_monotone_in_squared
+    (cc : CalibratedConstants)
+    {ε_A₁ ε_A₂ : ℝ} (h_lt : ε_A₁^2 < ε_A₂^2) :
+    detection_bound cc ε_A₁ < detection_bound cc ε_A₂ :=
+  LL006_bound_strict_monotone_in_squared_magnitude
+    cc.K_pos (mul_pos cc.c_pos cc.T_pos) h_lt
+
+/-- **Theorem 40 (placeholder).** LL-006 concentration-inequality
+    name reservation.
+
+    This is a *trivial* restatement of theorem 36 specialised to
+    `0 < ε_A`. It serves as a name-reservation for the eventual
+    full concentration-inequality theorem:
+
+        ∀ (P : ProbabilityMeasure Ω) (X : SubGaussianResidue),
+            P { ω | X.R ω > k } ≥ detection_bound cc ε_A
+
+    which requires the Mathlib.Probability lift documented in
+    the §scaffold docstring above (sub-Gaussian random-variable
+    formalisation, Hoeffding's lemma, MGF-based concentration).
+
+    The full theorem will replace this placeholder when a future
+    session takes on the lift. -/
+theorem LL006_concentration_bound_placeholder
+    (cc : CalibratedConstants) (ε_A : ℝ) (_h_ε_A_pos : 0 < ε_A) :
+    detection_bound cc ε_A ≤ 1 :=
+  LL006_calibrated_bound_le_one cc ε_A
+
+end LL006
+
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.74 — LL-033 + LL-034 joint-closures: theorems 31–35 landed (engine-discovered ≥10.50 triads exhausted)"
+  "0.0.76 — LL-006 concentration-inequality scaffold: theorems 36-39 + CalibratedConstants + roadmap"
 
 end LavaLamp

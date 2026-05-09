@@ -18,17 +18,20 @@ Expected: `Build completed successfully (1901 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
 Lean kernel verifies every proof at compile time.
 
-**Status.** All thirty-five theorems below are kernel-verified
+**Status.** All forty theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
 evidence-type discipline).
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
-theorem 1 below. Theorems 2–35 are composition lemmas building
+theorem 1 below. Theorems 2–40 are composition lemmas building
 toward future `:proved` status for LL-006 and the joint-defense
 parametric shape entries (LL-022 / LL-023 / LL-030 / LL-031 /
 LL-032 / LL-033 / LL-034); they currently land as `lean-proved`
 content supporting their associated entries without themselves
-being entry-promoting.
+being entry-promoting. Theorems 36-40 are the LL-006
+**concentration-inequality scaffold** — calibrated-constants
+parametrisation + name-reservation for the eventual
+concentration-inequality proof.
 
 ---
 
@@ -71,6 +74,11 @@ being entry-promoting.
 | 33 | `LL006_LL023_LL029_conformance_supports_LL006_well_typed` | composition (chains status-tier-diverse triad → LL-006) | — (supports LL-006 + status-tier-diverse triad) |
 | 34 | `LL034_joint_conformance` | composition (combined extraction; operational-deployment-stack) | — (supports LL-034) |
 | 35 | `LL023_LL024_LL029_conformance_supports_LL006_well_typed` | composition (chains operational-deployment-stack → LL-006) | — (supports LL-006 + operational-deployment-stack triad; defense-in-depth identifiable as conjunction with theorem 22) |
+| 36 | `LL006_calibrated_bound_le_one` | range (calibrated specialisation of theorem 4) | — (LL-006 concentration-inequality scaffold) |
+| 37 | `LL006_calibrated_bound_nonneg` | range (calibrated specialisation of theorem 5) | — (LL-006 concentration-inequality scaffold) |
+| 38 | `LL006_calibrated_bound_at_zero` | edge case (`detection_bound cc 0 = 1 - K`; FPR-floor framing) | — (LL-006 concentration-inequality scaffold) |
+| 39 | `LL006_calibrated_bound_strict_monotone_in_squared` | strict monotonicity (calibrated specialisation of theorem 9) | — (LL-006 concentration-inequality scaffold) |
+| 40 | `LL006_concentration_bound_placeholder` | name reservation for the eventual concentration-inequality theorem | — (LL-006 concentration-inequality scaffold) |
 
 ---
 
@@ -1648,9 +1656,123 @@ template makes explicit.
 
 ---
 
+## 36-40 — LL-006 concentration-inequality scaffold
+
+Theorems 36-40 are the **LL-006 concentration-inequality
+scaffold**, laying the abstract types and trivial supporting
+lemmas the eventual concentration-inequality lift will use.
+
+### Calibrated-constants structure
+
+```lean
+structure LL006.CalibratedConstants where
+  K : ℝ
+  c : ℝ
+  T : ℝ
+  K_pos : 0 < K
+  K_le_one : K ≤ 1
+  c_pos : 0 < c
+  T_pos : 0 < T
+
+noncomputable def LL006.empirical_calibration : CalibratedConstants where
+  K := 1
+  c := 423 / 100000     -- 0.00423 (high-res LSQ-fit)
+  T := 60
+  ...
+```
+
+The `empirical_calibration` instance pins the constants to the
+high-res LSQ-fit values from `p3_bound_high_res_lorenz96.txt`.
+The strengthen-pass benchmark
+(`p3_bound_strengthen_lorenz96.txt`) yields a tighter Gaussian-
+tail-derived c'=0.0208, but the LSQ-fit is the conservative
+target the proof should aim at because it holds across the full
+empirical surface within Wilson 95% CIs.
+
+### Detection-bound function
+
+```lean
+noncomputable def LL006.detection_bound
+    (cc : CalibratedConstants) (ε_A : ℝ) : ℝ :=
+  1 - cc.K * Real.exp (-(cc.c * cc.T) * ε_A^2)
+```
+
+### Theorems 36-39 — calibrated specialisations
+
+Each theorem reuses an existing parameter-only bound-shape
+theorem (4, 5, or 9) with the calibration's validity hypotheses
+discharging the abstract preconditions:
+
+- **Theorem 36** — `LL006_calibrated_bound_le_one`. The bound
+  is ≤ 1 for any ε_A. Discharges via theorem 4 with the
+  calibration's `K_pos.le` providing the non-negativity of K.
+- **Theorem 37** — `LL006_calibrated_bound_nonneg`. The bound
+  is ≥ 0 for any ε_A. Discharges via theorem 5 with the
+  calibration's `K_pos.le`, `K_le_one`, and the strict
+  positivity of c, T composing into `0 ≤ c·T`.
+- **Theorem 38** — `LL006_calibrated_bound_at_zero`. At ε_A = 0
+  the bound simplifies to `1 - K`. Direct unfold + `Real.exp_zero`.
+  At the empirical calibration (K = 1) this equals 0, which is
+  the FPR-floor framing — the bound's prediction is vacuous at
+  ε_A = 0, consistent with the strengthen-pass benchmark's
+  observation of FPR ≈ 0.04.
+- **Theorem 39** —
+  `LL006_calibrated_bound_strict_monotone_in_squared`. The bound
+  is strictly increasing in ε_A². Discharges via theorem 9 with
+  the calibration's `K_pos` and `c·T > 0`. Operational meaning:
+  larger adversary perturbations are *strictly* easier to detect
+  at the calibrated constants — the empirical observation the
+  strengthen-pass benchmark exhibits via the linear E[R/σ] vs ε_A
+  fit (R²=0.99).
+
+### Theorem 40 — `LL006_concentration_bound_placeholder` (name reservation)
+
+```lean
+theorem LL006_concentration_bound_placeholder
+    (cc : CalibratedConstants) (ε_A : ℝ) (_h_ε_A_pos : 0 < ε_A) :
+    detection_bound cc ε_A ≤ 1 :=
+  LL006_calibrated_bound_le_one cc ε_A
+```
+
+A *trivial* restatement of theorem 36 specialised to `0 < ε_A`.
+Reserves the name `LL006_concentration_bound_*` for the eventual
+full concentration-inequality theorem:
+
+```lean
+-- TARGET (not yet stated):
+theorem LL006_concentration_bound
+    (cc : CalibratedConstants) (X : SubGaussianResidue cc)
+    (ε_A : ℝ) (h_ε_A_pos : 0 < ε_A)
+    (h_mean_above_threshold : ...) :
+  P_detect X ε_A ≥ detection_bound cc ε_A
+```
+
+The full theorem requires the **Mathlib-probability lift**:
+
+  1. A measure-theoretic probability space
+     (`Mathlib.MeasureTheory.Measure.MeasureSpace`).
+  2. A sub-Gaussian residue random variable with mean
+     `a · ε_A + b` and rate `σ²(R/σ)`, calibrated empirically
+     to `a = 2.3891, b = 2.3553, σ²(R/σ) = 2.282`.
+  3. Mathlib's MGF-based concentration inequalities
+     (`Mathlib.Probability.Moments`) — Hoeffding's lemma is the
+     proof's central step.
+  4. A possible **sub-exponential relaxation** in step 3, per
+     the strengthen-pass χ² verdict (p=0.041 against strict
+     sub-Gaussian; the residue distribution is slightly heavier-
+     tailed than Gaussian).
+
+Promotion of LL-006 to `:proved` is gated on this proof. The
+strengthen pass at v0.0.75 calibrated all the constants; the
+scaffold here lays the abstract-types-and-supporting-lemmas
+groundwork; the concentration-inequality proof itself is the
+multi-session lift remaining.
+
+---
+
 ## What this collectively proves
 
-The thirty-five theorems chain to give:
+The forty theorems chain to give:
 
 - **LL-021 worst-case bound** (theorem 1) — projected adversary
   magnitude is bounded by unprojected magnitude.
@@ -1812,6 +1934,16 @@ The thirty-five theorems chain to give:
   with theorem 22, makes **defense-in-depth** across substrate-
   stack and API-stack formally identifiable in Lean as the
   conjunction of the two theorems' hypotheses.
+- **LL-006 calibrated-constants scaffold** (theorems 36-40) —
+  parametrises the LL-006 detection bound via a
+  `CalibratedConstants` structure with explicit validity
+  hypotheses (K_pos, K_le_one, c_pos, T_pos) and an
+  `empirical_calibration` instance pinning the high-res LSQ-fit
+  values (K=1, c'=0.00423, T=60). Theorems 36-39 are calibrated
+  specialisations of theorems 4/5/9 for the `detection_bound`
+  function. Theorem 40 reserves the name
+  `LL006_concentration_bound_*` for the eventual concentration-
+  inequality theorem the Mathlib-probability lift will produce.
 
 ## What this does NOT prove
 
@@ -1826,11 +1958,14 @@ requires:
 - The lower-bound proof itself (probabilistic concentration
   inequality on the spectrum residue).
 
-Each is a multi-session research investment. The thirty-five
-theorems above prove every *algebraic*, *real-analysis*,
-*asymptotic*, *type-shape*, and *compositional* property the
-eventual `:proved` proof will compose with — the missing piece
-is the probability-space side.
+Each is a multi-session research investment. The forty theorems
+above prove every *algebraic*, *real-analysis*, *asymptotic*,
+*type-shape*, and *compositional* property the eventual
+`:proved` proof will compose with — the missing piece is the
+probability-space side. Theorems 36-40 lay the scaffolding (a
+parametric `CalibratedConstants` structure with empirically-pinned
+constants from `p3_bound_strengthen_lorenz96.txt`) that the
+Mathlib-probability lift will plug into.
 
 **The operational defenses captured by all five joint-defense
 entries** (LL-030 V-006/V-018, LL-031 V-011, LL-032 bijective
@@ -1853,8 +1988,8 @@ top-level README §"Try it" or in `src/lean4/README.md`.
 ## Honest framing reminder
 
 Per the project's evidence-type discipline: a theorem with
-`sorry` in its body is **not** a proof. All thirty-five theorems
-above are kernel-verified with no `sorry`. The build is
-configured so any `sorry` regression would surface as a
+`sorry` in its body is **not** a proof. All forty theorems above
+are kernel-verified with no `sorry`. The build is configured so
+any `sorry` regression would surface as a
 `declaration uses 'sorry'` linter warning — the current build
 returns zero warnings, so the proofs are honest.
