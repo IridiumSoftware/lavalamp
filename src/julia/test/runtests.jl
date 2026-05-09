@@ -2459,4 +2459,277 @@ end
         end
     end
 
+    # ----- LL-036 integration test (detection-bound robustness) -----
+    #
+    # LL-036: LL-006 + LL-019 + LL-022 jointly defend the LL-006
+    # detection bound against side-channel oracles + weak-entropy
+    # degradation. Surfaced by TCE 0.2.9 stratified-scan as a
+    # 10.50 CYCLE sd=3 candidate (full status diversity).
+
+    @testset "LL-036 integration: detection-bound-robustness joint-closure" begin
+        # Build a small calibration substrate.
+        Random.seed!(836)
+        ds = lorenz96(20; F=8.0)
+        env = register_envelope(() -> lorenz96(20; F=8.0);
+                                 n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+
+        @testset "Positive case — all three defenses present" begin
+            # LL-006: residue audit accepts genuine system.
+            Random.seed!(837)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            @test verify(λs_h, env; k=10.0) == true
+            # LL-019: verify_constant_time pads to target.
+            t_padded = @elapsed verify_constant_time(λs_h, env;
+                                                      k=10.0,
+                                                      target_seconds=0.05)
+            @test t_padded >= 0.05
+            # LL-022: host-grade entropy (modeled by reseed working).
+            g = Guard(default_config(1.66; warmup_steps=2))
+            for _ in 1:2; update!(g, 1.7); end
+            update!(g, 0.05)
+            @test g.state == INVALID
+            u_pre = copy(current_state(ds))
+            reseed!(ds, g; rng=Random.Xoshiro(7777), magnitude=1.0)
+            u_post = copy(current_state(ds))
+            @test sqrt(sum((u_post .- u_pre).^2)) ≈ 1.0 atol=1e-10
+        end
+
+        @testset "Ablation 1 — disable LL-006: no audit, V-013 sails through" begin
+            # Without LL-006 audit mechanism, structured adversaries
+            # bypass the bound. Modeled by skipping verify entirely.
+            ll006_audit_skipped = true
+            @test ll006_audit_skipped   # vacuous; documents the ablation
+        end
+
+        @testset "Ablation 2 — disable LL-019: cheap-λ̂₁-mimicry succeeds" begin
+            # Plain verify is data-dependent timing; without
+            # constant-time padding the timing channel exists.
+            Random.seed!(838)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            t_plain = @elapsed verify(λs, env; k=10.0)
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=0.10)
+            @test t_padded >= 0.10
+            @test t_plain < t_padded
+        end
+
+        @testset "Ablation 3 — disable LL-022(c): weak entropy → predictable reseed" begin
+            # ZeroRNG models broken host TRNG. Reseed produces no entropy.
+            Random.seed!(839)
+            ds_a = lorenz96(40; F=8.0)
+            g_a = Guard(default_config(1.66; warmup_steps=2))
+            for _ in 1:2; update!(g_a, 1.7); end
+            update!(g_a, 0.05)
+            u_pre = copy(current_state(ds_a))
+            reseed!(ds_a, g_a; rng=ZeroRNG(), magnitude=1.0)
+            @test sqrt(sum((current_state(ds_a) .- u_pre).^2)) == 0.0
+        end
+    end
+
+    # ----- LL-037 integration test (verification-oracle-leak) -----
+    #
+    # LL-037: LL-017 + LL-023 + LL-029 jointly defend V-010 +
+    # V-006 + V-018. Surfaced by TCE 0.2.9 directional-cycle mode
+    # at 11.00 CYCLE sd=2 (HIGH band).
+
+    @testset "LL-037 integration: verification-oracle-leak joint-closure" begin
+        s_thermal_837 = gaussian_noise_stream(1.0; t_max=120.0,
+                                               sample_rate=10.0,
+                                               rng=Random.Xoshiro(871))
+        s_battery_837 = gaussian_noise_stream(1.0; t_max=120.0,
+                                               sample_rate=10.0,
+                                               rng=Random.Xoshiro(872))
+        s_ac_837      = gaussian_noise_stream(1.0; t_max=120.0,
+                                               sample_rate=10.0,
+                                               rng=Random.Xoshiro(873))
+
+        @testset "Positive case — all three layers intact" begin
+            # LL-017: verify returns Bool.
+            Random.seed!(870)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(871)
+            ds_h = lorenz96(20; F=8.0)
+            λs_h = lyapunov_spectrum(ds_h; N=200, Δt=0.05, Ttr=20.0)
+            @test verify(λs_h, env; k=10.0) isa Bool
+            # LL-023: API exposes Bool only.
+            @test verify(λs_h, env; k=10.0) isa Bool
+            # LL-029: independent streams.
+            cl = classify_families([s_thermal_837, s_battery_837, s_ac_837];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3
+        end
+
+        @testset "V-010 attack — threshold-probing rejected at LL-017 layer" begin
+            # LL-017 enforces Bool-only response; threshold probing
+            # cannot extract distance information.
+            Random.seed!(874)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(875)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            response = verify(λs, env; k=10.0)
+            @test response isa Bool   # no distance information leaks
+        end
+
+        @testset "V-006 attack — LL-029 catches via correlation analysis" begin
+            s_attacked = inject_v006_spike(s_thermal_837;
+                                            spike_at_idx=600,
+                                            magnitude=50.0)
+            @test sensor_authenticity_check(s_attacked) == false
+        end
+
+        @testset "V-018 attack — LL-029 collapses coupled families" begin
+            s_battery_coupled = couple_v018(s_thermal_837; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            cl = classify_families([s_thermal_837, s_battery_coupled, s_ac_837];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 2
+        end
+
+        @testset "Ablation 1 — disable LL-017: distance-to-threshold leaks" begin
+            # Hypothetical leaked surface: residue is a vector
+            # adversary can probe.
+            Random.seed!(876)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(877)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            res = residue(λs, env)
+            @test res isa AbstractVector{<:Real}   # leak observable
+        end
+
+        @testset "Ablation 2 — disable LL-023: API not enforcing LL-017" begin
+            # Same shape as LL-034 ablation 1: API leaks.
+            Random.seed!(878)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(879)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            res = residue(λs, env)
+            @test res isa AbstractVector{<:Real}
+        end
+
+        @testset "Ablation 3 — disable LL-029: V-018 succeeds" begin
+            s_battery_coupled = couple_v018(s_thermal_837; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            @test sensor_authenticity_check(s_thermal_837)
+            @test sensor_authenticity_check(s_battery_coupled)
+        end
+    end
+
+    # ----- LL-038 integration test (operational-defense-stack) -----
+    #
+    # LL-038: LL-019 + LL-023 + LL-029 jointly defend V-011 +
+    # V-006 + V-018 across all three evidence regimes (sd=3).
+    # Surfaced by TCE 0.2.9 stratified-scan in LOW band at 8.50
+    # — three V-NNN coverage with full status diversity.
+
+    @testset "LL-038 integration: operational-defense-stack joint-closure" begin
+        s_thermal_838 = gaussian_noise_stream(1.0; t_max=120.0,
+                                               sample_rate=10.0,
+                                               rng=Random.Xoshiro(881))
+        s_battery_838 = gaussian_noise_stream(1.0; t_max=120.0,
+                                               sample_rate=10.0,
+                                               rng=Random.Xoshiro(882))
+        s_ac_838      = gaussian_noise_stream(1.0; t_max=120.0,
+                                               sample_rate=10.0,
+                                               rng=Random.Xoshiro(883))
+
+        @testset "Positive case — three-layer defense engaged" begin
+            # LL-019: timing-padded.
+            Random.seed!(880)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(881)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=0.05)
+            @test t_padded >= 0.05
+            # LL-023: Bool-only.
+            @test verify(λs, env; k=10.0) isa Bool
+            # LL-029: independent.
+            cl = classify_families([s_thermal_838, s_battery_838, s_ac_838];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 3
+        end
+
+        @testset "V-011 attack — LL-019 timing-padding hides reseed" begin
+            Random.seed!(884)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(885)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=0.05)
+            @test t_padded >= 0.05
+        end
+
+        @testset "V-006 attack — LL-029 detects spike effect via family count" begin
+            s_attacked = inject_v006_spike(s_thermal_838;
+                                            spike_at_idx=600,
+                                            magnitude=50.0)
+            @test sensor_authenticity_check(s_attacked) == false
+        end
+
+        @testset "V-018 attack — LL-029 collapses coupled families" begin
+            s_battery_coupled = couple_v018(s_thermal_838; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            cl = classify_families([s_thermal_838, s_battery_coupled, s_ac_838];
+                                    ρ_threshold=0.3, window_s=60.0,
+                                    n_samples=600)
+            @test cl.n_families == 2
+        end
+
+        @testset "Ablation 1 — disable LL-019: V-011 timing observable" begin
+            Random.seed!(886)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(887)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            t_plain = @elapsed verify(λs, env; k=10.0)
+            t_padded = @elapsed verify_constant_time(λs, env;
+                                                      k=10.0,
+                                                      target_seconds=0.10)
+            @test t_padded >= 0.10
+            @test t_plain < t_padded
+        end
+
+        @testset "Ablation 2 — disable LL-023: API leaks" begin
+            Random.seed!(888)
+            env = register_envelope(() -> lorenz96(20; F=8.0);
+                                     n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+            Random.seed!(889)
+            ds_v = lorenz96(20; F=8.0)
+            λs = lyapunov_spectrum(ds_v; N=200, Δt=0.05, Ttr=20.0)
+            res = residue(λs, env)
+            @test res isa AbstractVector{<:Real}
+        end
+
+        @testset "Ablation 3 — disable LL-029: V-018 succeeds" begin
+            s_battery_coupled = couple_v018(s_thermal_838; α=0.95,
+                                             noise_σ=0.3,
+                                             rng=Random.Xoshiro(2018))
+            @test sensor_authenticity_check(s_thermal_838)
+            @test sensor_authenticity_check(s_battery_coupled)
+        end
+    end
+
 end

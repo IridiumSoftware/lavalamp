@@ -102,6 +102,13 @@ longer a structural assumption.
 | 44† | `LL006.TrivialInstantiation.trivial_subgaussian_residue` | trivial concrete instantiation (`noncomputable def`) — applies the lift end-to-end with a degenerate `(Unit, Measure.dirac ())` probability space; the calibration-match is vacuously satisfied | — (LL-006; sanity check that the lift's hypothesis signature is satisfiable end-to-end; not a `:proved` promotion because the detection regime is empty by construction) |
 | 45† | `LL006.GaussianInstantiation.hasSubgaussianMGF_id_gaussianReal` | identity is sub-Gaussian under centred Gaussian (uses `mgf_id_gaussianReal`) | — (LL-006 Mathlib-derived sub-Gaussian witness for Gaussian distribution) |
 | 46† | `LL006.GaussianInstantiation.gaussian_subgaussian_residue` | non-trivial Gaussian-residue instantiation (`noncomputable def`) — applies the lift to standard Gaussian on ℝ with R(ε_A, ω) = ε_A - ω; calibration K=1, c=1/2, T=1 chosen so Hoeffding rate matches LL-006 rate exactly | **Promotes LL-006 to `:proved` at 0.0.80** under the Path-C tightening (LL-006's claim is conditional on the sub-Gaussian-rate hypothesis tracked separately in LL-035) |
+| 47 | `LL036_joint_conformance` | LL-006 + LL-019 + LL-022 combined extraction (detection-bound robustness, sd=3) | — (LL-036) |
+| 48 | `LL006_LL019_LL022_conformance_supports_LL006_well_typed` | composition: detection-bound-robustness triad → LL-006 well-typedness | — (LL-036; surfaced by TCE 0.2.9 stratified-scan MID band 10.50 CYCLE sd=3) |
+| 49 | `LL017_conformance_implies_bool_only_response` | parametric shape (type-checked); new LL017.NoOracleResponse structure | — (LL-017; first joint-defense formalisation involving LL-017 no-oracle) |
+| 50 | `LL037_joint_conformance` | LL-017 + LL-023 + LL-029 combined extraction (verification-oracle-leak) | — (LL-037) |
+| 51 | `LL017_LL023_LL029_conformance_supports_LL006_well_typed` | composition: verification-oracle-leak triad → LL-006 well-typedness | — (LL-037; surfaced by TCE 0.2.9 directional-cycle mode 11.00 CYCLE; defends V-010 + V-006 + V-018) |
+| 52 | `LL038_joint_conformance` | LL-019 + LL-023 + LL-029 combined extraction (operational-defense-stack at sd=3) | — (LL-038) |
+| 53 | `LL019_LL023_LL029_conformance_supports_LL006_well_typed` | composition: operational-defense-stack triad → LL-006 well-typedness | — (LL-038; surfaced by TCE 0.2.9 stratified-scan LOW band 8.50; full status diversity sd=3 with V-011 + V-006 + V-018 co-defense) |
 
 † constructive declaration — `noncomputable def` returning `SubGaussianResidue cc` (a structure), not a `theorem` returning a `Prop`. The construction's *correctness* is enforced by the kernel's typechecking of every field's body against the structure's signature.
 
