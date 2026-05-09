@@ -1944,26 +1944,148 @@ theorem LL006_calibrated_bound_strict_monotone_in_squared
   LL006_bound_strict_monotone_in_squared_magnitude
     cc.K_pos (mul_pos cc.c_pos cc.T_pos) h_lt
 
-/-- **Theorem 40 (placeholder).** LL-006 concentration-inequality
-    name reservation.
+/-- **Theorem 40 (placeholder, retained for backward citation).**
+    Trivial restatement of theorem 36 specialised to `0 < ε_A`.
+    Now superseded by theorem 41 (`LL006_concentration_bound`),
+    which states the actual concentration-inequality at the
+    sub-Gaussian-residue-structure level.
 
-    This is a *trivial* restatement of theorem 36 specialised to
-    `0 < ε_A`. It serves as a name-reservation for the eventual
-    full concentration-inequality theorem:
-
-        ∀ (P : ProbabilityMeasure Ω) (X : SubGaussianResidue),
-            P { ω | X.R ω > k } ≥ detection_bound cc ε_A
-
-    which requires the Mathlib.Probability lift documented in
-    the §scaffold docstring above (sub-Gaussian random-variable
-    formalisation, Hoeffding's lemma, MGF-based concentration).
-
-    The full theorem will replace this placeholder when a future
-    session takes on the lift. -/
+    Retained as a placeholder name for downstream code that may
+    have cited it; remove once no callers depend on this
+    declaration. -/
 theorem LL006_concentration_bound_placeholder
     (cc : CalibratedConstants) (ε_A : ℝ) (_h_ε_A_pos : 0 < ε_A) :
     detection_bound cc ε_A ≤ 1 :=
   LL006_calibrated_bound_le_one cc ε_A
+
+/-! ### Sub-Gaussian residue model and the concentration inequality
+
+`SubGaussianResidue cc` bundles the abstract probability content
+the LL-006 concentration inequality requires:
+
+  - `P_detect : ℝ → ℝ` — the detection probability as a function of
+    adversary magnitude `ε_A` (lives in `[0, 1]`).
+  - `R_mean : ℝ → ℝ` — the mean per-σ-units max-residue
+    `E[max(R ./ σ)](ε_A)`. Empirically `≈ a · ε_A + b` per the
+    strengthen-pass benchmark (a = 2.3891, b = 2.3553).
+  - `threshold : ℝ` — the detection threshold (per-σ-units),
+    `k = 5` per the calibrated `verify` rejection criterion.
+  - `acceptance_tail_bound` — the **load-bearing assumption**
+    encoding the sub-Gaussian-tail behaviour: when the mean
+    residue `R_mean ε_A` exceeds the `threshold`, the
+    *acceptance* probability `1 - P_detect ε_A` is bounded above
+    by `K · exp(-(c · T) · ε_A²)` at the calibrated constants.
+
+    This is exactly the concentration inequality the eventual
+    Mathlib-probability lift will derive from a sub-Gaussian
+    residue MGF + Hoeffding's lemma. Encoding it as a structure
+    field here makes the hypothesis explicit and the resulting
+    theorem honest: the proof is rearrangement; the substantive
+    work is the assumption.
+
+The theorem `LL006_concentration_bound` (theorem 41) is the
+rearrangement: under the structure's assumption + the operational
+hypothesis `R_mean ε_A ≥ threshold`, the detection probability is
+bounded below by the calibrated `detection_bound`.
+
+When the Mathlib-probability lift lands, the
+`acceptance_tail_bound` field will be replaced by (or paralleled
+with) a *theorem* whose proof discharges Hoeffding's lemma against
+a measure-theoretic sub-Gaussian random variable. The shape of
+theorem 41 stays the same — only its hypothesis tightens from
+"assume the tail bound" to "derive the tail bound from a sub-
+Gaussian MGF + Hoeffding."
+-/
+
+/-- LL-006 sub-Gaussian residue model, parametrised by a
+    `CalibratedConstants` instance. See the §-block docstring
+    above for field semantics. -/
+structure SubGaussianResidue (cc : CalibratedConstants) where
+  P_detect : ℝ → ℝ
+  P_detect_range : ∀ ε_A : ℝ, 0 ≤ P_detect ε_A ∧ P_detect ε_A ≤ 1
+  R_mean : ℝ → ℝ
+  threshold : ℝ
+  acceptance_tail_bound :
+    ∀ ε_A : ℝ, 0 ≤ ε_A → R_mean ε_A ≥ threshold →
+      1 - P_detect ε_A ≤ cc.K * Real.exp (-(cc.c * cc.T) * ε_A ^ 2)
+
+/-- Inhabitedness witness: the trivial residue with `P_detect ≡ 1`
+    (always-detect) trivially satisfies the structure. Useful as
+    a sanity check that `SubGaussianResidue` is non-vacuous and
+    that theorem 41 is not vacuously inhabited. -/
+noncomputable def SubGaussianResidue.trivial (cc : CalibratedConstants) :
+    SubGaussianResidue cc where
+  P_detect _ := 1
+  P_detect_range _ := ⟨by norm_num, by norm_num⟩
+  R_mean _ := 0
+  threshold := 0
+  acceptance_tail_bound ε_A _ _ := by
+    -- 1 - 1 = 0 ≤ K · exp(...) since K > 0 and exp > 0.
+    have h_zero : (1 : ℝ) - 1 = 0 := by norm_num
+    rw [h_zero]
+    exact mul_nonneg cc.K_pos.le (Real.exp_pos _).le
+
+/-- **Theorem 41.** LL-006 concentration inequality.
+
+    Under the sub-Gaussian residue model `X : SubGaussianResidue cc`
+    and the operational hypothesis that the mean residue at
+    adversary magnitude `ε_A` exceeds the detection threshold,
+    the detection probability `X.P_detect ε_A` is bounded below by
+    the calibrated `detection_bound cc ε_A`.
+
+    **Proof shape.** Three lines:
+
+      1. Apply the structure's `acceptance_tail_bound` field at
+         the given `ε_A` with the two hypotheses.
+      2. Unfold `detection_bound`.
+      3. `linarith` to rearrange `1 - P ≤ K · exp(...)` into
+         `P ≥ 1 - K · exp(...)`.
+
+    **What this theorem does.** Bridges the abstract sub-Gaussian
+    residue model to the calibrated `detection_bound` function:
+    the bound shape is *guaranteed* (not just empirically
+    observed) given the structural assumption.
+
+    **What this theorem does NOT do.** It does not derive the
+    sub-Gaussian tail bound itself — that lives in the
+    `acceptance_tail_bound` structure field as an assumption.
+    The eventual Mathlib-probability lift will derive that
+    field from a measure-theoretic sub-Gaussian random variable
+    via Hoeffding's lemma and the MGF-based concentration
+    inequalities in `Mathlib.Probability.Moments`.
+
+    **Operational meaning.** The hypothesis `R_mean ε_A ≥ threshold`
+    is the *detection regime* — the empirical strengthen-pass
+    benchmark observes this for `ε_A ≥ ~1.10` (where
+    `a · ε_A + b ≥ 5`, given a=2.39, b=2.36, k=5). Below this
+    regime the bound is still non-negative (per theorem 37) but
+    operationally vacuous; above it, the bound gives a meaningful
+    lower-bound on detection probability that grows toward 1
+    exponentially in `ε_A²` (per theorem 11 asymptote). -/
+theorem LL006_concentration_bound
+    (cc : CalibratedConstants) (X : SubGaussianResidue cc)
+    (ε_A : ℝ) (h_ε_A_pos : 0 < ε_A)
+    (h_mean_above_threshold : X.R_mean ε_A ≥ X.threshold) :
+    X.P_detect ε_A ≥ detection_bound cc ε_A := by
+  have h_tail :=
+    X.acceptance_tail_bound ε_A h_ε_A_pos.le h_mean_above_threshold
+  unfold detection_bound
+  linarith
+
+/-- **Theorem 42.** Concentration-bound + range composition: under
+    the same hypotheses as theorem 41, the detection probability
+    sits in `[detection_bound cc ε_A, 1]`.
+
+    Combines theorem 41 (lower bound) with the structure's
+    `P_detect_range` field (upper bound). Convenience for callers
+    that need both ends of the inequality at once. -/
+theorem LL006_concentration_bound_in_unit_interval
+    (cc : CalibratedConstants) (X : SubGaussianResidue cc)
+    (ε_A : ℝ) (h_ε_A_pos : 0 < ε_A)
+    (h_mean_above_threshold : X.R_mean ε_A ≥ X.threshold) :
+    detection_bound cc ε_A ≤ X.P_detect ε_A ∧ X.P_detect ε_A ≤ 1 :=
+  ⟨LL006_concentration_bound cc X ε_A h_ε_A_pos h_mean_above_threshold,
+   (X.P_detect_range ε_A).2⟩
 
 end LL006
 
@@ -1971,6 +2093,6 @@ end LL006
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.76 — LL-006 concentration-inequality scaffold: theorems 36-39 + CalibratedConstants + roadmap"
+  "0.0.77 — LL-006 concentration inequality (theorem 41) + SubGaussianResidue model + composition (theorem 42)"
 
 end LavaLamp
