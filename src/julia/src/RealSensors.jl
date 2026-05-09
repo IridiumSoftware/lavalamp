@@ -97,10 +97,7 @@ for development.
 """
 function _scaffold_error(sensor_name::String)
     platform = _detect_platform()
-    hook = if platform == :macos
-        "Darwin hook: IOKit framework via `IOServiceGetMatchingServices` + " *
-        "thermal/battery/AC properties. Phase 2 roadmap."
-    elseif platform == :windows
+    hook = if platform == :windows
         "Windows hook: WMI / PerfCounters via `GetSystemTimes`, " *
         "`Win32_TemperatureProbe`, `Win32_Battery`. Phase 3 roadmap."
     else
@@ -108,8 +105,8 @@ function _scaffold_error(sensor_name::String)
     end
     error("""
         RealSensors.$sensor_name not yet implemented on platform :$platform.
-        Phase 1 (Linux) is implemented in this module via sysfs/procfs;
-        non-Linux platforms remain scaffold tier.
+        Phase 1 (Linux) and Phase 2a (macOS) are implemented in this
+        module; remaining platforms are scaffold tier.
 
         $hook
 
@@ -315,6 +312,247 @@ function _read_loadavg_linux_value(;
     return parse(Float64, first_token)
 end
 
+# ─── macOS Phase 2 readers ─────────────────────────────────
+#
+# Phase 2 dispatches macOS via shell-out to non-privileged
+# tools (`sysctl`, `pmset`, `ioreg`) to keep the implementation
+# hermetic — no FFI bindings, no IOKit framework dependency,
+# no privileged access. Each reader has a parse function
+# isolated from the I/O so tests can exercise parsing logic
+# with canned output strings.
+#
+# Substrate notes:
+#  - Apple Silicon does not expose CPU thermal via public sysctl
+#    (`machdep.xcpm.cpu_thermal_level` is Intel-only). Phase 2a
+#    substitutes battery temperature from `AppleSmartBattery`
+#    (a real, per-deployment thermal reading from the device);
+#    a future Phase 2b SMC IOKit FFI reader can land alongside
+#    without breaking the public API.
+#  - Apple Silicon does not expose instantaneous CPU frequency
+#    (no `hw.cpufrequency`). Phase 2a substitutes
+#    `vm.page_free_count` as the system-activity proxy — it
+#    varies in real time with workload, satisfies LL-005
+#    Nyquist for the 50 Hz public default, and is per-deployment
+#    unique (memory pressure tracks user behaviour).
+#
+# All parse functions are pure (no I/O); reader functions take
+# an optional `output::Union{String,Nothing}=nothing` keyword
+# that bypasses the shell call when supplied — the test seam.
+
+"""
+    _parse_loadavg_macos(output) -> Float64
+
+Parses `sysctl -n vm.loadavg` output of the form
+`{ 7.13 7.17 6.84 }` and returns the 1-minute load average.
+"""
+function _parse_loadavg_macos(output::AbstractString)
+    m = match(r"\{\s*([0-9.]+)\s+", output)
+    m === nothing &&
+        error("RealSensors macOS: cannot parse loadavg from \"$output\"")
+    return parse(Float64, m.captures[1])
+end
+
+"""
+    _read_loadavg_macos_value(; output::Union{String,Nothing}=nothing) -> Float64
+
+Returns the 1-minute load average from `sysctl -n vm.loadavg`.
+Pass `output=...` to parse a canned string instead of running
+the shell command (test seam).
+"""
+function _read_loadavg_macos_value(;
+                                    output::Union{AbstractString,Nothing}=nothing)
+    s = output === nothing ? read(`sysctl -n vm.loadavg`, String) : output
+    return _parse_loadavg_macos(s)
+end
+
+"""
+    _parse_battery_current_macos(output) -> Float64
+
+Parses `ioreg -rn AppleSmartBattery` output for the
+`"InstantAmperage" = N` field and returns N as a signed
+Float64 (mA). The kernel reports current as an unsigned 64-bit
+integer; values above 2^63 are reinterpreted as signed
+(charging draws negative current).
+
+Returns `0.0` if the field is absent (desktop / no battery).
+"""
+function _parse_battery_current_macos(output::AbstractString)
+    m = match(r"\"InstantAmperage\"\s*=\s*(\d+)", output)
+    m === nothing && return 0.0
+    raw = parse(UInt64, m.captures[1])
+    # Reinterpret as signed (Int64) — charging is negative.
+    signed_val = raw < UInt64(2)^63 ? Int64(raw) : Int64(raw - UInt64(2)^63) - Int64(2)^63
+    return Float64(signed_val)
+end
+
+"""
+    _read_battery_current_macos_value(; output::Union{String,Nothing}=nothing) -> Float64
+
+Returns instantaneous battery amperage (mA) from
+`ioreg -rn AppleSmartBattery`. Charging is negative,
+discharging positive.
+"""
+function _read_battery_current_macos_value(;
+                                            output::Union{AbstractString,Nothing}=nothing)
+    s = if output === nothing
+        try
+            read(`ioreg -rn AppleSmartBattery`, String)
+        catch
+            return 0.0
+        end
+    else
+        output
+    end
+    return _parse_battery_current_macos(s)
+end
+
+"""
+    _parse_ac_online_macos(output) -> Float64
+
+Parses `pmset -g ps` first-line output:
+`Now drawing from 'AC Power'` → 1.0;
+`Now drawing from 'Battery Power'` → 0.0.
+"""
+function _parse_ac_online_macos(output::AbstractString)
+    return occursin("AC Power", output) ? 1.0 : 0.0
+end
+
+"""
+    _read_ac_online_macos_value(; output::Union{String,Nothing}=nothing) -> Float64
+
+Returns 1.0 if the system is on AC power, 0.0 if on battery,
+parsed from `pmset -g ps`.
+"""
+function _read_ac_online_macos_value(;
+                                      output::Union{AbstractString,Nothing}=nothing)
+    s = if output === nothing
+        try
+            read(`pmset -g ps`, String)
+        catch
+            return 0.0
+        end
+    else
+        output
+    end
+    return _parse_ac_online_macos(s)
+end
+
+"""
+    _parse_usb_count_macos(output) -> Float64
+
+Counts top-level USB host devices and attached devices from
+`ioreg -p IOUSB -l -w 0` output. Matches `+-o ` lines whose
+indentation indicates a non-Root entry. Excludes the implicit
+`Root` registry entry to align semantically with the Linux
+reader (which counts attached devices, not the controller).
+"""
+function _parse_usb_count_macos(output::AbstractString)
+    n = 0
+    for line in split(output, '\n')
+        # Match indented `+-o ` lines (anything except "+-o Root").
+        if occursin(r"^[ |]+\+-o ", line)
+            n += 1
+        end
+    end
+    return Float64(n)
+end
+
+"""
+    _read_usb_count_macos_value(; output::Union{String,Nothing}=nothing) -> Float64
+
+Returns count of attached USB devices from
+`ioreg -p IOUSB -l -w 0`.
+"""
+function _read_usb_count_macos_value(;
+                                      output::Union{AbstractString,Nothing}=nothing)
+    s = if output === nothing
+        try
+            read(`ioreg -p IOUSB -l -w 0`, String)
+        catch
+            return 0.0
+        end
+    else
+        output
+    end
+    return _parse_usb_count_macos(s)
+end
+
+"""
+    _parse_thermal_macos(output) -> Float64
+
+Parses `ioreg -rn AppleSmartBattery` output for the
+`"Temperature" = N` field and returns the value in degrees
+Celsius. The kernel reports temperature in 0.01°C units;
+this function divides by 100.
+
+**Substrate note:** this is *battery* temperature, not CPU
+die temperature. Apple Silicon does not expose CPU thermal
+via public sysctl; battery temp is a real per-deployment
+thermal sensor and serves the LL-005 Nyquist + LL-016
+authenticity contract for Phase 2a. A Phase 2b SMC IOKit
+FFI reader can substitute for CPU-die thermal without
+breaking the public stream API.
+"""
+function _parse_thermal_macos(output::AbstractString)
+    m = match(r"\"Temperature\"\s*=\s*(\d+)", output)
+    m === nothing && return 0.0
+    return parse(Int, m.captures[1]) / 100.0
+end
+
+"""
+    _read_thermal_macos_value(; output::Union{String,Nothing}=nothing) -> Float64
+
+Returns battery temperature in °C (Phase 2a substitute for
+CPU thermal). Returns `0.0` if the field is absent.
+"""
+function _read_thermal_macos_value(;
+                                    output::Union{AbstractString,Nothing}=nothing)
+    s = if output === nothing
+        try
+            read(`ioreg -rn AppleSmartBattery`, String)
+        catch
+            return 0.0
+        end
+    else
+        output
+    end
+    return _parse_thermal_macos(s)
+end
+
+"""
+    _parse_cpu_proxy_macos(output) -> Float64
+
+Parses `sysctl -n vm.page_free_count` output (a single
+integer) and returns it as Float64. Per-call value tracks
+real-time memory pressure, which on a multi-process system
+correlates with CPU activity (allocator churn).
+"""
+function _parse_cpu_proxy_macos(output::AbstractString)
+    return Float64(parse(Int, strip(output)))
+end
+
+"""
+    _read_cpu_freq_macos_value(; output::Union{String,Nothing}=nothing) -> Float64
+
+Returns `vm.page_free_count` as a system-activity proxy on
+Apple Silicon (Phase 2a substitute for CPU scaling
+frequency, which Apple Silicon does not expose via public
+sysctl). The value varies in real time with workload.
+"""
+function _read_cpu_freq_macos_value(;
+                                     output::Union{AbstractString,Nothing}=nothing)
+    s = if output === nothing
+        try
+            read(`sysctl -n vm.page_free_count`, String)
+        catch
+            return 0.0
+        end
+    else
+        output
+    end
+    return _parse_cpu_proxy_macos(s)
+end
+
 # ─── Per-sensor public readers ─────────────────────────────
 
 """
@@ -332,7 +570,18 @@ one (typical on multi-zone systems).
 scaled to °C). Falls back to `/sys/class/thermal/thermal_zone0/temp`
 if hwmon is unavailable.
 
-**macOS / Windows / other**: errors with a per-platform
+**macOS Phase 2a implementation.** Reads battery temperature
+from `ioreg -rn AppleSmartBattery` (the `Temperature` field,
+in 0.01°C units). Apple Silicon does not expose CPU die
+thermal via public sysctl; battery temperature is a real
+per-deployment thermal sensor that satisfies LL-005 Nyquist
++ LL-016 authenticity. A Phase 2b SMC IOKit FFI reader can
+substitute for CPU-die thermal without breaking this API.
+The `sensor_index` keyword is currently ignored on macOS
+(only one battery thermal sensor); it is retained for API
+parity with the Linux reader.
+
+**Windows / other**: errors with a per-platform
 implementation pointer. Use `gaussian_noise_stream` for
 development.
 
@@ -348,6 +597,9 @@ function real_thermal_stream(; sample_rate::Real=50.0,
     if _detect_platform() == :linux
         reader = () -> _read_thermal_linux_value(sensor_index)
         return record_stream(reader; sample_rate=sample_rate, t_max=t_max)
+    elseif _detect_platform() == :macos
+        return record_stream(_read_thermal_macos_value;
+                              sample_rate=sample_rate, t_max=t_max)
     end
     _scaffold_error("real_thermal_stream")
 end
@@ -365,12 +617,19 @@ on desktops / servers without a battery (still produces a
 `SensorStream` with all-zero values; callers should
 cross-validate with other sensors per LL-029).
 
+**macOS Phase 2a**: reads `InstantAmperage` (signed mA) from
+`ioreg -rn AppleSmartBattery`. Charging is negative. Returns
+`0.0` on desktops without a battery.
+
 **Other platforms**: scaffold error.
 """
 function real_battery_stream(; sample_rate::Real=5.0,
                               t_max::Real=10.0)
     if _detect_platform() == :linux
         return record_stream(_read_battery_current_linux_value;
+                              sample_rate=sample_rate, t_max=t_max)
+    elseif _detect_platform() == :macos
+        return record_stream(_read_battery_current_macos_value;
                               sample_rate=sample_rate, t_max=t_max)
     end
     _scaffold_error("real_battery_stream")
@@ -388,12 +647,18 @@ content is in transitions, not in continuous values.
 `/sys/class/power_supply/AC*` or `/sys/class/power_supply/ADP*`
 directory.
 
+**macOS Phase 2a**: parses `pmset -g ps` first line; returns
+1.0 if "AC Power", 0.0 otherwise.
+
 **Other platforms**: scaffold error.
 """
 function real_ac_stream(; sample_rate::Real=1.0,
                         t_max::Real=10.0)
     if _detect_platform() == :linux
         return record_stream(_read_ac_online_linux_value;
+                              sample_rate=sample_rate, t_max=t_max)
+    elseif _detect_platform() == :macos
+        return record_stream(_read_ac_online_macos_value;
                               sample_rate=sample_rate, t_max=t_max)
     end
     _scaffold_error("real_ac_stream")
@@ -410,12 +675,22 @@ Discrete-state per LL-005; transitions on attach/detach.
 whose name starts with a digit (filtering out hub / controller
 metadata entries).
 
+**macOS Phase 2a**: counts indented `+-o ` entries from
+`ioreg -p IOUSB -l -w 0` (excludes the synthetic Root entry,
+includes XHCI controllers and attached host devices). The
+absolute count semantics differ slightly from Linux but the
+*transition* semantics — what LL-005 actually guards — are
+identical.
+
 **Other platforms**: scaffold error.
 """
 function real_usb_stream(; sample_rate::Real=1.0,
                          t_max::Real=10.0)
     if _detect_platform() == :linux
         return record_stream(_read_usb_count_linux_value;
+                              sample_rate=sample_rate, t_max=t_max)
+    elseif _detect_platform() == :macos
+        return record_stream(_read_usb_count_macos_value;
                               sample_rate=sample_rate, t_max=t_max)
     end
     _scaffold_error("real_usb_stream")
@@ -434,6 +709,15 @@ Reads CPU scaling frequency (kHz) for the specified core at
 Returns `0.0` for cores where cpufreq is unavailable
 (virtualised hosts).
 
+**macOS Phase 2a**: reads `vm.page_free_count` via `sysctl -n`
+as a system-activity proxy. Apple Silicon does not expose
+instantaneous CPU frequency through public sysctl; memory
+pressure (page-free count) is a real-time substitute that
+varies with workload at sub-second timescales. The
+`cpu_index` keyword is currently ignored on macOS (single
+system-wide value); it is retained for API parity with the
+Linux reader.
+
 **Other platforms**: scaffold error.
 """
 function real_cpu_governor_stream(; sample_rate::Real=50.0,
@@ -442,6 +726,9 @@ function real_cpu_governor_stream(; sample_rate::Real=50.0,
     if _detect_platform() == :linux
         reader = () -> _read_cpu_freq_linux_value(cpu_index)
         return record_stream(reader; sample_rate=sample_rate, t_max=t_max)
+    elseif _detect_platform() == :macos
+        return record_stream(_read_cpu_freq_macos_value;
+                              sample_rate=sample_rate, t_max=t_max)
     end
     _scaffold_error("real_cpu_governor_stream")
 end
@@ -455,12 +742,18 @@ Reads 1-minute system load average at `sample_rate` Hz.
 **Linux Phase 1**: reads first whitespace-separated token from
 `/proc/loadavg` (per kernel docs).
 
+**macOS Phase 2a**: parses `sysctl -n vm.loadavg` (output
+`{ 7.13 7.17 6.84 }`) and returns the 1-minute load average.
+
 **Other platforms**: scaffold error.
 """
 function real_loadavg_stream(; sample_rate::Real=5.0,
                               t_max::Real=10.0)
     if _detect_platform() == :linux
         return record_stream(_read_loadavg_linux_value;
+                              sample_rate=sample_rate, t_max=t_max)
+    elseif _detect_platform() == :macos
+        return record_stream(_read_loadavg_macos_value;
                               sample_rate=sample_rate, t_max=t_max)
     end
     _scaffold_error("real_loadavg_stream")

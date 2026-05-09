@@ -994,6 +994,74 @@ end
         end
     end
 
+    @testset "macOS reader parsers with canned output (LL-024 Phase 2a)" begin
+        # The internal _parse_*_macos and _read_*_macos_value helpers
+        # accept a canned `output` string for test injection. Works on
+        # any platform — only string parsing is exercised, not
+        # platform-specific shell-out.
+        using LavaLamp.RealSensors: _parse_loadavg_macos,
+                                     _parse_battery_current_macos,
+                                     _parse_ac_online_macos,
+                                     _parse_usb_count_macos,
+                                     _parse_thermal_macos,
+                                     _parse_cpu_proxy_macos,
+                                     _read_loadavg_macos_value,
+                                     _read_battery_current_macos_value,
+                                     _read_ac_online_macos_value,
+                                     _read_usb_count_macos_value,
+                                     _read_thermal_macos_value,
+                                     _read_cpu_freq_macos_value
+
+        # loadavg: braced 3-tuple from `sysctl -n vm.loadavg`
+        @test _parse_loadavg_macos("{ 7.13 7.17 6.84 }") ≈ 7.13
+        @test _parse_loadavg_macos("{ 0.42 0.55 0.61 }") ≈ 0.42
+        @test _read_loadavg_macos_value(output="{ 1.50 1.60 1.70 }") ≈ 1.50
+        @test_throws ErrorException _parse_loadavg_macos("garbage")
+
+        # Battery: signed mA from ioreg
+        # Discharging: positive value
+        ioreg_discharge = """
+                "InstantAmperage" = 1500
+                "Temperature" = 3071
+            """
+        @test _parse_battery_current_macos(ioreg_discharge) == 1500.0
+        # Charging: unsigned wraps; high bit set → reinterpret as negative
+        ioreg_charge = """
+                "InstantAmperage" = 18446744073709550522
+            """
+        @test _parse_battery_current_macos(ioreg_charge) == -1094.0
+        # No battery field → 0.0
+        @test _parse_battery_current_macos("no battery here") == 0.0
+        @test _read_battery_current_macos_value(output=ioreg_discharge) == 1500.0
+
+        # AC online: pmset first line
+        @test _parse_ac_online_macos("Now drawing from 'AC Power'\n") == 1.0
+        @test _parse_ac_online_macos("Now drawing from 'Battery Power'\n") == 0.0
+        @test _read_ac_online_macos_value(
+            output="Now drawing from 'AC Power'") == 1.0
+
+        # USB count: indented +-o lines
+        ioreg_usb = """
+            +-o Root  <class IORegistryEntry, id 0x100000100>
+              +-o XHCI@01000000  <class XHCI>
+              +-o XHCI@02000000  <class XHCI>
+              | +-o EarPods@00100000  <class IOUSBHostDevice>
+            """
+        @test _parse_usb_count_macos(ioreg_usb) == 3.0  # excludes Root
+        @test _parse_usb_count_macos("+-o Root only\n") == 0.0
+        @test _read_usb_count_macos_value(output=ioreg_usb) == 3.0
+
+        # Thermal: battery temp in 0.01°C units
+        @test _parse_thermal_macos("\"Temperature\" = 3071") ≈ 30.71
+        @test _parse_thermal_macos("no temperature here") == 0.0
+        @test _read_thermal_macos_value(output="\"Temperature\" = 3500") ≈ 35.0
+
+        # CPU activity proxy: vm.page_free_count integer
+        @test _parse_cpu_proxy_macos("21929\n") == 21929.0
+        @test _parse_cpu_proxy_macos("0") == 0.0
+        @test _read_cpu_freq_macos_value(output="50000") == 50000.0
+    end
+
     if Sys.islinux()
         @testset "Linux Phase 1 readers exercise actual sysfs/procfs (LL-024)" begin
             # On Linux, exercise the public readers against the host's
@@ -1018,9 +1086,45 @@ end
             @test stream_usb isa SensorStream
             @test all(stream_usb.values .>= 0.0)
         end
+    elseif Sys.isapple()
+        @testset "macOS Phase 2a readers exercise actual sysctl/ioreg/pmset (LL-024)" begin
+            # On macOS, exercise the public readers against the host's
+            # actual shell-out sources. Use small t_max + low sample
+            # rates to keep test runtime well under one second per
+            # reader.
+            stream = real_loadavg_stream(sample_rate=2.0, t_max=0.5)
+            @test stream isa SensorStream
+            @test length(stream.values) >= 2
+            @test all(stream.values .>= 0.0)  # load average non-negative
+
+            # Battery: present on laptops (M-series MBP), absent on
+            # mac mini / studio. Either way we get a SensorStream.
+            stream_bat = real_battery_stream(sample_rate=2.0, t_max=0.5)
+            @test stream_bat isa SensorStream
+
+            # AC: 0 or 1.
+            stream_ac = real_ac_stream(sample_rate=2.0, t_max=0.5)
+            @test stream_ac isa SensorStream
+            @test all(v -> v == 0.0 || v == 1.0, stream_ac.values)
+
+            # USB: non-negative count.
+            stream_usb = real_usb_stream(sample_rate=2.0, t_max=0.5)
+            @test stream_usb isa SensorStream
+            @test all(stream_usb.values .>= 0.0)
+
+            # Thermal (battery temp): non-negative (0 if no battery).
+            stream_th = real_thermal_stream(sample_rate=2.0, t_max=0.5)
+            @test stream_th isa SensorStream
+            @test all(stream_th.values .>= 0.0)
+
+            # CPU activity proxy (vm.page_free_count): non-negative.
+            stream_cpu = real_cpu_governor_stream(sample_rate=2.0, t_max=0.5)
+            @test stream_cpu isa SensorStream
+            @test all(stream_cpu.values .>= 0.0)
+        end
     else
-        @testset "Non-Linux platforms hit scaffold-error path (LL-024)" begin
-            # macOS / Windows / other: each reader errors meaningfully.
+        @testset "Non-Linux non-macOS platforms hit scaffold-error path (LL-024)" begin
+            # Windows / other: each reader errors meaningfully.
             @test_throws ErrorException real_thermal_stream()
             @test_throws ErrorException real_battery_stream()
             @test_throws ErrorException real_ac_stream()
@@ -1029,7 +1133,7 @@ end
             @test_throws ErrorException real_loadavg_stream()
 
             # Error message points at LL-024 + per-platform implementation
-            # hook (Darwin IOKit / Windows WMI) + synthetic substitute.
+            # hook (Windows WMI) + synthetic substitute.
             try
                 real_thermal_stream()
                 @test false   # should not reach here
