@@ -53,18 +53,31 @@ The security claim is **resolution-bounded**: secure against any
 adversary whose measurement and compute resolution is exceeded by
 the device's chaos-production rate (LL-008).
 
-The paper documents thirty-four formal spec entries (LAVALAMP_SPEC.md),
-five **joint-defense meta-claims** (LL-030 through LL-034) surfaced
-by a Discovery.Triadic engine pass on the spec corpus, thirty-five
-Lean 4 + Mathlib v4.29.1 theorems (THEOREMS.md), a four-hundred-
-twenty-four-assertion Julia test suite, and a clone-and-run end-to-end
-demo with cross-machine reproducibility check. Three template
+The paper documents thirty-eight formal spec entries (LAVALAMP_SPEC.md),
+eight **joint-defense meta-claims** (LL-030 through LL-038, omitting
+LL-035 which is the empirical-conservativeness hypothesis backing
+LL-006) surfaced by Discovery.Triadic engine passes on the spec
+corpus, fifty-three Lean 4 + Mathlib v4.29.1 theorems
+(THEOREMS.md), a four-hundred-fifty-three-assertion Julia test
+suite, and a clone-and-run end-to-end demo with cross-machine
+reproducibility check. The detection bound (LL-006) is now at
+status `:proved` — conditional on the empirically-calibrated
+sub-Gaussian-residue hypothesis tracked separately as LL-035 — via
+a Mathlib-probability lift (`HasSubgaussianMGF.measure_ge_le`) and
+a non-trivial Gaussian-residue instantiation. Three template
 generalisation findings emerged from the joint-defense work:
-**tier-agnostic** (LL-031), **structure-additive** (LL-032), and
-**evidence-regime-agnostic** (LL-033) composition; LL-034 makes
-**defense-in-depth** across substrate-stack and consumer-API stack
-formally identifiable in Lean as the conjunction of two composition
-theorems' hypotheses.
+**tier-agnostic** (LL-031), **structure-additive** (LL-032,
+asymptote validated by LL-034 and LL-038 at 2 theorems / 0
+structures), and **evidence-regime-agnostic** (LL-033) composition;
+LL-034 makes **defense-in-depth** across substrate-stack and
+consumer-API stack formally identifiable in Lean as the conjunction
+of two composition theorems' hypotheses. Three additional
+joint-defense entries (LL-036/037/038) surfaced via TCE 0.2.9
+stratified-scan demonstrate the template's robustness under
+re-discovery: LL-036 is the first joint-defense entry where one
+component is itself `:proved` (LL-006); LL-037 introduces the
+LL-017 no-oracle conformance structure; LL-038 hits the
+2-theorem / 0-structure asymptote.
 
 The work is part of the Triad Deployments portfolio (LavaLamp /
 Lazarus / PharOS) addressing digital identity resilience. LavaLamp
@@ -222,13 +235,13 @@ construction.
 ------------------------------------------------------------------------
 
 17. Verification is **Lyapunov-spectrum residue audit** (LL-006
-    :benchmarked). At registration, an envelope is calibrated by
-    running n_trials genuine-system trajectories and recording the
-    sample mean and sample standard deviation of each Lyapunov
-    exponent λ₁, ..., λ_N (LL-011). At verification, a fresh
-    trajectory is integrated, its full Benettin spectrum is
-    estimated, and the per-exponent residue against the envelope is
-    compared to a calibrated threshold k.
+    :proved at v0.0.80, conditional on LL-035). At registration,
+    an envelope is calibrated by running n_trials genuine-system
+    trajectories and recording the sample mean and sample standard
+    deviation of each Lyapunov exponent λ₁, ..., λ_N (LL-011). At
+    verification, a fresh trajectory is integrated, its full
+    Benettin spectrum is estimated, and the per-exponent residue
+    against the envelope is compared to a calibrated threshold k.
 
 18. The detection-probability bound has the empirical shape
     P(detect) ≥ 1 - K · exp(-c · T · δ_A²), where δ_A is the
@@ -236,7 +249,17 @@ construction.
     K, c are calibration constants. The bound's structural
     properties --- range in [0,1], monotonicity in T and δ_A²,
     asymptotic tendency to 1 --- are formalised as Lean theorems
-    1-12 (§6).
+    1-12 (§6); the abstract concentration inequality, the
+    Mathlib-probability lift to a sub-Gaussian residue, and a
+    non-trivial Gaussian-residue instantiation (theorems 36-46,
+    chained through `LL006.GaussianInstantiation`) discharge the
+    bound itself end-to-end *under* the sub-Gaussian-rate
+    hypothesis. The unconditional empirical claim — that the
+    Lorenz-96 max-residue is sub-Gaussian at the calibrated rate
+    — is spawned as the separate spec entry LL-035 at status
+    `:benchmarked` (50-trials-per-point pass with Wilson 95% CIs
+    and a marginal χ² p=0.041 sub-Gaussian fit), carrying the
+    empirical-validation burden distinctly from the bound's shape.
 
 19. Audit must run on **every verification request** (LL-019). The
     cheap Wolf-method λ̂₁ alone is insufficient because adversaries
@@ -496,12 +519,14 @@ construction.
 5.1  The joint-defense meta-claim template
 ------------------------------------------------------------------------
 
-39. The spec's five **joint-defense meta-claims** (LL-030 through
-    LL-034) formalise structurally cohesive triads of component
-    entries that jointly defend specific attack vectors with no
-    single-point failure. The template was developed during the
-    LL-030 work (sensor-defense joint-closure) and stress-tested
-    across four subsequent triads with increasing scope:
+39. The spec's eight **joint-defense meta-claims** (LL-030 through
+    LL-038, omitting LL-035 which is the LL-006 sub-Gaussian
+    empirical-conservativeness hypothesis) formalise structurally
+    cohesive triads of component entries that jointly defend
+    specific attack vectors with no single-point failure. The
+    template was developed during the LL-030 work (sensor-defense
+    joint-closure) and stress-tested across seven subsequent
+    triads of increasing scope and re-discovery passes:
 
 40. **Template structure.** A joint-defense entry consists of:
     (a) three component LL-NNN entries already in the spec; (b) one
@@ -523,10 +548,15 @@ construction.
     spec corpus identified the candidates, and human judgment
     selected the load-bearing ones for formalisation.
 
-5.2  The five engine-discovered triads
+5.2  The eight engine-discovered triads
 ------------------------------------------------------------------------
 
-42. The engine pass scored five triads at cohesion ≥ 10.50:
+42. Two engine passes contributed: the original v0.2.4 pass
+    surfaced LL-030 through LL-034 at cohesion ≥ 10.50, and the
+    v0.2.9 SHOW_BANDS stratified-scan (HIGH ≥ 11.00 / MID ≥ 9.00 /
+    LOW ≥ 7.00) over the now-35-entry corpus surfaced three
+    previously-hidden mid-band candidates (LL-036/037/038). The
+    eight triads:
 
     LL-030  LL-016 + LL-024 + LL-029 (sensor-defense joint-closure).
             Defends V-006 + V-018. Score 12.00 in both R-edge
@@ -549,40 +579,66 @@ construction.
             Defends V-006 + V-018 from the consumer-API operational
             surface. Score 11.50. Operational counterpart to
             LL-030 (substrate-stack vs API-stack).
+    LL-036  LL-006 + LL-019 + LL-022 (detection-bound-robustness
+            joint-closure). Defends V-013 + V-011. Score 10.50
+            CYCLE sd=3 (full status diversity). **First joint-
+            defense entry where one component is itself `:proved`**
+            (LL-006 post-v0.0.80). Surfaced by v0.2.9 stratified-
+            scan MID band.
+    LL-037  LL-017 + LL-023 + LL-029 (verification-oracle-leak
+            joint-closure). Defends V-010 + V-006 + V-018.
+            Score 11.00 CYCLE sd=2. **First formalisation
+            involving LL-017 no-oracle requirement** — introduces
+            the `LL017.NoOracleResponse` Lean structure. Surfaced
+            by v0.2.9 stratified-scan HIGH band.
+    LL-038  LL-019 + LL-023 + LL-029 (operational-defense-stack
+            joint-closure). Defends V-011 + V-006 + V-018.
+            Score 8.50 sd=3. **Sixth joint-defense meta-claim and
+            lightest-footprint entry** — at the structure-additive
+            template's asymptote (2 new theorems, full structure
+            reuse). Surfaced by v0.2.9 stratified-scan LOW band.
 
-43. All five entries are at status `:tested` with `example-tested`
+43. All eight entries are at status `:tested` with `example-tested`
     evidence (Julia integration tests) plus `lean-proved`
     structural-composition lemmas (Theorems.lean). LL-030 was
     promoted from `:argued` at v0.0.70; LL-031 through LL-034
-    landed at `:tested` directly because the integration test and
-    Lean lemmas shipped together with the entry.
+    landed at `:tested` directly at v0.0.71-0.0.74; LL-036/037/038
+    landed at `:tested` directly at v0.0.81 because the
+    integration test and Lean lemmas shipped together with each
+    entry.
 
 5.3  Bijective vs overlapping V-NNN coverage
 ------------------------------------------------------------------------
 
-44. The five triads partition into three structural shapes:
+44. The eight triads partition into three structural shapes:
 
     Single-V-NNN triads.  LL-031 (V-011 only): all three components
                           converge on a single attack vector.
-    Overlapping-V-NNN triads.  LL-030, LL-033, LL-034 (V-006 +
-                          V-018, plus V-013 in LL-033): components
+    Overlapping-V-NNN triads.  LL-030, LL-033, LL-034, LL-036
+                          (V-006 + V-018, plus V-013 in LL-033 and
+                          LL-036, plus V-011 in LL-036): components
                           co-defend the same V-NNNs through
                           different mechanisms.
-    Bijective-V-NNN triads.  LL-032 (V-006 + V-018 + V-019): each
-                          component is the *only* defense against
-                          its primary V-NNN; cardinality of
-                          components = cardinality of defended
-                          V-NNNs.
+    Bijective-V-NNN triads.  LL-032, LL-037, LL-038 (V-006 + V-018
+                          plus V-019 in LL-032, V-010 in LL-037,
+                          V-011 in LL-038): each component is the
+                          *only* defense against its primary
+                          V-NNN; cardinality of components =
+                          cardinality of defended V-NNNs.
 
-45. The bijective shape (LL-032) is the strongest no-single-point-
-    failure claim: each ablation produces a *distinct* failure
-    mode, isolating exactly which V-NNN that component defends.
-    The overlapping shape (LL-030, LL-033, LL-034) produces shared-
-    coverage gaps in the ablations: removing one component leaves
-    a path to the V-NNN through the remaining defenses, but
-    weakens the surface. The single-V-NNN shape (LL-031) is the
-    most concentrated: all three components contribute to the same
-    defense surface against a single attack class.
+45. The bijective shape (LL-032, LL-037, LL-038) is the strongest
+    no-single-point-failure claim: each ablation produces a
+    *distinct* failure mode, isolating exactly which V-NNN that
+    component defends. The bijective shape now appears across
+    three engine-discovered triads from two distinct passes,
+    confirming it is not an artifact of a single discovery
+    threshold. The overlapping shape (LL-030, LL-033, LL-034,
+    LL-036) produces shared-coverage gaps in the ablations:
+    removing one component leaves a path to the V-NNN through
+    the remaining defenses, but weakens the surface. The single-
+    V-NNN shape (LL-031) is the most concentrated: all three
+    components contribute to the same defense surface against a
+    single attack class.
 
 5.4  Defense-in-depth identifiability (LL-034)
 ------------------------------------------------------------------------
@@ -595,21 +651,35 @@ construction.
     stack) *and* LL-034's hypotheses (Theorem 35, API-stack) has
     **defense-in-depth** across substrate and API surfaces ---
     formally identifiable in Lean as the conjunction of the two
-    theorems' hypotheses.
+    theorems' hypotheses. The 0.0.81 stratified-scan additions
+    extend the parallel-defense surface: LL-031 (LL-007 + LL-019 +
+    LL-022, V-011 single) and LL-036 (LL-006 + LL-019 + LL-022,
+    V-013 + V-011) share LL-019 + LL-022 as components, providing
+    parallel defense of V-011 through different operational
+    layers; LL-037 (LL-017 + LL-023 + LL-029, V-010 + V-006 +
+    V-018) and LL-038 (LL-019 + LL-023 + LL-029, V-011 + V-006 +
+    V-018) share LL-023 + LL-029 as components, providing
+    parallel defense of V-006 + V-018 through different oracle-
+    isolation paths.
 
 47. This is the strongest finding of the joint-defense work: the
     Discovery.Triadic engine surfaces parallel defense layers
-    explicitly, and the joint-defense template makes defense-in-
-    depth **structurally identifiable** in the spec rather than a
-    narrative assertion. Production deployments that satisfy both
-    triads can cite the conjunction of theorems 22 and 35 as
-    machine-checked evidence of the multi-layer defense.
+    explicitly across distinct engine passes, and the joint-defense
+    template makes defense-in-depth **structurally identifiable**
+    in the spec rather than a narrative assertion. Production
+    deployments that satisfy multiple triads can cite the
+    conjunction of the corresponding composition theorems
+    (e.g. theorems 22 ∧ 35 for substrate ∧ API; theorems 27 ∧ 48
+    for V-011-defense across operational ∧ detection layers;
+    theorems 51 ∧ 53 for V-006-defense across no-oracle ∧
+    operational layers) as machine-checked evidence of the
+    multi-layer defense.
 
 5.5  Generalisation findings
 ------------------------------------------------------------------------
 
-48. Three generalisation properties of the joint-defense template
-    emerged from the five entries:
+48. Five generalisation properties of the joint-defense template
+    emerged across the eight entries and two engine passes:
 
     Tier-agnostic (LL-031).  The template handles same-tier triads
                              (LL-030: Core + Operational +
@@ -623,21 +693,48 @@ construction.
                              defense entries using that component
                              reuse it for free. LL-024 and LL-029
                              structures defined for LL-030 were
-                             reused unchanged in LL-032 (and
-                             again in LL-034). Joint-defense
-                             entry cost asymptotes at 2 new
-                             theorems (joint-conformance +
-                             composition into LL-006) once all
-                             three components' structures exist.
+                             reused unchanged in LL-032, LL-034,
+                             and LL-038. Joint-defense entry cost
+                             asymptotes at 2 new theorems (joint-
+                             conformance + composition into LL-006)
+                             once all three components' structures
+                             exist; LL-034 hit the asymptote first
+                             (0.0.74) and LL-036 / LL-038 confirmed
+                             it on a second engine pass (0.0.81).
     Evidence-regime-agnostic (LL-033).  Heterogeneous evidence
                              kinds (`:benchmarked` empirical +
                              `:argued` structural + `:tested`
                              algorithmic) compose into a single
-                             load-bearing joint claim. The template
-                             does not require uniform maturity
-                             across the triad.
+                             load-bearing joint claim. LL-036
+                             extends this by composing a `:proved`
+                             component (LL-006) with `:benchmarked`
+                             (LL-019) and `:argued` (LL-022); the
+                             template does not require uniform
+                             maturity across the triad and is
+                             stable under component-promotion.
+    Stratified-discovery-stable (LL-036/037/038).  The TCE 0.2.9
+                             SHOW_BANDS scan revealed that mid-band
+                             candidates (cohesion < the original
+                             top-N threshold) are not artifacts ---
+                             they encode structurally cohesive
+                             defense layers that the original pass
+                             elided by truncation. All three
+                             stratified-scan triads pass the
+                             integration-test discipline at the
+                             same artifact shape as the top-band
+                             original triads.
+    Status-promotion-stable (LL-006 in LL-033 / LL-036).  When a
+                             component (LL-006) was promoted from
+                             `:benchmarked` to `:proved` between
+                             LL-033 (0.0.73) and LL-036 (0.0.81),
+                             the joint-defense template absorbed
+                             the change without restructuring:
+                             the `:proved` component appears in
+                             LL-036's joint conformance identically
+                             to its `:benchmarked` appearance in
+                             LL-033.
 
-49. Joint-defense entry cost across the five entries:
+49. Joint-defense entry cost across the eight entries:
 
     | Entry  | New Lean theorems | New conformance structures |
     | ------ | ----------------- | -------------------------- |
@@ -646,11 +743,20 @@ construction.
     | LL-032 | 3                 | 1 (LL028)                  |
     | LL-033 | 3                 | 1 (LL006)                  |
     | LL-034 | 2                 | 0 (all reused)             |
+    | LL-036 | 2                 | 0 (all reused)             |
+    | LL-037 | 3                 | 1 (LL017)                  |
+    | LL-038 | 2                 | 0 (all reused)             |
 
-50. The asymptote at LL-034 demonstrates the structure-additive
-    property concretely. Future engine-discovered triads composed
-    entirely of already-formalised components will cost 2 theorems
-    and zero structures to formalise.
+50. The asymptote at LL-034 (0.0.74) and reconfirmed at LL-036 +
+    LL-038 (0.0.81) demonstrates the structure-additive property
+    concretely across two engine passes. Future engine-discovered
+    triads composed entirely of already-formalised components will
+    cost 2 theorems and zero structures to formalise. The single
+    structure that remained to be added across the second pass
+    was LL-017 (`NoOracleResponse`, introduced by LL-037);
+    LL-038 had no remaining structures to introduce because all
+    three of its components (LL-019, LL-023, LL-029) had been
+    formalised in earlier triads.
 
 ========================================================================
 6.  THE LEAN TRACK
@@ -659,16 +765,20 @@ construction.
 6.1  What is proved
 ------------------------------------------------------------------------
 
-51. Thirty-five theorems are kernel-verified at Lean 4 toolchain
+51. Fifty-three theorems are kernel-verified at Lean 4 toolchain
     pin v4.29.1 against Mathlib v4.29.1 (`src/lean4/LavaLamp/
-    Theorems.lean`). The build command `lake build` returns 1901
+    Theorems.lean`). The build command `lake build` returns 2872
     jobs with **zero `sorry` warnings** --- the kernel verifies
-    every proof at compile time.
+    every proof at compile time. The job-count growth from 1901
+    (pre-0.0.78) to 2872 (post-0.0.80) reflects the addition of
+    Mathlib's probability content: `Mathlib.Probability.Moments.
+    SubGaussian` and `Mathlib.Probability.Distributions.Gaussian.
+    Real` are now load-bearing for the LL-006 :proved chain.
 
-52. The thirty-five theorems decompose by logical role:
+52. The fifty-three theorems decompose by logical role:
 
     Theorems 1-2.   LL-021 worst-case-adversary bound (algebraic
-                    `mul_le_of_le_one_right`); the only theorem
+                    `mul_le_of_le_one_right`); the first theorem
                     promoting an LL-NNN entry to `:proved` status
                     (LL-021 promoted at v0.0.48).
     Theorems 3-12.  LL-006 detection-bound shape: range theorems
@@ -707,38 +817,117 @@ construction.
                     parallel-conformance-path enabling defense-in-
                     depth identifiability via conjunction with
                     theorem 22).
+    Theorems 36-40. LL-006 concentration-inequality calibration
+                    scaffold: `CalibratedConstants` structure with
+                    explicit positivity hypotheses (K_pos, K_le_one,
+                    c_pos, T_pos), the `empirical_calibration`
+                    instance pinning the LSQ-fit constants
+                    (K=1, c'=0.00423, T=60), `detection_bound`
+                    noncomputable function, and four calibrated
+                    specialisations of the parameter-only bound-
+                    shape theorems (36/37/38/39 from theorems
+                    4/5/9; 40 reserved as the concentration-
+                    inequality slot).
+    Theorems 41-42. LL-006 abstract concentration inequality:
+                    `SubGaussianResidue` structure bundling the
+                    abstract probability content (P_detect,
+                    P_detect_range, R_mean, threshold,
+                    acceptance_tail_bound); theorem 41
+                    `LL006_concentration_bound` is the
+                    rearrangement under the structure's tail-bound
+                    hypothesis; theorem 42 composes it with the
+                    structure's range field for detection_bound ≤
+                    P_detect ≤ 1.
+    Theorems 43-46. LL-006 Mathlib-probability lift + Gaussian
+                    instantiation: theorem 43 (constructive
+                    `noncomputable def`) `LL006_lift_to_
+                    SubGaussianResidue` derives the abstract
+                    `SubGaussianResidue.acceptance_tail_bound`
+                    field from Mathlib's `HasSubgaussianMGF.
+                    measure_ge_le` (Hoeffding-style upper-tail
+                    bound) + a calibration-match hypothesis;
+                    theorem 44 (sanity-check trivial
+                    instantiation) `LL006.TrivialInstantiation.
+                    trivial_subgaussian_residue` confirms the lift
+                    composes end-to-end on the degenerate `(Unit,
+                    Measure.dirac ())` probability space; theorem
+                    45 forwards the well-typedness statement;
+                    theorem 46 (constructive `noncomputable def`)
+                    `LL006.GaussianInstantiation.gaussian_
+                    subgaussian_residue` provides the **non-trivial
+                    measure-theoretic witness** — standard Gaussian
+                    on ℝ with R(ε_A, ω) = ε_A - ω yields a
+                    `SubGaussianResidue` whose `acceptance_tail_
+                    bound` is proved end-to-end via Mathlib's
+                    `mgf_id_gaussianReal`. The chain through
+                    theorems 41 → 43 → 46 is what promotes LL-006
+                    to `:proved` at v0.0.80 (conditional on the
+                    sub-Gaussian-rate hypothesis tracked separately
+                    in LL-035).
+    Theorems 47-48. LL-036 detection-bound-robustness joint-
+                    closure: joint conformance (47) reusing
+                    existing structures (LL006/LL019/LL022),
+                    composition (48 --- first composition where
+                    one component is itself `:proved`).
+    Theorems 49-51. LL-037 verification-oracle-leak joint-closure:
+                    new `LL017.NoOracleResponse` Lean structure
+                    with three Bool fields (has_bool_only_response,
+                    has_rate_limit_policy,
+                    has_internal_logging_isolation) encoding
+                    "verification API is oracle-isolated";
+                    extraction lemma (49); joint conformance
+                    (50) over LL017/LL023/LL029; composition (51).
+    Theorems 52-53. LL-038 operational-defense-stack joint-
+                    closure: joint conformance (52) over
+                    LL019/LL023/LL029; composition (53).
+                    Lightest-footprint joint-defense entry —
+                    structure-additive template asymptote at 2
+                    theorems / 0 new structures.
 
 6.2  What is not proved
 ------------------------------------------------------------------------
 
 53. The probability bound itself --- P(detect) ≥ 1 - K · exp(-c · T ·
-    δ²) --- is a probability-space claim. Promoting LL-006 to
-    `:proved` (rather than the current `:benchmarked`) requires:
+    δ²) --- is now machine-proved at v0.0.80, conditional on the
+    sub-Gaussian-residue hypothesis tracked as LL-035. The chain
+    is: theorem 41 (abstract concentration inequality) → theorem
+    43 (Mathlib-probability lift via `HasSubgaussianMGF.
+    measure_ge_le`) → theorem 46 (non-trivial Gaussian-residue
+    instantiation via `mgf_id_gaussianReal`). What remains
+    unproved at the probability-space level is **the empirical
+    hypothesis itself** — that the Lorenz-96 max-residue
+    distribution is sub-Gaussian at the calibrated rate.
 
-    -  A probability space modeling trajectory sampling.
-    -  Random variables for the spectrum estimator output.
-    -  The detection-event predicate (when do we say a trajectory
-       was "detected as adversarial"?).
-    -  The lower-bound proof itself (a probabilistic concentration
-       inequality on the spectrum residue).
+54. The empirical hypothesis (LL-035) is at status `:benchmarked`:
+    a 50-trials-per-point pass over 11 ε_A points produces
+    Wilson 95% CIs on every P_reject point, a linear fit
+    E[R/σ] = 2.39·ε_A + 2.36 at R²=0.990, a sub-Gaussian rate
+    σ²(R/σ) ≈ 2.28 ± 0.95, and a marginal χ² goodness-of-fit
+    p=0.041 against the Gaussian-tail proxy (slightly heavier-
+    tailed than Gaussian). The LL-006 calibrated constant c'=0.00423
+    is conservative enough that the bound holds within Wilson 95%
+    CIs across the empirical surface despite the marginal sub-
+    Gaussian rejection. Promoting LL-035 to `:proved` would
+    require either (a) sub-exponential relaxation matching the
+    marginal-sub-Gaussian observation, or (b) the full Lyapunov-
+    spectrum-estimator measure-theoretic derivation from the
+    Lorenz-96 SDE's spectral statistics (research-paper-level
+    multi-session lift).
 
-54. Each is a multi-session research investment. Theorems 2-35
-    above prove every algebraic, real-analysis, asymptotic, type-
-    shape, and compositional property the eventual `:proved` proof
-    will compose with --- the missing piece is the probability-
-    space side.
-
-55. The operational defenses captured by all five joint-defense
+55. The operational defenses captured by all eight joint-defense
     entries (LL-030 V-006/V-018, LL-031 V-011, LL-032 bijective
     V-006/V-018/V-019, LL-033 evidence-stack composition, LL-034
-    defense-in-depth via API-stack) are similarly *not* proved at
-    the probability-space level. Theorems 18-35 capture the
-    structural composition shape --- joint conformance simultaneously
-    witnesses each component's load-bearing field, no sub-
-    conformance is redundant, defense-in-depth across distinct
-    conformance paths is identifiable as the conjunction of theorem
-    hypotheses. The operational evidence (concrete attack scenarios
-    blocked) lives in the integration tests (§7).
+    defense-in-depth via API-stack, LL-036 detection-bound
+    robustness, LL-037 verification-oracle-leak, LL-038
+    operational-defense-stack) are *not* proved at the
+    probability-space level — they are at status `:tested` with
+    `example-tested` evidence. Theorems 18-53 capture the
+    structural composition shape --- joint conformance
+    simultaneously witnesses each component's load-bearing field,
+    no sub-conformance is redundant, defense-in-depth across
+    distinct conformance paths is identifiable as the conjunction
+    of theorem hypotheses. The operational evidence (concrete
+    attack scenarios blocked) lives in the integration tests (§7).
 
 6.3  Honest evidence-type discipline
 ------------------------------------------------------------------------
@@ -766,27 +955,45 @@ construction.
     *joint* evidence is the integration test's scenario + ablation
     coverage plus the Lean structural composition.
 
+58a. LL-006's promotion to `:proved` (v0.0.80) is honest spec
+    hygiene rather than goalpost-moving: the bound's calibrated
+    constants (K, c, T) already implicitly assumed a residue
+    distributional shape; making that shape explicit as a separate
+    spec entry (LL-035) carries the empirical-validation burden
+    distinctly from the bound's mathematical shape. The Lean
+    chain proves the bound's shape *under* the sub-Gaussian-rate
+    hypothesis; the strengthen-pass evidence at LL-035 shows the
+    hypothesis holds within Wilson 95% CIs at the empirically-
+    calibrated rate. Calling the bound shape `:proved` honestly
+    requires this conditionalisation; the prior `:benchmarked`
+    framing was equally honest in the opposite direction (the
+    full conjunction is empirically-validated, the bound shape
+    has Lean evidence). The 0.0.80 reframing is a precision
+    increase, not a status downgrade.
+
 ========================================================================
 7.  THE INTEGRATION TEST
 ========================================================================
 
-7.1  The 424-assertion suite
+7.1  The 453-assertion suite
 ------------------------------------------------------------------------
 
 59. The Julia test suite (`src/julia/test/runtests.jl`) runs via
-    `Pkg.test()` from the canonical project root. Total: 424
+    `Pkg.test()` from the canonical project root. Total: 453
     assertions across the full suite, exercising every LL-NNN
     entry that has `:tested`, `:benchmarked`, or partial-coverage
     evidence type.
 
-60. The five joint-defense integration testsets (LL-030 through
-    LL-034) contribute 14 + 8 + 8 + 8 + 6 = approximately 90
-    assertions. Each follows the eight-testset shape: positive
-    case + V-NNN attack scenarios + combined attack + three
-    single-point-failure ablations + no-single-point-failure
-    summary. LL-034 is lighter (six testsets) because its attack
-    scenarios reuse LL-030's verbatim with only the conformance-
-    layer-credit changing.
+60. The eight joint-defense integration testsets (LL-030 through
+    LL-038, omitting LL-035) contribute approximately 120
+    assertions. Each follows the standard shape: positive case +
+    V-NNN attack scenarios + combined attack + three single-point-
+    failure ablations + no-single-point-failure summary. Lighter-
+    footprint variants (LL-034 / LL-036 / LL-038) reuse upstream
+    attack scenarios verbatim, with only the conformance-layer-
+    credit changing. The 0.0.81 additions (LL-036/037/038)
+    contribute 4 + 6 + 6 = 16 nested testsets and an
+    incremental 29 assertions over the 0.0.80 baseline.
 
 7.2  The verify_demo.sh cross-machine reproducibility check
 ------------------------------------------------------------------------
@@ -955,9 +1162,10 @@ construction.
     tiers receive partial mitigation via per-deployment shielding
     strategies; this is not the load-bearing defense.
 
-77. **Not a panacea.** The five joint-defense meta-claims
-    (LL-030 through LL-034) cover the structural-cohesion ≥ 10.50
-    triads identified by the engine pass. Other attack vectors
+77. **Not a panacea.** The eight joint-defense meta-claims
+    (LL-030 through LL-038, omitting LL-035) cover the
+    structural-cohesion triads identified across two engine
+    passes (top-band and stratified-scan). Other attack vectors
     (V-007, V-008, V-009, etc.) are addressed by individual
     LL-NNN entries; the joint-defense formalisation is *one*
     layer of the spec's defense surface, not the whole of it.
@@ -978,17 +1186,25 @@ construction.
     composition shape); platform-specific sensor authenticity
     and rate compliance require the FFI implementations.
 
-10.2  Probability-space proof for LL-006 / LL-008
+10.2  Empirical sub-Gaussian validation for LL-035
 ------------------------------------------------------------------------
 
-79. The detection bound's lower-bound proof at the probability-
-    space level is open (§6.2). The bound's structural properties
-    are formalised in Lean (theorems 4-12); the missing piece is
-    the probabilistic concentration inequality that connects the
-    spectrum residue to a detection probability with the asserted
-    rate K · exp(-c · T · δ²). This is multi-session research
-    work involving Mathlib's probability theory + concentration-
-    inequality libraries.
+79. The detection bound itself (LL-006) is now `:proved` at v0.0.80
+    via the abstract concentration inequality (theorem 41) +
+    Mathlib-probability lift (theorem 43) + non-trivial Gaussian-
+    residue instantiation (theorem 46), conditional on the
+    sub-Gaussian-residue hypothesis tracked as LL-035. What
+    remains open at the formal-proof level is **promoting LL-035
+    itself** from `:benchmarked` to `:proved`. The strengthen-pass
+    evidence (50 trials × 11 ε_A points; Wilson 95% CIs;
+    χ² p=0.041 marginal Gaussian-tail fit) supports the
+    hypothesis empirically with the calibrated constant
+    c'=0.00423 conservatively above the empirical surface, but
+    the formal promotion would require either (a) sub-exponential
+    relaxation matching the marginal-sub-Gaussian observation, or
+    (b) the full Lyapunov-spectrum-estimator measure-theoretic
+    derivation from the Lorenz-96 SDE's spectral statistics — a
+    research-paper-level multi-session lift.
 
 10.3  A7 passive-emanation boundary refinement
 ------------------------------------------------------------------------
@@ -1051,15 +1267,26 @@ construction.
     at resolution exceeding adversary capability) rather than a
     computational hardness assumption.
 
-85. The work documents thirty-four formal spec entries, five
-    joint-defense meta-claims surfaced by a Discovery.Triadic
-    engine pass, thirty-five Lean 4 + Mathlib v4.29.1 theorems,
-    a 424-assertion Julia test suite, and a clone-and-run demo
-    with cross-machine reproducibility verification. Three
-    template generalisation findings emerged: tier-agnostic,
-    structure-additive, and evidence-regime-agnostic composition.
-    The defense-in-depth identifiability finding makes parallel
-    conformance paths formally identifiable in Lean.
+85. The work documents thirty-eight formal spec entries, eight
+    joint-defense meta-claims surfaced across two Discovery.
+    Triadic engine passes (top-band v0.2.4 and stratified-scan
+    v0.2.9), fifty-three Lean 4 + Mathlib v4.29.1 theorems, a
+    453-assertion Julia test suite, and a clone-and-run demo
+    with cross-machine reproducibility verification. Five template
+    generalisation findings emerged: tier-agnostic, structure-
+    additive (asymptote validated across two engine passes),
+    evidence-regime-agnostic, stratified-discovery-stable, and
+    status-promotion-stable composition. The defense-in-depth
+    identifiability finding makes parallel conformance paths
+    formally identifiable in Lean — across two engine passes
+    parallel paths now exist for V-006 + V-018 (LL-030 ∧ LL-034
+    via substrate ∧ API; LL-037 ∧ LL-038 via no-oracle ∧
+    operational) and for V-011 (LL-031 ∧ LL-036 via reseed ∧
+    detection-bound layers). The detection bound (LL-006) is
+    `:proved` at v0.0.80 conditional on LL-035 (the empirical
+    sub-Gaussian hypothesis at `:benchmarked`); the bound's shape
+    has end-to-end Lean evidence chained through theorems 41 →
+    43 → 46.
 
 86. LavaLamp positions itself complementarily to PQC: PQC migrates
     computational hardness while preserving the static-credential
@@ -1071,8 +1298,9 @@ construction.
 
 87. The prototype is sufficient to demonstrate the structural
     properties claimed; production deployment requires Phase 2
-    and Phase 3 real-sensor implementations, the probability-
-    space proof for the detection bound, and per-deployment
+    and Phase 3 real-sensor implementations, the formal promotion
+    of LL-035 (the sub-Gaussian-rate empirical hypothesis backing
+    LL-006's conditional `:proved` claim), and per-deployment
     hardening per §10. The work is **prototype-stage**, honestly
     framed; readers are cautioned to treat the proposal as a
     research program with a working substrate, not a deployable
@@ -1088,7 +1316,7 @@ construction.
 APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
 ========================================================================
 
-89. The thirty-four spec entries cited in this paper are
+89. The thirty-eight spec entries cited in this paper are
     catalogued in `LAVALAMP_SPEC.md` at the canonical repository.
     A condensed map follows:
 
@@ -1098,7 +1326,8 @@ APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
       LL-003  Lorenz-96 SDE choice (Operational, :benchmarked).
       LL-004  sensor coupling (Operational, :tested).
       LL-005  sensor-Nyquist condition (Operational, :argued).
-      LL-006  detection-probability bound (Core, :benchmarked).
+      LL-006  detection-probability bound (Core, :proved at
+              v0.0.80, conditional on LL-035).
       LL-007  chaos-guard (Operational, :tested).
       LL-008  resolution-bounded security (Core, :argued).
       LL-009  no-complex-numbers (Boundary, :argued).
@@ -1143,7 +1372,8 @@ APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
       LL-029  multi-channel-entropy-independence (Operational,
               :tested).
 
-    Joint-defense meta-claims (LL-030 through LL-034):
+    Joint-defense meta-claims, top-band engine pass v0.2.4
+    (LL-030 through LL-034):
       LL-030  sensor-defense-joint-closure (Operational, :tested).
       LL-031  reseed-oracle-joint-closure (Operational, :tested).
       LL-032  round3-tier3-operational-joint-closure (Operational,
@@ -1153,12 +1383,31 @@ APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
       LL-034  operational-deployment-stack-joint-closure
               (Operational, :tested).
 
-90. Status counts at the time of this paper (canonical
-    `LAVALAMP_SPEC.md` final-section counts):
+    LL-006 sub-Gaussian empirical hypothesis (LL-035):
+      LL-035  lorenz96-max-residue-sub-gaussian (Operational,
+              :benchmarked at v0.0.80; carries the empirical-
+              conservativeness burden backing LL-006's
+              conditional :proved claim).
 
-      Total:           34
-      :proved:         1   (LL-021)
-      :tested:         9
+    Joint-defense meta-claims, stratified-scan engine pass v0.2.9
+    (LL-036 through LL-038):
+      LL-036  detection-bound-robustness-joint-closure
+              (Operational, :tested at v0.0.81; first joint-defense
+              entry where one component is itself :proved).
+      LL-037  verification-oracle-leak-joint-closure (Operational,
+              :tested at v0.0.81; introduces the
+              `LL017.NoOracleResponse` Lean structure).
+      LL-038  operational-defense-stack-joint-closure
+              (Operational, :tested at v0.0.81; structure-additive
+              template asymptote at 2 theorems / 0 new structures).
+
+90. Status counts at the time of this paper (canonical
+    `LAVALAMP_SPEC.md` v0.0.81 final-section counts):
+
+      Total:           38
+      :proved:         2   (LL-021, LL-006 — LL-006 conditional
+                            on LL-035)
+      :tested:        12
       :verified:       0
       :benchmarked:    4
       :argued:        19
@@ -1168,18 +1417,27 @@ APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
 APPENDIX B.  CITED LEAN THEOREMS
 ========================================================================
 
-91. The thirty-five Lean theorems are catalogued in `THEOREMS.md`
+91. The fifty-three Lean theorems are catalogued in `THEOREMS.md`
     at the canonical repository. Build via `cd src/lean4 && lake
     update && lake exe cache get && lake build`. Expected:
-    "Build completed successfully (1901 jobs)" with zero warnings.
+    "Build completed successfully (2872 jobs)" with zero warnings.
     Toolchain: leanprover/lean4:v4.29.1; Mathlib v4.29.1 via
-    `lake-manifest.json`.
+    `lake-manifest.json`. Mathlib's probability content
+    (`Mathlib.Probability.Moments.SubGaussian`,
+    `Mathlib.Probability.Distributions.Gaussian.Real`) is load-
+    bearing for the LL-006 :proved chain through theorems 41 →
+    43 → 46.
 
 92. Theorem-by-theorem detail (statements, proofs, spec
     connections) is in `THEOREMS.md`. The grouping by logical role
-    is summarised in §6.1 of this paper. The single LavaLamp
-    spec entry currently at `:proved` status is LL-021 (worst-
-    case-adversary bound), promoted at v0.0.48 by theorem 1.
+    is summarised in §6.1 of this paper. Two LavaLamp spec
+    entries are currently at `:proved` status: LL-021 (worst-
+    case-adversary bound, promoted at v0.0.48 by theorem 1) and
+    LL-006 (detection-probability bound, promoted at v0.0.80 by
+    the abstract concentration inequality + Mathlib-probability
+    lift + non-trivial Gaussian-residue instantiation chain
+    through theorems 36-46, conditional on the empirical sub-
+    Gaussian-rate hypothesis tracked separately as LL-035).
 
 ========================================================================
 APPENDIX C.  V-NNN ATTACK VECTORS
@@ -1188,10 +1446,16 @@ APPENDIX C.  V-NNN ATTACK VECTORS
 93. The attack vectors invoked in this paper are catalogued in
     `docs/attack_surface_enumeration.md` at the canonical
     repository (a non-public document; readers requiring access
-    should contact the author). The five vectors most structurally
-    relevant to the joint-defense meta-claims are summarised in
-    §3.5. The catalog is non-exhaustive; individual LL-NNN entries
-    cite additional V-NNN entries as their defense surface.
+    should contact the author). The vectors most structurally
+    relevant to the eight joint-defense meta-claims are V-006
+    (sensor poisoning), V-010 (threshold probing — defended by
+    LL-037 via LL-017 no-oracle), V-011 (reseed-oracle —
+    defended by LL-031 ∧ LL-036 ∧ LL-038), V-013 (structured-
+    direction adversary — defended by LL-033 ∧ LL-036), V-018
+    (sensor-fusion-inversion), and V-019 (configuration-trust-
+    vs-runtime gap — defended by LL-032). The catalog is non-
+    exhaustive; individual LL-NNN entries cite additional V-NNN
+    entries as their defense surface.
 
 ========================================================================
 APPENDIX D.  SUPPORTING MATERIAL

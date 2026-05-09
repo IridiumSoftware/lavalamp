@@ -5,16 +5,19 @@ Aaron Green, May 2026
 ================================================================
 
 Canonical URL:  https://github.com/IridiumSoftware/lavalamp
-Released:       2026-05-08
-Release tag:    whitepaper-v1.0 + threat-landscape-v1.0
+Released:       2026-05-09 (v1.1; v1.0 released 2026-05-08)
+Release tag:    whitepaper-v1.1 + threat-landscape-v1.0
 License:        Triadic Closure License (TCL) v1.3
 Author:         Aaron Green
 
 This file documents the canonical SHA-256 hashes for two
 artefacts:
 
-  (1) LavaLamp Whitepaper v1.0 — the deployment-specific paper
+  (1) LavaLamp Whitepaper v1.1 — the deployment-specific paper
       for the LavaLamp substrate-bound identity primitive.
+      v1.1 reflects v0.0.80 LL-006 promotion to :proved + LL-035
+      spawning, and v0.0.81 LL-036/037/038 joint-defense additions
+      surfaced by TCE 0.2.9 stratified-scan.
       Files: lavalamp_whitepaper.{txt,pdf}.
 
   (2) Triad Deployments Threat-Landscape Companion v1.0 — the
@@ -30,8 +33,18 @@ release, the companion will move there with appropriate
 canonical-URL update.
 
 ================================================================
-SHA-256 HASHES (current — Whitepaper v1.0)
+SHA-256 HASHES (current — Whitepaper v1.1)
 ================================================================
+
+lavalamp_whitepaper.txt
+b414ebee5cd597100b993c6dd150f90bd61818c02728c00b32b7ae16cdba1871
+
+lavalamp_whitepaper.pdf
+31a19ad24dff6d34323c28aadfd4f7f257d73aa698a4c1697f67a56694c9ea01
+
+----------------------------------------------------------------
+PRIOR HASHES (Whitepaper v1.0, superseded 2026-05-09)
+----------------------------------------------------------------
 
 lavalamp_whitepaper.txt
 b6b60e3e1583f3c193b5ce380563eecd0e681e63e5e1416a782b503442420cc2
@@ -68,9 +81,9 @@ artefacts are versioned with the source tree, not separately:
                                      check.
 
 To verify the whitepaper matches the codebase at this release,
-clone at the whitepaper-v1.0 tag and confirm the lake build
-returns 1901 jobs with zero sorry warnings, Pkg.test() returns
-424/424 pass, and verify_demo.sh exits 0.
+clone at the whitepaper-v1.1 tag and confirm the lake build
+returns 2872 jobs with zero sorry warnings, Pkg.test() returns
+453/453 pass, and verify_demo.sh exits 0.
 
 ================================================================
 VERIFICATION
