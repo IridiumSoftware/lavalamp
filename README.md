@@ -126,6 +126,31 @@ See:
 - `src/julia/demo/lavalamp_demo.jl` — clone-and-run end-to-end walkthrough
 - `src/lean4/README.md` — Lean track build instructions + theorem plan
 
+## Daily-driver UX (macOS, 0.0.83)
+
+Two new pieces of deployment infrastructure landed at v0.0.83
+to give the user continuous visual feedback that LavaLamp is
+running:
+
+```bash
+# Start the daemon in one terminal:
+julia --project=src/julia src/julia/daemon/lavalamp_daemon.jl
+
+# Build + start the menu bar app (one-time build):
+cd src/swift/lavalamp_menubar
+swiftc -framework Cocoa lavalamp_menubar.swift -o lavalamp_menubar
+./lavalamp_menubar
+```
+
+The menu bar shows a small lavalamp icon — vibrant green when
+the daemon is alive, faded grey when it isn't (LL-039). The
+cross-process channel is a heartbeat file at
+`~/.lavalamp/heartbeat` containing **only a timestamp** —
+strict LL-002 compliance, no security state leaks. The browser
+visual at `visual/index.html` is now positioned as the
+marketing/landing-page asset; the menu bar app is the daily
+driver.
+
 ## Layout
 
 ```

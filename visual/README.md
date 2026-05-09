@@ -1,8 +1,19 @@
 # visual/ — Decorative-Only Lava-Lamp Animation
 
-This directory contains the user-facing lava-lamp visual layer.
+This directory contains the **marketing / landing-page asset**
+for the LavaLamp project — a browser-canvas lava-lamp animation.
 **Decoupled from the security primitive per LL-002**, the
 load-bearing architectural invariant of the LavaLamp project.
+
+> **Note on UX role.** As of v0.0.83, the daily-driver user-
+> feedback surface is the **macOS menu bar app**
+> (`../src/swift/lavalamp_menubar/`) — a small lavalamp icon
+> that turns green when the LavaLamp daemon is running and
+> faded when it isn't (see LL-039 in `LAVALAMP_SPEC.md`). This
+> directory is positioned as marketing/landing material —
+> embed it in the project homepage, screenshot it for the
+> README, demo it to a non-technical audience. It does not
+> give live status; the menu bar does that.
 
 ## What it is
 

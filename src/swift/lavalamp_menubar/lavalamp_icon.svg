@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+LavaLamp menu bar template icon.
+
+Black silhouette on transparent background, sized for 22x22 pt
+macOS menu bar. The Swift app loads this with isTemplate=true so
+NSStatusItem renders it as a system-tinted template; contentTintColor
+controls colour at runtime (green = daemon alive; dim grey = dead).
+
+Silhouette anatomy:
+  - Trapezoidal base (bottom)
+  - Bell-shaped body
+  - Small conical cap (top)
+  - One filled "bubble" dot in the middle for visual identity
+
+The art is intentionally simple — at 22x22 pt rendering, fine
+detail disappears. The trapezoid + bell + cap silhouette is what
+the eye recognises.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22" width="22" height="22">
+  <!-- Cap (small triangle at top) -->
+  <path d="M 9 1 L 13 1 L 12 3 L 10 3 Z" fill="black"/>
+  <!-- Neck (narrow rectangle below cap) -->
+  <rect x="9.5" y="3" width="3" height="1" fill="black"/>
+  <!-- Body (bell-shaped curve, narrow at top, wide at base) -->
+  <path d="M 8 4
+           Q 5 9 5 14
+           L 17 14
+           Q 17 9 14 4
+           Z" fill="black"/>
+  <!-- Base (trapezoid below body, sitting on bottom) -->
+  <path d="M 4 14 L 18 14 L 17 19 L 5 19 Z" fill="black"/>
+  <!-- Bubble in the middle -->
+  <circle cx="11" cy="10" r="1.5" fill="white"/>
+  <circle cx="11" cy="10" r="1" fill="black"/>
+</svg>

@@ -53,3 +53,7 @@ artifact_registry.md
 changelog.md
 docs/
 dashboard.md
+
+# Swift build artifacts (lavalamp_menubar; users build locally)
+src/swift/lavalamp_menubar/lavalamp_menubar
+src/swift/**/*.dSYM/
