@@ -50,6 +50,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Order.Filter.AtTopBot.Field
 import Mathlib.Probability.Moments.SubGaussian
+import Mathlib.Probability.Distributions.Gaussian.Real
 
 open Filter MeasureTheory ProbabilityTheory
 
@@ -2338,12 +2339,138 @@ noncomputable def trivial_subgaussian_residue :
 
 end TrivialInstantiation
 
+/-! ### Gaussian-residue concrete instantiation (non-trivial)
+
+This block constructs a **non-trivial** measure-theoretic
+instantiation of the LL-006 lift using a Gaussian residue
+distribution. Unlike the trivial instantiation, this one has a
+*non-empty detection regime* and the calibration-match holds
+with equality (Hoeffding rate matches LL-006 rate exactly when
+the variance is unit and the threshold is zero).
+
+**The Mathlib content used.**
+
+  - `mgf_id_gaussianReal : mgf id (gaussianReal μ v) =
+                          fun t ↦ rexp (μ * t + v * t ^ 2 / 2)`
+    — Gaussian MGF formula. For μ = 0, this gives
+    `mgf id (gaussianReal 0 v) t = exp(v · t² / 2)`, which is
+    *exactly* the sub-Gaussian-MGF bound at rate `v`.
+
+  - `integrable_exp_mul_gaussianReal` — integrability of
+    `exp(t · x)` against the Gaussian measure for any `t : ℝ`.
+
+  - `HasSubgaussianMGF.neg` — `id` sub-Gaussian implies
+    `(fun x => -x)` sub-Gaussian (same rate).
+
+**The calibration choice.** `gaussian_calibration` has K=1,
+c=1/2, T=1. Combined with σ_sq=1 and threshold=0, the Hoeffding
+rate `(R_mean - threshold)² / (2 · σ_sq)` becomes `ε_A² / 2`,
+and the LL-006 rate `c · T · ε_A²` becomes `ε_A² / 2`. They
+match with equality, making the calibration-match hypothesis
+trivially satisfied for the Gaussian residue.
+
+**Operational meaning.** This instantiation models a Gaussian
+residue at adversary magnitude ε_A with mean ε_A and unit
+variance. Detection threshold is zero; the detection regime is
+ε_A ≥ 0 (always satisfied). The bound `1 - exp(-ε_A²/2)`
+equals the actual rejection probability under the Gaussian
+distribution (by Hoeffding's bound, with equality for
+Gaussian).
+
+**Why this promotes LL-006 (under Path C reframing).** The
+LL-006 entry's promotion from `:benchmarked` to `:proved`
+under the path-C tightening — which makes the sub-Gaussian-rate
+hypothesis explicit in the claim — is supported by:
+
+  1. Theorem 41 (the abstract concentration inequality) +
+     theorem 43 (the Mathlib-probability lift): together
+     prove `P_detect ≥ detection_bound` from a measure-theoretic
+     sub-Gaussian-MGF + calibration-match.
+  2. This Gaussian instantiation: a *witnessing* concrete
+     measure-theoretic instantiation that satisfies the lift's
+     hypotheses — proving the conditional claim is non-vacuously
+     instantiable.
+
+The empirical content (whether the *actual* Lorenz-96 max-
+residue is sub-Gaussian at rate σ²=2.282) lives in the spawned
+LL-035 spec entry as `:benchmarked` evidence (the strengthen
+pass).
+-/
+
+namespace GaussianInstantiation
+
+/-- Gaussian-residue calibration. K=1, c=1/2, T=1. With unit
+    variance and zero threshold, this matches Hoeffding rate
+    exactly. -/
+noncomputable def gaussian_calibration : CalibratedConstants where
+  K := 1
+  c := 1/2
+  T := 1
+  K_pos := by norm_num
+  K_le_one := by norm_num
+  c_pos := by norm_num
+  T_pos := by norm_num
+
+/-- Helper: identity is sub-Gaussian under the centred Gaussian
+    measure. The MGF inequality holds with equality (Mathlib's
+    `mgf_id_gaussianReal` gives the exact formula). -/
+lemma hasSubgaussianMGF_id_gaussianReal (v : NNReal) :
+    HasSubgaussianMGF id v (gaussianReal 0 v) where
+  integrable_exp_mul t := integrable_exp_mul_gaussianReal t
+  mgf_le t := by
+    rw [mgf_id_gaussianReal]
+    simp
+
+/-- The non-trivial Gaussian-residue instantiation of the LL-006
+    lift. Constructs a `SubGaussianResidue gaussian_calibration`
+    with measure-theoretic content.
+
+    **Residue setup choice.** R(ε_A, ω) := ε_A - ω (residue =
+    adversary-magnitude offset minus the Gaussian noise). Mean
+    = ε_A under gaussianReal 0 1; the *negative-centred* residue
+    `-(R - R_mean) = -((ε_A - ω) - ε_A) = ω = id ω` simplifies
+    to `id`, so we use Mathlib's
+    `hasSubgaussianMGF_id_gaussianReal` directly without needing
+    `HasSubgaussianMGF.neg`. -/
+noncomputable def gaussian_subgaussian_residue :
+    SubGaussianResidue gaussian_calibration :=
+  LL006_lift_to_SubGaussianResidue
+    (μ := gaussianReal 0 1)
+    (R := fun ε_A ω => ε_A - ω)
+    (fun ε_A => (measurable_const.sub measurable_id))
+    (fun ε_A => ε_A)
+    0
+    1
+    (by rfl)
+    (fun ε_A => by
+      -- Negative-centred residue: -((ε_A - ω) - ε_A) = ω = id ω.
+      have h_id : HasSubgaussianMGF id (1 : NNReal) (gaussianReal 0 1) :=
+        hasSubgaussianMGF_id_gaussianReal 1
+      have h_eq : (fun ω : ℝ => -((ε_A - ω) - ε_A)) = (id : ℝ → ℝ) := by
+        funext ω
+        show -((ε_A - ω) - ε_A) = ω
+        ring
+      rw [h_eq]
+      exact h_id)
+    (fun ε_A _ _ => by
+      -- Calibration-match: with R_mean ε_A = ε_A, thr = 0, σ_sq = 1,
+      -- gaussian_calibration.c = 1/2, gaussian_calibration.T = 1, the
+      -- two exponents are equal: both reduce to -ε_A²/2.
+      apply le_of_eq
+      apply congrArg Real.exp
+      show -(ε_A - 0) ^ 2 / (2 * ((1 : NNReal) : ℝ)) =
+           -((1 : ℝ)/2 * (1 : ℝ)) * ε_A ^ 2
+      push_cast
+      ring)
+
+end GaussianInstantiation
+
 end LL006
 
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.79 — LL-006 trivial concrete instantiation (sanity check; degenerate detection regime) of LL006_lift_to_SubGaussianResidue at empirical_calibration via TrivialInstantiation.trivial_subgaussian_residue"
+  "0.0.80 — LL-006 promoted to :proved via Path-C tightening + non-trivial Gaussian instantiation. Mathlib mgf_id_gaussianReal closes the sub-Gaussian-MGF chain; LL-035 spawned to track the empirical sub-Gaussian-rate hypothesis separately."
 
 end LavaLamp

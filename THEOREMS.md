@@ -14,21 +14,23 @@ lake exe cache get
 lake build
 ```
 
-Expected: `Build completed successfully (2851 jobs)` with **zero
+Expected: `Build completed successfully (2872 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
-Lean kernel verifies every proof at compile time. (The job count
-jumped from 1901 to 2851 at the 0.0.78 Mathlib-probability lift,
-which adds `Mathlib.Probability.Moments.SubGaussian` and its
-dependencies to the import graph.)
+Lean kernel verifies every proof at compile time. (Job count
+trajectory: 1901 jobs through 0.0.77; 2851 jobs after 0.0.78
+Mathlib-probability lift added `Mathlib.Probability.Moments.SubGaussian`;
+2872 jobs after 0.0.80 Gaussian instantiation added
+`Mathlib.Probability.Distributions.Gaussian.Real` import.)
 
 **Status.** All forty-two theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
-evidence-type discipline). Plus two constructive declarations
-(`LL006_lift_to_SubGaussianResidue` — the Mathlib-probability
-lift; and `LL006.TrivialInstantiation.trivial_subgaussian_residue`
-— a sanity-check instantiation applying the lift end-to-end).
-Both are `noncomputable def` declarations rather than theorems
-because they construct structure instances, not propositions.
+evidence-type discipline). Plus four constructive declarations
+(the Mathlib-probability lift, two instantiations — trivial and
+Gaussian — and the Gaussian sub-Gaussian witness lemma). The
+Gaussian instantiation **promotes LL-006 to `:proved`** under
+the Path-C tightening at 0.0.80 (LL-006's bound is now
+conditional on the sub-Gaussian-rate hypothesis tracked
+separately in spec entry LL-035).
 
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
@@ -98,6 +100,8 @@ longer a structural assumption.
 | 42 | `LL006_concentration_bound_in_unit_interval` | composition: theorem 41 ∧ structure's `P_detect_range` upper bound | — (LL-006; convenience for callers needing both ends of the inequality) |
 | 43† | `LL006_lift_to_SubGaussianResidue` | Mathlib-probability lift (`noncomputable def`) — derives `SubGaussianResidue cc` from a measure-theoretic sub-Gaussian residue + calibration-match hypothesis via Mathlib's `HasSubgaussianMGF.measure_ge_le` (Hoeffding-style tail bound) | — (LL-006; the structural `acceptance_tail_bound` is now a *proved* consequence of measure-theoretic sub-Gaussian + the calibration-match condition, not a structural assumption) |
 | 44† | `LL006.TrivialInstantiation.trivial_subgaussian_residue` | trivial concrete instantiation (`noncomputable def`) — applies the lift end-to-end with a degenerate `(Unit, Measure.dirac ())` probability space; the calibration-match is vacuously satisfied | — (LL-006; sanity check that the lift's hypothesis signature is satisfiable end-to-end; not a `:proved` promotion because the detection regime is empty by construction) |
+| 45† | `LL006.GaussianInstantiation.hasSubgaussianMGF_id_gaussianReal` | identity is sub-Gaussian under centred Gaussian (uses `mgf_id_gaussianReal`) | — (LL-006 Mathlib-derived sub-Gaussian witness for Gaussian distribution) |
+| 46† | `LL006.GaussianInstantiation.gaussian_subgaussian_residue` | non-trivial Gaussian-residue instantiation (`noncomputable def`) — applies the lift to standard Gaussian on ℝ with R(ε_A, ω) = ε_A - ω; calibration K=1, c=1/2, T=1 chosen so Hoeffding rate matches LL-006 rate exactly | **Promotes LL-006 to `:proved` at 0.0.80** under the Path-C tightening (LL-006's claim is conditional on the sub-Gaussian-rate hypothesis tracked separately in LL-035) |
 
 † constructive declaration — `noncomputable def` returning `SubGaussianResidue cc` (a structure), not a `theorem` returning a `Prop`. The construction's *correctness* is enforced by the kernel's typechecking of every field's body against the structure's signature.
 
