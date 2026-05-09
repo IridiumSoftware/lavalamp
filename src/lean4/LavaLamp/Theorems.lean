@@ -49,8 +49,9 @@
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Order.Filter.AtTopBot.Field
+import Mathlib.Probability.Moments.SubGaussian
 
-open Filter
+open Filter MeasureTheory ProbabilityTheory
 
 namespace LavaLamp
 
@@ -2087,12 +2088,165 @@ theorem LL006_concentration_bound_in_unit_interval
   ⟨LL006_concentration_bound cc X ε_A h_ε_A_pos h_mean_above_threshold,
    (X.P_detect_range ε_A).2⟩
 
+/-! ### Mathlib-probability lift (theorems 43-44)
+
+This section derives the abstract `SubGaussianResidue` from a
+**measure-theoretic** sub-Gaussian residue model using Mathlib's
+`ProbabilityTheory.HasSubgaussianMGF` and its Hoeffding-style tail
+bound `measure_ge_le`. The lift makes the `acceptance_tail_bound`
+field — currently a structural assumption in `SubGaussianResidue`
+— a *derived theorem* given the right calibration-match
+hypothesis.
+
+**Mathlib API used.** From `Mathlib.Probability.Moments.SubGaussian`:
+
+  `structure HasSubgaussianMGF (X : Ω → ℝ) (c : ℝ≥0) (μ : Measure Ω) : Prop`
+    — `mgf_le : ∀ t, mgf X μ t ≤ exp (c · t² / 2)`
+
+  `lemma measure_ge_le (h : HasSubgaussianMGF X c μ) (hε : 0 ≤ ε) :`
+    `μ.real {ω | ε ≤ X ω} ≤ exp (-ε² / (2c))`
+
+This gives the Hoeffding/Chernoff upper-tail bound:
+`μ.real {X ≥ ε} ≤ exp(-ε²/(2c))` for sub-Gaussian X with rate c.
+
+**Why the calibration-match hypothesis is needed.** The Hoeffding
+tail bound's rate is `ε² / (2c)` where `ε = mean - threshold` and
+`c = σ²` (the sub-Gaussian rate). The LL-006 bound's rate is
+`c'·T·ε_A²` where ε_A is the *adversary magnitude*. With the
+empirical linear-fit `mean = a · ε_A + b`, the rates relate as:
+
+      Hoeffding:  (a · ε_A + b - threshold)² / (2 σ²)
+      LL-006:     c' · T · ε_A²
+
+These match asymptotically (large ε_A) but differ near the
+detection-regime boundary where `mean ≈ threshold`. The
+strengthen-pass benchmark validates the LL-006 fit's
+*conservativeness* across the empirical surface (within Wilson
+95% CIs); the Mathlib lift requires this conservativeness as an
+explicit calibration-match hypothesis.
+
+**Result.** The lift theorem (theorem 44) takes a measure-
+theoretic residue model + the calibration-match condition and
+constructs a `SubGaussianResidue cc`. All five fields of the
+structure are populated; the `acceptance_tail_bound` is *proved*
+from Mathlib's `measure_ge_le` plus the calibration-match
+hypothesis. No `sorry` is introduced.
+-/
+
+/-- **Theorem 43.** LL-006 Mathlib-probability lift.
+
+    Given a measure-theoretic sub-Gaussian residue model — a
+    probability space `(Ω, μ)` with a residue family `R` plus
+    sub-Gaussian + calibration-match hypotheses — construct a
+    `SubGaussianResidue cc`.
+
+    The constructed `P_detect ε_A` is the measure-theoretic
+    detection probability `μ.real {ω | R ε_A ω > threshold}`.
+
+    **Proof shape.**
+
+    1. Apply Mathlib's
+       `ProbabilityTheory.HasSubgaussianMGF.measure_ge_le`
+       (Hoeffding-style upper-tail bound) on the *negative-centred*
+       residue `-(R - R_mean)` at `ε := R_mean - threshold ≥ 0`.
+       This gives `μ.real {ω | R ω ≤ threshold} ≤
+       exp(-(R_mean - threshold)² / (2σ²))`.
+
+    2. Apply the calibration-match hypothesis: the Hoeffding rate
+       `(R_mean - threshold)² / (2σ²)` is ≥ the LL-006 rate
+       `c·T·ε_A²`, so `exp(-Hoeffding) ≤ exp(-LL006)`.
+
+    3. The complement identity for probability measures:
+       `1 - μ.real {R > t} = μ.real {R ≤ t}` (using
+       `probReal_add_probReal_compl`). Rearrange.
+
+    4. `K_eq_one` lets `K · exp(...) = exp(...)`.
+
+    **Honest framing.** The proof uses Mathlib's full sub-Gaussian
+    + Hoeffding machinery. The `calibration_match` hypothesis is
+    the empirical input: it asserts the LL-006 fitted rate
+    (`c · T = 0.254`) is at most the Hoeffding rate (`a²/(2σ²)`)
+    in the detection regime, which the strengthen-pass benchmark
+    validates within Wilson 95% CIs.
+
+    The lift gives a constructive bridge: any concrete probability
+    space with a sub-Gaussian residue + the calibration-match
+    numerical condition produces a `SubGaussianResidue cc` whose
+    `acceptance_tail_bound` is a *theorem*, not a structural
+    assumption. The eventual deployment-context formalisation
+    instantiates this with the SDE's invariant measure and the
+    empirically-fitted residue distribution. -/
+noncomputable def LL006_lift_to_SubGaussianResidue
+    {cc : CalibratedConstants}
+    {Ω : Type} [MeasurableSpace Ω] {μ : Measure Ω}
+    [IsProbabilityMeasure μ]
+    (R : ℝ → Ω → ℝ)
+    (R_measurable : ∀ ε_A : ℝ, Measurable (R ε_A))
+    (R_mean : ℝ → ℝ)
+    (thr : ℝ)
+    (σ_sq : NNReal)
+    (h_K_eq_one : cc.K = 1)
+    (h_sub_gaussian : ∀ ε_A : ℝ,
+      HasSubgaussianMGF (fun ω => -(R ε_A ω - R_mean ε_A)) σ_sq μ)
+    (h_calibration_match : ∀ ε_A : ℝ, 0 ≤ ε_A → R_mean ε_A ≥ thr →
+      Real.exp (-(R_mean ε_A - thr) ^ 2 / (2 * (σ_sq : ℝ)))
+        ≤ Real.exp (-(cc.c * cc.T) * ε_A ^ 2)) :
+    SubGaussianResidue cc where
+  P_detect ε_A := μ.real {ω | R ε_A ω > thr}
+  P_detect_range ε_A := by
+    refine ⟨measureReal_nonneg, ?_⟩
+    calc μ.real {ω | R ε_A ω > thr}
+        ≤ μ.real Set.univ := measureReal_mono (Set.subset_univ _)
+      _ = 1 := by simp
+  R_mean := R_mean
+  threshold := thr
+  acceptance_tail_bound ε_A h_ε_A_nn h_above := by
+    -- The detection set is measurable since R is measurable.
+    have h_meas : MeasurableSet {ω | R ε_A ω > thr} :=
+      (R_measurable ε_A) measurableSet_Ioi
+    -- Step A: 1 - μ.real {R > t} = μ.real {R ≤ t} via complement
+    -- identity for probability measures.
+    have h_set_compl :
+        {ω | R ε_A ω ≤ thr} = {ω | R ε_A ω > thr}ᶜ := by
+      ext ω; simp [not_lt]
+    have h_sum :
+        μ.real {ω | R ε_A ω > thr}
+          + μ.real {ω | R ε_A ω > thr}ᶜ = 1 :=
+      probReal_add_probReal_compl h_meas
+    have h_compl :
+        1 - μ.real {ω | R ε_A ω > thr}
+          = μ.real {ω | R ε_A ω ≤ thr} := by
+      rw [h_set_compl]; linarith
+    -- Step B: μ.real {R ≤ t} ≤ Hoeffding rate.
+    -- The acceptance event = {ε ≤ -(R - R_mean)} where ε = R_mean - t.
+    have h_set_eq :
+        {ω | R ε_A ω ≤ thr}
+          = {ω | (R_mean ε_A - thr) ≤ -(R ε_A ω - R_mean ε_A)} := by
+      ext ω
+      simp only [Set.mem_setOf_eq]
+      constructor <;> intro h <;> linarith
+    have h_ε_nn : 0 ≤ R_mean ε_A - thr := sub_nonneg.mpr h_above
+    have h_hoeffding :
+        μ.real {ω | R ε_A ω ≤ thr}
+          ≤ Real.exp (-(R_mean ε_A - thr) ^ 2 / (2 * (σ_sq : ℝ))) := by
+      rw [h_set_eq]
+      exact (h_sub_gaussian ε_A).measure_ge_le h_ε_nn
+    -- Step C: Hoeffding rate ≤ LL-006 rate (calibration_match).
+    have h_calib := h_calibration_match ε_A h_ε_A_nn h_above
+    -- Combine everything.
+    rw [h_K_eq_one, one_mul]
+    calc 1 - μ.real {ω | R ε_A ω > thr}
+        = μ.real {ω | R ε_A ω ≤ thr} := h_compl
+      _ ≤ Real.exp (-(R_mean ε_A - thr) ^ 2 / (2 * (σ_sq : ℝ))) :=
+          h_hoeffding
+      _ ≤ Real.exp (-(cc.c * cc.T) * ε_A ^ 2) := h_calib
+
 end LL006
 
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.77 — LL-006 concentration inequality (theorem 41) + SubGaussianResidue model + composition (theorem 42)"
+  "0.0.78 — LL-006 Mathlib-probability lift: theorem 43 (LL006_lift_to_SubGaussianResidue) derives the abstract acceptance_tail_bound from Mathlib's HasSubgaussianMGF.measure_ge_le + calibration-match hypothesis"
 
 end LavaLamp

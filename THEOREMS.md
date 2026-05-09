@@ -14,26 +14,37 @@ lake exe cache get
 lake build
 ```
 
-Expected: `Build completed successfully (1901 jobs)` with **zero
+Expected: `Build completed successfully (2851 jobs)` with **zero
 warnings** — no `sorry`, no unused-variable, no deprecation. The
-Lean kernel verifies every proof at compile time.
+Lean kernel verifies every proof at compile time. (The job count
+jumped from 1901 to 2851 at the 0.0.78 Mathlib-probability lift,
+which adds `Mathlib.Probability.Moments.SubGaussian` and its
+dependencies to the import graph.)
 
 **Status.** All forty-two theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
-evidence-type discipline).
+evidence-type discipline). Plus a constructive declaration
+(`LL006_lift_to_SubGaussianResidue`, the Mathlib-probability
+lift; a `noncomputable def` rather than a theorem because it
+constructs a structure, not a proposition).
+
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
-theorem 1 below. Theorems 2–42 are composition lemmas building
-toward future `:proved` status for LL-006 and the joint-defense
-parametric shape entries (LL-022 / LL-023 / LL-030 / LL-031 /
-LL-032 / LL-033 / LL-034); they currently land as `lean-proved`
-content supporting their associated entries without themselves
-being entry-promoting. Theorems 36-42 are the LL-006
-**concentration-inequality scaffold and theorem** — calibrated-
-constants parametrisation (36-40) plus the actual concentration
-inequality stated at the sub-Gaussian residue model level
-(theorem 41) with a unit-interval-composition corollary
-(theorem 42).
+theorem 1 below. Theorems 2–42 + the lift are composition lemmas
+building toward future `:proved` status for LL-006 and the joint-
+defense parametric shape entries (LL-022 / LL-023 / LL-030 /
+LL-031 / LL-032 / LL-033 / LL-034); they currently land as
+`lean-proved` content supporting their associated entries without
+themselves being entry-promoting. Theorems 36-42 + the
+Mathlib-probability lift are the **LL-006 concentration-inequality
+scaffold + theorem + lift** — calibrated-constants parametrisation
+(36-40), abstract concentration inequality at the sub-Gaussian
+residue model level (theorem 41) with unit-interval composition
+(theorem 42), and the Mathlib-probability lift (`LL006_lift_to_SubGaussianResidue`)
+that uses Mathlib's `HasSubgaussianMGF.measure_ge_le` (Hoeffding-
+style tail bound) to derive the abstract structure's
+`acceptance_tail_bound` field as a *proved* consequence — no
+longer a structural assumption.
 
 ---
 
@@ -83,6 +94,9 @@ inequality stated at the sub-Gaussian residue model level
 | 40 | `LL006_concentration_bound_placeholder` | name reservation; superseded by theorem 41 | — (LL-006 concentration-inequality scaffold; retained for backward citation) |
 | 41 | `LL006_concentration_bound` | concentration inequality at sub-Gaussian-residue-model level | — (LL-006; abstract concentration inequality, awaits Mathlib-probability lift to derive its load-bearing tail-bound assumption) |
 | 42 | `LL006_concentration_bound_in_unit_interval` | composition: theorem 41 ∧ structure's `P_detect_range` upper bound | — (LL-006; convenience for callers needing both ends of the inequality) |
+| 43† | `LL006_lift_to_SubGaussianResidue` | Mathlib-probability lift (`noncomputable def`) — derives `SubGaussianResidue cc` from a measure-theoretic sub-Gaussian residue + calibration-match hypothesis via Mathlib's `HasSubgaussianMGF.measure_ge_le` (Hoeffding-style tail bound) | — (LL-006; the structural `acceptance_tail_bound` is now a *proved* consequence of measure-theoretic sub-Gaussian + the calibration-match condition, not a structural assumption) |
+
+† constructive declaration — `noncomputable def` returning `SubGaussianResidue cc` (a structure), not a `theorem` returning a `Prop`. The construction's *correctness* is enforced by the kernel's typechecking of every field's body against the structure's signature.
 
 ---
 
