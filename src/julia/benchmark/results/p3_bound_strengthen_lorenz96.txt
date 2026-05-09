@@ -1,0 +1,70 @@
+# LavaLamp P3-bound — Strengthen pass for LL-006 :benchmarked
+# =============================================================
+# Date: 2026-05-08
+# Script: benchmark/p3_bound_strengthen.jl
+# Predecessor: p3_bound_high_res_lorenz96.txt (15 trials/point;
+#              this run uses 50 trials/point)
+# Reproducibility: deterministic. calibration seed = 101;
+#                    adversary seed = Xoshiro(2000+trial);
+#                    trial IC seed = 3000+trial.
+#
+# System: Lorenz-96 N=20, F=8.0
+# Coupling: single channel, b=ones(20), α=[1.0], constant_stream(1.0)
+# Calibration: n_trials=10, N_benettin=1200, Δt=0.05, Ttr=200.0
+# Verifier: vector per-exponent test, k=5.0
+# Adversary: synthetic_adversary with isotropic unit-vector × ε_A
+# Trials per ε_A: 50
+# Observation window: T = 60.0 (= N_benettin · Δt)
+# Rejection criterion: max(residue ./ env.σ) > k = 5.0
+# (per-σ-units residue space)
+#
+# Bound shape under test (LL-006 §2.1):
+#   P(detect) ≥ 1 - K · exp(-c · T · δ_A²)
+# Fittable form (ε_A absorbing ∂λ/∂α into effective slope c'):
+#   log(1 - P_reject) = log(K) - c' · T · ε_A²
+#
+# Per-row columns:
+#   ε_A      adversary magnitude
+#   P̂_rej    empirical rejection rate (rejects / n_trials)
+#   CI_lo    Wilson 95% lower bound on P̂_rej
+#   CI_hi    Wilson 95% upper bound on P̂_rej
+#   E[R/σ]   sample mean of max(residue ./ env.σ) (per-σ-units)
+#   σ(R/σ)   sample std of max(residue ./ env.σ)
+#
+ε_A     P̂_rej   CI_lo   CI_hi   E[R/σ]    σ(R/σ)    wall_s
+-----   -----   -----   -----   -------   -------   ------
+ 0.00   0.040   0.011   0.135    3.0867    0.9144      7.3
+ 0.25   0.040   0.011   0.135    3.3379    1.3441      7.5
+ 0.50   0.040   0.011   0.135    3.4158    1.3691      7.1
+ 0.75   0.100   0.043   0.214    3.9027    1.2810      7.3
+ 1.00   0.340   0.224   0.478    4.6051    1.2743      7.1
+ 1.25   0.520   0.385   0.652    5.2444    1.5553      7.3
+ 1.50   0.740   0.604   0.841    6.0628    2.0773      7.1
+ 1.75   0.940   0.838   0.979    6.7526    1.5147      7.0
+ 2.00   1.000   0.929   1.000    7.0535    1.1538      6.9
+ 2.50   1.000   0.929   1.000    8.1238    1.5796      6.8
+ 3.00   1.000   0.929   1.000    9.6964    1.6893      6.9
+
+# ===
+# Lean-proof-relevant constants (extracted post-sweep):
+#
+#   E[R](ε_A) linear fit (dynamic regime, ε_A > 0):
+#     slope a   = 2.3891
+#     intercept = 2.3553
+#     R²        = 0.9902
+#
+#   Sub-Gaussian rate σ²_R (transition regime, 0 < P̂_rej < 0.99):
+#     mean σ²_R = 2.282077
+#     std  σ²_R = 0.947771
+#
+#   Implied effective slope:
+#     c' ≈ a² / (2·σ²_R·T) = 0.020843
+#     (compare p3_bound_high_res LSQ-fit c' = 0.00423)
+#
+# χ² goodness-of-fit (Gaussian-tail proxy):
+#   χ²       = 11.562
+#   df       = 5  (n_points=7 - n_params=2)
+#   p-value  = 0.0413
+#   Verdict  = reject H₀ at α=0.05
+#
+# Sweep wall-clock: 1.3 min
