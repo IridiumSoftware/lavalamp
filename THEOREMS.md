@@ -23,10 +23,12 @@ dependencies to the import graph.)
 
 **Status.** All forty-two theorems below are kernel-verified
 (`lean-proved` evidence type per the project's
-evidence-type discipline). Plus a constructive declaration
-(`LL006_lift_to_SubGaussianResidue`, the Mathlib-probability
-lift; a `noncomputable def` rather than a theorem because it
-constructs a structure, not a proposition).
+evidence-type discipline). Plus two constructive declarations
+(`LL006_lift_to_SubGaussianResidue` — the Mathlib-probability
+lift; and `LL006.TrivialInstantiation.trivial_subgaussian_residue`
+— a sanity-check instantiation applying the lift end-to-end).
+Both are `noncomputable def` declarations rather than theorems
+because they construct structure instances, not propositions.
 
 The single LavaLamp spec entry currently at `:proved` status is
 **LL-021** (worst-case-adversary-bound) — promoted at 0.0.48 by
@@ -95,6 +97,7 @@ longer a structural assumption.
 | 41 | `LL006_concentration_bound` | concentration inequality at sub-Gaussian-residue-model level | — (LL-006; abstract concentration inequality, awaits Mathlib-probability lift to derive its load-bearing tail-bound assumption) |
 | 42 | `LL006_concentration_bound_in_unit_interval` | composition: theorem 41 ∧ structure's `P_detect_range` upper bound | — (LL-006; convenience for callers needing both ends of the inequality) |
 | 43† | `LL006_lift_to_SubGaussianResidue` | Mathlib-probability lift (`noncomputable def`) — derives `SubGaussianResidue cc` from a measure-theoretic sub-Gaussian residue + calibration-match hypothesis via Mathlib's `HasSubgaussianMGF.measure_ge_le` (Hoeffding-style tail bound) | — (LL-006; the structural `acceptance_tail_bound` is now a *proved* consequence of measure-theoretic sub-Gaussian + the calibration-match condition, not a structural assumption) |
+| 44† | `LL006.TrivialInstantiation.trivial_subgaussian_residue` | trivial concrete instantiation (`noncomputable def`) — applies the lift end-to-end with a degenerate `(Unit, Measure.dirac ())` probability space; the calibration-match is vacuously satisfied | — (LL-006; sanity check that the lift's hypothesis signature is satisfiable end-to-end; not a `:proved` promotion because the detection regime is empty by construction) |
 
 † constructive declaration — `noncomputable def` returning `SubGaussianResidue cc` (a structure), not a `theorem` returning a `Prop`. The construction's *correctness* is enforced by the kernel's typechecking of every field's body against the structure's signature.
 

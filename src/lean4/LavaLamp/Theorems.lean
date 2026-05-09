@@ -2241,12 +2241,109 @@ noncomputable def LL006_lift_to_SubGaussianResidue
           h_hoeffding
       _ ≤ Real.exp (-(cc.c * cc.T) * ε_A ^ 2) := h_calib
 
+/-! ### Trivial concrete instantiation of the lift (sanity check)
+
+This block constructs a **trivial-but-valid** measure-theoretic
+instantiation of the LL-006 lift. The instantiation:
+
+  - Uses `Ω = Unit` with `μ = Measure.dirac ()` as the probability
+    space (the simplest non-vacuous probability space).
+  - Sets `R = const 0`, `R_mean = const 0`, `threshold = 1`, so the
+    detection regime hypothesis `R_mean ε_A ≥ threshold` (i.e.,
+    `0 ≥ 1`) is never satisfied; the calibration-match condition
+    becomes vacuously true (the implication's antecedent is
+    always false).
+  - Sets `σ_sq = 0` and uses Mathlib's `HasSubgaussianMGF.fun_zero`
+    (the constant-zero function is sub-Gaussian with rate 0).
+
+**Purpose.** Demonstrate the lift's hypothesis signature is
+satisfiable; provide an end-to-end compile-checked instance that
+future *real* instantiations can use as a template. This is a
+**sanity check**, not a promotion of LL-006 to `:proved` — the
+trivial instance has a degenerate detection regime.
+
+**What a real (non-trivial) instantiation would require.**
+
+  1. **Gaussian-residue path.** Use Mathlib's `gaussianReal μ σ²`
+     measure on ℝ with R = identity. Need to prove
+     `HasSubgaussianMGF id σ² (gaussianReal 0 σ²)` — i.e., the
+     Gaussian MGF computation: `∫ exp(t·x) · gaussianPDFReal 0
+     σ² x dx = exp(σ²·t²/2)`. This requires:
+     - completing the square in the integrand's exponent
+     - substitution to `gaussianPDFReal 0 σ²` (mass 1)
+     - Mathlib's `integral_gaussianPDFReal_eq_one`
+
+     Estimated effort: a multi-page Lean proof; multi-session
+     research lift in Mathlib's measure-theoretic integration
+     API. Once landed, plugs into the LL-006 lift to give a
+     *non-trivial* `SubGaussianResidue` based on Gaussian
+     residues.
+
+  2. **Lyapunov-spectrum-estimator path.** The actual LL-006
+     deployment-relevance proof. Requires:
+     - The chaotic SDE's invariant measure on the trajectory
+       manifold (the SDE-physics measure-theoretic content).
+     - The Benettin algorithm formalised as a measurable
+       functional from trajectory space to ℝ^N.
+     - A sub-Gaussian-MGF bound on the per-σ-units max-residue
+       derived from spectral-statistics arguments (the
+       Furstenberg-type ergodic theorem for Lyapunov spectra,
+       central-limit for finite-time estimators, etc.).
+
+     Estimated effort: research-paper-level lift; not a single-
+     session task. The strengthen pass at 0.0.75 calibrated the
+     sub-Gaussian rate empirically (σ²(R/σ) = 2.282 ± 0.948); a
+     formal derivation from the SDE's spectral properties is the
+     remaining `:proved`-promotion gate.
+-/
+
+namespace TrivialInstantiation
+
+/-- The trivial residue family: constant 0 for any adversary
+    magnitude. -/
+noncomputable def R : ℝ → Unit → ℝ := fun _ _ => 0
+
+/-- The trivial mean function: constant 0. -/
+noncomputable def R_mean : ℝ → ℝ := fun _ => 0
+
+/-- The trivial threshold (chosen so `R_mean ε_A < threshold` for
+    all ε_A; the detection regime is empty). -/
+noncomputable def thr : ℝ := 1
+
+/-- Apply the lift to construct a `SubGaussianResidue` for
+    `empirical_calibration`. The lift's calibration-match
+    hypothesis is vacuously satisfied because the detection
+    regime is empty. -/
+noncomputable def trivial_subgaussian_residue :
+    SubGaussianResidue empirical_calibration :=
+  LL006_lift_to_SubGaussianResidue
+    (μ := Measure.dirac ())
+    R
+    (fun _ => measurable_const)
+    R_mean
+    thr
+    0
+    (by rfl)
+    (fun ε_A => by
+      -- The negative-centred residue is the constant zero
+      -- function (since R is constant 0 and R_mean is 0).
+      -- HasSubgaussianMGF.fun_zero gives sub-Gaussian rate 0.
+      simp only [R, R_mean, sub_self, neg_zero]
+      exact HasSubgaussianMGF.fun_zero)
+    (fun ε_A _ h_above => by
+      -- The detection regime is empty: R_mean ε_A = 0 < 1 = thr,
+      -- so h_above : 0 ≥ 1 is false. Vacuous implication.
+      simp only [R_mean, thr] at h_above
+      linarith)
+
+end TrivialInstantiation
+
 end LL006
 
 /-- Scaffold-tier marker. Confirms the package builds. Removed
     when the Theorems file is reorganised into per-priority
     submodules (per `src/lean4/README.md` §File inventory). -/
 def scaffold_tier : String :=
-  "0.0.78 — LL-006 Mathlib-probability lift: theorem 43 (LL006_lift_to_SubGaussianResidue) derives the abstract acceptance_tail_bound from Mathlib's HasSubgaussianMGF.measure_ge_le + calibration-match hypothesis"
+  "0.0.79 — LL-006 trivial concrete instantiation (sanity check; degenerate detection regime) of LL006_lift_to_SubGaussianResidue at empirical_calibration via TrivialInstantiation.trivial_subgaussian_residue"
 
 end LavaLamp
