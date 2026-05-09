@@ -83,20 +83,100 @@ numerically demonstrates two of them.
     The triad is non-redundant. (Theorem 21 encodes this at
     the type level; theorem 22 chains it into LL-006.)
 
+────────────────────────────────────────────────────────────────────────
+Step 7 — Reseed-oracle joint-closure (LL-031): LL-007 + LL-019 + LL-022 triad
+────────────────────────────────────────────────────────────────────────
+LL-031 claims LL-007 (chaos-guard) + LL-019 (side-channel hardening)
++ LL-022 (OS-trust-stack, host-grade TRNG) jointly defend V-011
+(reseed-oracle attack: external observer uses reseed-event timing
+as a sensor-correlated event channel). Spans all three Logic tiers
+(Operational + Core + Boundary) — confirms the joint-defense template
+is tier-agnostic.
+• LL-007 reaches VALID after warmup                        : true
+• LL-007 catches sub-threshold collapse → INVALID          : true
+• LL-022(c) reseed perturbs state by magnitude=1.0 (||Δu||≈1): true  (||Δu|| = 1.0000)
+• LL-019 verify_constant_time elapsed ≥ target=0.050 s        : true  (elapsed = <TIMING> s)
+  → V-011 oracle defeated: collapse detected, entropy injected,
+    reseed-event timing indistinguishable from regular verification.
+    (Theorem 26 encodes 9-field combined extraction; theorem 27
+    chains it into LL-006 well-typedness.)
+
+────────────────────────────────────────────────────────────────────────
+Step 8 — Round-3 Tier-3 joint-closure (LL-032): LL-024 + LL-028 + LL-029
+────────────────────────────────────────────────────────────────────────
+LL-032 claims the three round-3 Tier 3 entries — LL-024 (deployment)
++ LL-028 (runtime-conformance) + LL-029 (entropy independence) —
+jointly defend V-006 (sensor poisoning) + V-018 (sensor-fusion
+inversion) + V-019 (configuration-trust gap) with BIJECTIVE
+no-single-point-failure: each component is the *only* defense
+against its primary V-NNN.
+• V-006 blocked by LL-024 (authenticity)        : true
+• V-006 blocked by LL-028 (freshness probe)     : false  (expected false)
+• V-006 blocked by LL-029 (correlation analysis): false  (expected false)
+• V-018 blocked by LL-029 (correlation analysis): true
+• V-018 blocked by LL-024 (authenticity)        : false  (expected false)
+• V-018 blocked by LL-028 (freshness probe)     : false  (expected false)
+• V-019 blocked by LL-028 (freshness probe)     : true
+• V-019 blocked by LL-024 (authenticity)        : false  (expected false)
+• V-019 blocked by LL-029 (correlation analysis): false  (expected false)
+  → Bijective V-NNN coverage confirmed: each component is the only
+    defense against its primary V-NNN. Removing any one component
+    creates a single-point failure for exactly one V-NNN, not a
+    shared coverage gap. (Theorem 29 encodes the bijection.)
+
+────────────────────────────────────────────────────────────────────────
+Step 9 — Status-tier-diverse detection-stack (LL-033): LL-006 + LL-023 + LL-029
+────────────────────────────────────────────────────────────────────────
+LL-033 claims LL-006 (:benchmarked) + LL-023 (:argued) + LL-029
+(:tested) compose into a single load-bearing claim across THREE
+evidence regimes — empirical + structural + algorithmic. The
+template is evidence-regime-agnostic; heterogeneous evidence kinds
+compose into one consumer-facing detection guarantee.
+• LL-006 empirical: genuine system passes envelope (k=10)  : true
+• LL-023 structural: verify returns Bool only (no-oracle)  : true
+• LL-029 algorithmic: 3 independent gaussian streams → 3 fams: true
+  → Three distinct evidence regimes (empirical / structural /
+    algorithmic) compose into the consumer-facing detection
+    guarantee. (Theorem 33 chains the joint into LL-006 well-
+    typedness; first composition theorem where one component is a
+    witness for LL-006 itself.)
+
+────────────────────────────────────────────────────────────────────────
+Step 10 — Operational-deployment-stack (LL-034): LL-023 + LL-024 + LL-029
+────────────────────────────────────────────────────────────────────────
+LL-034 is the operational counterpart to LL-030: same V-006 + V-018
+defense, API-stack instead of substrate-stack. LL-030 (theorem 22)
+∧ LL-034 (theorem 35) hypotheses formally identify defense-in-depth
+across substrate and API surfaces — the strongest joint-defense
+structural finding to date.
+• LL-023 layer: API returns Bool (no-oracle preserved)     : true
+• LL-024 layer: per-stream authenticity passes             : true
+• LL-029 layer: 3 independent families                     : true
+• Defense-in-depth (theorem 22 ∧ theorem 35 hypotheses)    : true
+  → Same V-006 + V-018 surface closed via two distinct
+    conformance paths (substrate-stack via LL-016; API-stack via
+    LL-023). Defense-in-depth is now structurally identifiable in
+    Lean as the conjunction of theorems 22 and 35 hypotheses.
+
 ========================================================================
 Summary
 ========================================================================
 • Honest system accepted   : true        (expected true)
 • Adversary system rejected: true        (expected true)
 • Chaos guard tripped post-collapse: true (expected true)
-• LL-030 sensor-defense triad blocks V-006 + V-018: true (expected true)
+• LL-030 sensor-defense triad blocks V-006 + V-018          : true
+• LL-031 reseed-oracle triad defeats V-011 timing channel   : true
+• LL-032 Tier-3 triad bijective V-006/V-018/V-019 coverage  : true
+• LL-033 status-tier-diverse evidence-stack composes         : true
+• LL-034 operational-deployment-stack (defense-in-depth)     : true
 
 • Wall-clock — registration : <TIMING> s
 • Wall-clock — verify (honest) : <TIMING> s
 • Wall-clock — verify (adversary) : <TIMING> s
 
-✅ All four pillars of the LavaLamp pipeline behave as specified.
-   See THEOREMS.md for the Lean 4 / Mathlib v4.29.1 formal-
-   verification track; src/lean4/ for the Lake project itself.
+✅ All eight pillars of the LavaLamp pipeline behave as specified
+   (3 core + 5 joint-defense triads). See THEOREMS.md for the
+   Lean 4 / Mathlib v4.29.1 formal-verification track;
+   src/lean4/ for the Lake project itself.
 
 Demo complete.

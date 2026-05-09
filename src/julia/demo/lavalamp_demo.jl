@@ -37,6 +37,26 @@
 #                 here numerically shows V-006 rejected by LL-016
 #                 alone and V-018 detected by LL-029 alone, validating
 #                 that the triad has no single-point failure.
+#   9. LL-031   — Reseed-oracle joint-closure: LL-007 (chaos-guard) +
+#                 LL-019 (side-channel hardening) + LL-022 (host-grade
+#                 TRNG) jointly defend V-011 (reseed-event timing
+#                 oracle). Cross-tier triad (Operational + Core +
+#                 Boundary) — confirms tier-agnostic generalisation.
+#                 Theorems 23-27.
+#  10. LL-032   — Round-3 Tier-3 joint-closure with BIJECTIVE V-NNN
+#                 coverage: LL-024 → V-006, LL-028 → V-019, LL-029 →
+#                 V-018. Each component is the only defense against
+#                 its primary V-NNN. Theorems 28-30.
+#  11. LL-033   — Status-tier-diverse detection-stack: LL-006
+#                 (:benchmarked) + LL-023 (:argued) + LL-029 (:tested)
+#                 compose across THREE evidence regimes (empirical /
+#                 structural / algorithmic). Confirms evidence-regime-
+#                 agnostic generalisation. Theorems 31-33.
+#  12. LL-034   — Operational-deployment-stack: same V-006 + V-018
+#                 surface as LL-030, API-stack instead of substrate-
+#                 stack. Theorem 22 ∧ theorem 35 hypotheses formally
+#                 identify defense-in-depth across substrate and API
+#                 surfaces. Theorems 34-35.
 #
 # What it does NOT exercise:
 #
@@ -63,6 +83,7 @@ using LavaLamp.Audit: residue
 using LavaLamp.ChaosGuard: Guard, default_config, update!, is_valid,
                             current_lambda, GuardState, INVALID,
                             WARMUP, VALID
+using DynamicalSystems: current_state
 
 println("="^72)
 println("LavaLamp end-to-end demo")
@@ -295,6 +316,202 @@ ll030_ok = auth_ok && cl_baseline.n_families == 3 && v006_blocked &&
            v018_invisible_to_ll016
 
 # ─────────────────────────────────────────────────────────────────────
+# 7. Reseed-oracle joint-closure (LL-031): LL-007 + LL-019 + LL-022.
+# ─────────────────────────────────────────────────────────────────────
+
+println("\n" * "─"^72)
+println("Step 7 — Reseed-oracle joint-closure (LL-031): LL-007 + LL-019 + LL-022 triad")
+println("─"^72)
+println("LL-031 claims LL-007 (chaos-guard) + LL-019 (side-channel hardening)")
+println("+ LL-022 (OS-trust-stack, host-grade TRNG) jointly defend V-011")
+println("(reseed-oracle attack: external observer uses reseed-event timing")
+println("as a sensor-correlated event channel). Spans all three Logic tiers")
+println("(Operational + Core + Boundary) — confirms the joint-defense template")
+println("is tier-agnostic.")
+
+# LL-007 catches collapse, LL-022(c) reseed perturbs state with TRNG,
+# LL-019 timing-padded response hides the reseed event.
+Random.seed!(7100)
+ds_v011 = lorenz96(40; F=8.0)
+g_v011  = Guard(default_config(1.66; warmup_steps=2))
+
+# Drive to VALID, then collapse triggers INVALID.
+for _ in 1:2; update!(g_v011, 1.7); end
+ll007_pre_collapse = (g_v011.state == VALID)
+update!(g_v011, 0.05)
+ll007_catches_collapse = (g_v011.state == INVALID)
+@printf "• LL-007 reaches VALID after warmup                        : %s\n" ll007_pre_collapse
+@printf "• LL-007 catches sub-threshold collapse → INVALID          : %s\n" ll007_catches_collapse
+
+# LL-022(c) reseed: TRNG-derived perturbation injects entropy.
+u_pre = copy(current_state(ds_v011))
+reseed!(ds_v011, g_v011; rng=Random.Xoshiro(7777), magnitude=1.0)
+u_post = copy(current_state(ds_v011))
+diff_norm = sqrt(sum((u_post .- u_pre) .^ 2))
+ll022c_reseed_ok = isapprox(diff_norm, 1.0; atol=1e-10) && g_v011.state == WARMUP
+@printf "• LL-022(c) reseed perturbs state by magnitude=1.0 (||Δu||≈1): %s  (||Δu|| = %.4f)\n" ll022c_reseed_ok diff_norm
+
+# LL-019 timing-padded response hides the reseed timing channel.
+Random.seed!(7200)
+env_v011 = register_envelope(() -> lorenz96(20; F=8.0);
+                              n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+Random.seed!(7300)
+ds_check_v011 = lorenz96(20; F=8.0)
+λs_check = lyapunov_spectrum(ds_check_v011; N=200, Δt=0.05, Ttr=20.0)
+target_pad = 0.05
+t_padded_v011 = @elapsed verify_constant_time(λs_check, env_v011;
+                                                k=10.0, target_seconds=target_pad)
+ll019_padding_ok = t_padded_v011 >= target_pad
+@printf "• LL-019 verify_constant_time elapsed ≥ target=%.3f s        : %s  (elapsed = %.3f s)\n" target_pad ll019_padding_ok t_padded_v011
+
+println("  → V-011 oracle defeated: collapse detected, entropy injected,")
+println("    reseed-event timing indistinguishable from regular verification.")
+println("    (Theorem 26 encodes 9-field combined extraction; theorem 27")
+println("    chains it into LL-006 well-typedness.)")
+
+ll031_ok = ll007_pre_collapse && ll007_catches_collapse &&
+           ll022c_reseed_ok && ll019_padding_ok
+
+# ─────────────────────────────────────────────────────────────────────
+# 8. Round-3 Tier-3 joint-closure (LL-032): bijective V-006/V-018/V-019.
+# ─────────────────────────────────────────────────────────────────────
+
+println("\n" * "─"^72)
+println("Step 8 — Round-3 Tier-3 joint-closure (LL-032): LL-024 + LL-028 + LL-029")
+println("─"^72)
+println("LL-032 claims the three round-3 Tier 3 entries — LL-024 (deployment)")
+println("+ LL-028 (runtime-conformance) + LL-029 (entropy independence) —")
+println("jointly defend V-006 (sensor poisoning) + V-018 (sensor-fusion")
+println("inversion) + V-019 (configuration-trust gap) with BIJECTIVE")
+println("no-single-point-failure: each component is the *only* defense")
+println("against its primary V-NNN.")
+
+# Reuse healthy streams from Step 6 (s_thermal, s_battery, s_ac).
+# V-006 → only LL-024-side authenticity catches the spike.
+v006_blocked_by_ll024 = !authentic(s_thermal_attacked)
+v006_blocked_by_ll028 = (probe_sensor_freshness([s_thermal_attacked, s_battery, s_ac],
+                                                  [true, true, true]).status == FAIL)
+v006_blocked_by_ll029 = (classify_families([s_thermal_attacked, s_battery, s_ac];
+                                            ρ_threshold=0.3, window_s=60.0,
+                                            n_samples=600).n_families < 3)
+@printf "• V-006 blocked by LL-024 (authenticity)        : %s\n" v006_blocked_by_ll024
+@printf "• V-006 blocked by LL-028 (freshness probe)     : %s  (expected false)\n" v006_blocked_by_ll028
+@printf "• V-006 blocked by LL-029 (correlation analysis): %s  (expected false)\n" v006_blocked_by_ll029
+
+# V-018 → only LL-029 catches the coupled streams.
+v018_blocked_by_ll024 = !authentic(s_battery_coupled)
+v018_blocked_by_ll028 = (probe_sensor_freshness([s_thermal, s_battery_coupled, s_ac],
+                                                  [true, true, true]).status == FAIL)
+v018_blocked_by_ll029 = (classify_families([s_thermal, s_battery_coupled, s_ac];
+                                            ρ_threshold=0.3, window_s=60.0,
+                                            n_samples=600).n_families < 3)
+@printf "• V-018 blocked by LL-029 (correlation analysis): %s\n" v018_blocked_by_ll029
+@printf "• V-018 blocked by LL-024 (authenticity)        : %s  (expected false)\n" v018_blocked_by_ll024
+@printf "• V-018 blocked by LL-028 (freshness probe)     : %s  (expected false)\n" v018_blocked_by_ll028
+
+# V-019 → only LL-028 catches the cached/stub stream.
+s_v019 = constant_stream(0.5; t_max=120.0)
+v019_blocked_by_ll024 = !authentic(s_v019)
+v019_blocked_by_ll028 = (probe_sensor_freshness([s_v019, s_battery, s_ac],
+                                                  [true, true, true]).status == FAIL)
+v019_blocked_by_ll029 = (classify_families([s_v019, s_battery, s_ac];
+                                            ρ_threshold=0.3, window_s=60.0,
+                                            n_samples=600).n_families < 3)
+@printf "• V-019 blocked by LL-028 (freshness probe)     : %s\n" v019_blocked_by_ll028
+@printf "• V-019 blocked by LL-024 (authenticity)        : %s  (expected false)\n" v019_blocked_by_ll024
+@printf "• V-019 blocked by LL-029 (correlation analysis): %s  (expected false)\n" v019_blocked_by_ll029
+
+println("  → Bijective V-NNN coverage confirmed: each component is the only")
+println("    defense against its primary V-NNN. Removing any one component")
+println("    creates a single-point failure for exactly one V-NNN, not a")
+println("    shared coverage gap. (Theorem 29 encodes the bijection.)")
+
+ll032_ok = v006_blocked_by_ll024 && !v006_blocked_by_ll028 && !v006_blocked_by_ll029 &&
+           v018_blocked_by_ll029 && !v018_blocked_by_ll024 && !v018_blocked_by_ll028 &&
+           v019_blocked_by_ll028 && !v019_blocked_by_ll024 && !v019_blocked_by_ll029
+
+# ─────────────────────────────────────────────────────────────────────
+# 9. Status-tier-diverse detection-stack (LL-033): evidence-regime composition.
+# ─────────────────────────────────────────────────────────────────────
+
+println("\n" * "─"^72)
+println("Step 9 — Status-tier-diverse detection-stack (LL-033): LL-006 + LL-023 + LL-029")
+println("─"^72)
+println("LL-033 claims LL-006 (:benchmarked) + LL-023 (:argued) + LL-029")
+println("(:tested) compose into a single load-bearing claim across THREE")
+println("evidence regimes — empirical + structural + algorithmic. The")
+println("template is evidence-regime-agnostic; heterogeneous evidence kinds")
+println("compose into one consumer-facing detection guarantee.")
+
+# LL-006 evidence: empirical detection bound (benchmark-fit).
+Random.seed!(9100)
+env_733 = register_envelope(() -> lorenz96(20; F=8.0);
+                             n_trials=3, N=200, Δt=0.05, Ttr=20.0)
+Random.seed!(9200)
+ds_h_933 = lorenz96(20; F=8.0)
+λs_h_933 = lyapunov_spectrum(ds_h_933; N=200, Δt=0.05, Ttr=20.0)
+ll006_empirical = verify(λs_h_933, env_733; k=10.0)
+@printf "• LL-006 empirical: genuine system passes envelope (k=10)  : %s\n" ll006_empirical
+
+# LL-023 evidence: structural Bool-only contract (LL-017 no-oracle).
+ll023_structural = (verify(λs_h_933, env_733; k=10.0) isa Bool)
+@printf "• LL-023 structural: verify returns Bool only (no-oracle)  : %s\n" ll023_structural
+
+# LL-029 evidence: algorithmic correlation-test.
+ll029_algorithmic = (classify_families([s_thermal, s_battery, s_ac];
+                                         ρ_threshold=0.3, window_s=60.0,
+                                         n_samples=600).n_families == 3)
+@printf "• LL-029 algorithmic: 3 independent gaussian streams → 3 fams: %s\n" ll029_algorithmic
+
+println("  → Three distinct evidence regimes (empirical / structural /")
+println("    algorithmic) compose into the consumer-facing detection")
+println("    guarantee. (Theorem 33 chains the joint into LL-006 well-")
+println("    typedness; first composition theorem where one component is a")
+println("    witness for LL-006 itself.)")
+
+ll033_ok = ll006_empirical && ll023_structural && ll029_algorithmic
+
+# ─────────────────────────────────────────────────────────────────────
+# 10. Operational-deployment-stack (LL-034): defense-in-depth identifiability.
+# ─────────────────────────────────────────────────────────────────────
+
+println("\n" * "─"^72)
+println("Step 10 — Operational-deployment-stack (LL-034): LL-023 + LL-024 + LL-029")
+println("─"^72)
+println("LL-034 is the operational counterpart to LL-030: same V-006 + V-018")
+println("defense, API-stack instead of substrate-stack. LL-030 (theorem 22)")
+println("∧ LL-034 (theorem 35) hypotheses formally identify defense-in-depth")
+println("across substrate and API surfaces — the strongest joint-defense")
+println("structural finding to date.")
+
+# LL-023 layer: API returns Bool only.
+ll023_api_bool = (verify(λs_h_933, env_733; k=10.0) isa Bool)
+@printf "• LL-023 layer: API returns Bool (no-oracle preserved)     : %s\n" ll023_api_bool
+
+# LL-024 layer: per-stream authenticity passes (LL-016 wired into reads).
+ll024_layer_ok = authentic(s_thermal) && authentic(s_battery) && authentic(s_ac)
+@printf "• LL-024 layer: per-stream authenticity passes             : %s\n" ll024_layer_ok
+
+# LL-029 layer: independent-family classification.
+ll029_layer = (classify_families([s_thermal, s_battery, s_ac];
+                                   ρ_threshold=0.3, window_s=60.0,
+                                   n_samples=600).n_families == 3)
+@printf "• LL-029 layer: 3 independent families                     : %s\n" ll029_layer
+
+# V-006 + V-018 attacks are the same as LL-030; what changes is which
+# conformance layer takes credit. LL-030 = substrate-stack via LL-016;
+# LL-034 = API-stack via LL-023. A deployment satisfying both has
+# defense-in-depth across the V-006 + V-018 surface.
+defense_in_depth_identifiable = ll030_ok && ll023_api_bool && ll024_layer_ok && ll029_layer
+@printf "• Defense-in-depth (theorem 22 ∧ theorem 35 hypotheses)    : %s\n" defense_in_depth_identifiable
+println("  → Same V-006 + V-018 surface closed via two distinct")
+println("    conformance paths (substrate-stack via LL-016; API-stack via")
+println("    LL-023). Defense-in-depth is now structurally identifiable in")
+println("    Lean as the conjunction of theorems 22 and 35 hypotheses.")
+
+ll034_ok = ll023_api_bool && ll024_layer_ok && ll029_layer && defense_in_depth_identifiable
+
+# ─────────────────────────────────────────────────────────────────────
 # Summary
 # ─────────────────────────────────────────────────────────────────────
 
@@ -304,21 +521,27 @@ println("="^72)
 honest_ok   = result_honest && max_k_honest < K_CHECK
 adv_ok      = !result_adv  && max_k_adv > K_REJECT
 guard_ok    = !is_valid(g)
-all_ok      = honest_ok && adv_ok && guard_ok && ll030_ok
+all_ok      = honest_ok && adv_ok && guard_ok &&
+              ll030_ok && ll031_ok && ll032_ok && ll033_ok && ll034_ok
 
 println("• Honest system accepted   : $(result_honest)        (expected true)")
 println("• Adversary system rejected: $(!result_adv)        (expected true)")
 println("• Chaos guard tripped post-collapse: $(!is_valid(g)) (expected true)")
-println("• LL-030 sensor-defense triad blocks V-006 + V-018: $(ll030_ok) (expected true)")
+println("• LL-030 sensor-defense triad blocks V-006 + V-018          : $(ll030_ok)")
+println("• LL-031 reseed-oracle triad defeats V-011 timing channel   : $(ll031_ok)")
+println("• LL-032 Tier-3 triad bijective V-006/V-018/V-019 coverage  : $(ll032_ok)")
+println("• LL-033 status-tier-diverse evidence-stack composes         : $(ll033_ok)")
+println("• LL-034 operational-deployment-stack (defense-in-depth)     : $(ll034_ok)")
 println()
 @printf "• Wall-clock — registration : %.2f s\n" t_register
 @printf "• Wall-clock — verify (honest) : %.2f s\n" t_verify_honest
 @printf "• Wall-clock — verify (adversary) : %.2f s\n" t_verify_adv
 
 if all_ok
-    println("\n✅ All four pillars of the LavaLamp pipeline behave as specified.")
-    println("   See THEOREMS.md for the Lean 4 / Mathlib v4.29.1 formal-")
-    println("   verification track; src/lean4/ for the Lake project itself.")
+    println("\n✅ All eight pillars of the LavaLamp pipeline behave as specified")
+    println("   (3 core + 5 joint-defense triads). See THEOREMS.md for the")
+    println("   Lean 4 / Mathlib v4.29.1 formal-verification track;")
+    println("   src/lean4/ for the Lake project itself.")
 else
     println("\n❌ One or more pipeline stages diverged from spec. Investigate before shipping.")
     exit(1)

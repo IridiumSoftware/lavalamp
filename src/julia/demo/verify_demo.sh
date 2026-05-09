@@ -25,11 +25,12 @@ EXPECTED="${REPO_ROOT}/src/julia/demo/expected_output.txt"
 ACTUAL="$(mktemp -t lavalamp_demo_actual.XXXXXX)"
 
 # Normalization regex — turns wall-clock timings into "<TIMING>" so the
-# diff is cross-machine deterministic. Matches three patterns:
+# diff is cross-machine deterministic. Matches four patterns:
 #   1. "in 3.89 s." / "in 0.18 s" — verify_full / register progress lines
 #   2. "registered in 3.89 s" — register-envelope completion
 #   3. "Wall-clock — <label> : 3.89 s" — summary lines
-NORMALIZE_SED='s/in [0-9]+\.[0-9]+ s/in <TIMING> s/g; s/registered in [0-9]+\.[0-9]+ s/registered in <TIMING> s/g; s/Wall-clock — ([^:]+) : [0-9]+\.[0-9]+ s/Wall-clock — \1 : <TIMING> s/g'
+#   4. "elapsed = 0.060 s)" — Step 7 LL-019 verify_constant_time line
+NORMALIZE_SED='s/in [0-9]+\.[0-9]+ s/in <TIMING> s/g; s/registered in [0-9]+\.[0-9]+ s/registered in <TIMING> s/g; s/Wall-clock — ([^:]+) : [0-9]+\.[0-9]+ s/Wall-clock — \1 : <TIMING> s/g; s/elapsed = [0-9]+\.[0-9]+ s/elapsed = <TIMING> s/g'
 
 # Run the demo (capture stdout + stderr) and normalize.
 if ! julia --project="${REPO_ROOT}/src/julia" "${DEMO_FILE}" 2>&1 | sed -E "${NORMALIZE_SED}" > "${ACTUAL}"; then
