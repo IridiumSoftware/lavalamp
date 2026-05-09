@@ -40,6 +40,20 @@ Running verify_full at k=10.0 (full Benettin spectrum + envelope check) ...
   → ACCEPT (genuine system passes its own envelope; expected)
   • Max residue / σ ratio (honest) : 2.97  (well under k=10.0)
 
+  What this means in plain terms:
+  • verify_full computed the full 20-dim Lyapunov spectrum
+    of a fresh trajectory and compared per-exponent to the
+    registered envelope (λ_means ± σ from 5-trial calibration).
+  • Max deviation: 2.97σ  ≪  threshold k=10.0  → ACCEPT.
+  • By LL-006 (Lean theorems 41 + 43 + 46, :proved at 0.0.80,
+    conditional on LL-035): P(detect ε_A) ≥ 1 - exp(-0.00423 · 60 · ε_A²)
+    At ε_A = 3σ that's 89.81%. At ε_A = 5σ it's 99.8244%.
+  • To FORGE this identity an adversary must reproduce all 20
+    Lyapunov exponents within ±σᵢ on a different physical substrate.
+    Per LL-008 (resolution-bounded security), this is bounded by
+    the substrate's chaos-production rate vs adversary's measurement
+    resolution — a physics constraint, not a computational one.
+
 ────────────────────────────────────────────────────────────────────────
 Step 4 — Strong adversary (LL-021): ε_A = 3.0σ; expect REJECT
 ────────────────────────────────────────────────────────────────────────
@@ -47,6 +61,18 @@ Running verify_full at k=5.0 on adversary system ...
 ✓ verify_full returned false in <TIMING> s
   → REJECT (structured-adversary detected; expected)
   • Max residue / σ ratio (adversary): 14.47  (well above k=5.0)
+
+  What this means in plain terms:
+  • At ε_A = 3.0σ, LL-006 predicts P(detect) ≥ 89.81%.
+    Observed here: 100% (single trial). Step 11 below shows the
+    empirical curve across N=10 trials per ε_A vs the bound.
+  • Max residue 14.47σ ≫ k=5.0 means the structured perturbation
+    produced detectable spectral drift across multiple exponents
+    simultaneously — exactly the failure mode LL-006's L∞-residue
+    norm catches. Single-exponent matching (cheap λ̂₁ Wolf method)
+    is insufficient because λ₂..λ₂₀ also drift under structured
+    perturbation; this is why audit must use the FULL spectrum,
+    LL-019.
 
 ────────────────────────────────────────────────────────────────────────
 Step 5 — Chaos-guard state machine (LL-007): always-on chaos health
@@ -157,6 +183,31 @@ structural finding to date.
     conformance paths (substrate-stack via LL-016; API-stack via
     LL-023). Defense-in-depth is now structurally identifiable in
     Lean as the conjunction of theorems 22 and 35 hypotheses.
+
+────────────────────────────────────────────────────────────────────────
+Step 11 — Empirical attack curve vs LL-006 bound
+────────────────────────────────────────────────────────────────────────
+Running N=10 adversary attempts per ε_A ∈ {0.5,1.0,1.5,2.0,2.5,3.0}
+at smaller N_steps=500 for speed; comparing empirical detection rate
+to the LL-006 theoretical bound P(detect) ≥ 1 - exp(-c'·T·ε_A²)
+with calibrated c'=0.00423, T=60 (LL-035 strengthen pass).
+
+  ε_A     empirical [Wilson 95% CI]      LL-006 bound   honest?
+  ────    ──────────────────────────     ────────────   ───────
+   0.5    [ 6/10]  60.0% [ 31.3%,  83.2%]    6.1%         ✓ yes
+   1.0    [ 8/10]  80.0% [ 49.0%,  94.3%]   22.4%         ✓ yes
+   1.5    [ 9/10]  90.0% [ 59.6%,  98.2%]   43.5%         ✓ yes
+   2.0    [10/10] 100.0% [ 72.2%, 100.0%]   63.8%         ✓ yes
+   2.5    [10/10] 100.0% [ 72.2%, 100.0%]   79.5%         ✓ yes
+   3.0    [10/10] 100.0% [ 72.2%, 100.0%]   89.8%         ✓ yes
+
+  → All ε_A points: LL-006 theoretical bound ≤ upper edge of
+    Wilson 95% CI of empirical detection rate. The bound is
+    conservative — empirical attack-vs-detection performance
+    meets or exceeds the proved floor for every ε_A.
+  → Skeptic who wants the underlying Lean proof:
+    src/lean4/LavaLamp/Theorems.lean theorems 41 + 43 + 46
+    (`:proved` at 0.0.80, conditional on LL-035 sub-Gaussian).
 
 ========================================================================
 Summary

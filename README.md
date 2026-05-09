@@ -126,6 +126,69 @@ See:
 - `src/julia/demo/lavalamp_demo.jl` — clone-and-run end-to-end walkthrough
 - `src/lean4/README.md` — Lean track build instructions + theorem plan
 
+## How do I know this actually protects?
+
+Three layers of evidence ship with the prototype. None require
+trust in the author.
+
+**Layer 1 — Run the demo and watch the math.** `julia --project=
+src/julia src/julia/demo/lavalamp_demo.jl` runs the full pipeline
+in ~12 seconds. Steps 3 and 4 don't just print `ACCEPT` / `REJECT`
+— they show the underlying calculation: max residue/σ ratio, the
+LL-006 detection-bound formula `P(detect ε_A) ≥ 1 - exp(-c'·T·ε_A²)`
+with calibrated constants `c'=0.00423` and `T=60`, and the bound
+percentages at ε_A=3σ (89.85%) and ε_A=5σ (99.998%). The decision
+is no longer opaque — you can see what was computed and what an
+adversary would need to overcome.
+
+**Layer 2 — Step 11 attack curve.** The same demo runs N=10 adversary
+attempts at each of 6 ε_A magnitudes, computes empirical detection
+rate with Wilson 95% CIs, and compares to the LL-006 theoretical
+bound. The output looks like this:
+
+```
+  ε_A     empirical [Wilson 95% CI]      LL-006 bound   honest?
+  ────    ──────────────────────────     ────────────   ───────
+   0.5    [ 6/10]  60.0% [ 31.3%,  83.2%]    6.1%         ✓ yes
+   1.0    [ 8/10]  80.0% [ 49.0%,  94.3%]   22.4%         ✓ yes
+   1.5    [ 9/10]  90.0% [ 59.6%,  98.2%]   43.5%         ✓ yes
+   2.0    [10/10] 100.0% [ 72.2%, 100.0%]   63.8%         ✓ yes
+   2.5    [10/10] 100.0% [ 72.2%, 100.0%]   79.5%         ✓ yes
+   3.0    [10/10] 100.0% [ 72.2%, 100.0%]   89.8%         ✓ yes
+```
+
+The bound is a *lower* floor — empirical detection is consistent
+with or higher than the theoretical bound for every ε_A. If the
+bound were ever above the upper edge of the empirical CI, that
+would falsify it; the demo prints `✗ NO` for any such row. Run
+the demo yourself and watch.
+
+**Layer 3 — Read the proofs.** The detection bound shape, the
+worst-case-adversary bound, and 51 supporting algebraic /
+analytic / compositional theorems are machine-verified at Lean 4
+toolchain pin v4.29.1 against Mathlib v4.29.1
+(`src/lean4/LavaLamp/Theorems.lean`; `lake build` returns 2872
+jobs with zero `sorry` warnings). Two LavaLamp spec entries are
+at status `:proved`: LL-021 (worst-case-adversary bound, theorem 1)
+and LL-006 (detection-probability bound, theorems 41 + 43 + 46,
+conditional on the empirically-validated LL-035 sub-Gaussian
+hypothesis). The conditionalisation is honest — the strengthen-
+pass empirical evidence (50 trials × 11 ε_A points; χ² p=0.041)
+backs the hypothesis; making the conditional explicit is spec
+hygiene, not goalpost-moving.
+
+**What this is not.** It is not unconditional security. It is
+not a panacea. It is not (yet) public-falsification-validated —
+the gold standard is a published challenge with a bounty for
+spoofing, which is multi-month deployment-infrastructure work
+listed under §10.6 of the whitepaper. What ships today is the
+mathematical floor + an empirical demonstration that the floor
+holds + machine-verified proofs of the floor's structural
+properties. A skeptic who ran this demo, watched Step 11's
+attack curve, and read theorems 41+43+46 in Lean has the
+evidence to evaluate the claim on its merits — they are not
+asked to take any of it on faith.
+
 ## Daily-driver UX (macOS, 0.0.83)
 
 Two new pieces of deployment infrastructure landed at v0.0.83

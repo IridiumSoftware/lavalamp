@@ -127,12 +127,25 @@ end
 
 # ─── Verify loop ────────────────────────────────────────────
 
+"""
+    run_verify(env, ds_factory, k_check) -> (accepted::Bool, max_resσ::Float64)
+
+Runs a fresh Lyapunov-spectrum residue audit against the
+registered envelope. Returns the accept/reject decision **and**
+the max residue/σ ratio observed — the underlying calculation
+the verify decision is based on. Surfacing this number in the
+daemon's log line is what makes the per-cycle verification
+auditable from outside (per the credibility-section discipline:
+no black-box ACCEPT lines).
+"""
 function run_verify(env, ds_factory, k_check)
     Random.seed!(rand(UInt32))
     ds = ds_factory()
     λs = lyapunov_spectrum(ds; N=1000, Δt=0.05, Ttr=200.0)
     accepted = verify(λs, env; k=k_check)
-    return accepted
+    res = LavaLamp.Audit.residue(λs, env)
+    max_resσ = maximum(res ./ max.(env.σ, 1e-10))
+    return (accepted, max_resσ)
 end
 
 # ─── Main loop ──────────────────────────────────────────────
@@ -162,8 +175,9 @@ function main()
     # First heartbeat + first verify on entry.
     write_heartbeat()
     last_verify_time = time()
-    accepted = run_verify(env, ds_factory, k_check)
-    @printf "[%s] verify_full → %s\n" now() (accepted ? "ACCEPT" : "REJECT")
+    (accepted, max_resσ) = run_verify(env, ds_factory, k_check)
+    @printf("[%s] verify_full → %s  (max residue/σ = %.2f / k=%.1f)\n",
+            now(), (accepted ? "ACCEPT" : "REJECT"), max_resσ, k_check)
     flush(stdout)
 
     try
@@ -172,9 +186,10 @@ function main()
             write_heartbeat()
 
             if time() - last_verify_time >= VERIFY_CADENCE_SECONDS
-                accepted = run_verify(env, ds_factory, k_check)
+                (accepted, max_resσ) = run_verify(env, ds_factory, k_check)
                 last_verify_time = time()
-                @printf "[%s] verify_full → %s\n" now() (accepted ? "ACCEPT" : "REJECT")
+                @printf("[%s] verify_full → %s  (max residue/σ = %.2f / k=%.1f)\n",
+                        now(), (accepted ? "ACCEPT" : "REJECT"), max_resσ, k_check)
                 flush(stdout)
             end
         end
