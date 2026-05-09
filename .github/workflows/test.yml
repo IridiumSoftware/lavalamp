@@ -3,11 +3,17 @@
 # Lockfile discipline (per CLAUDE.md package-management rule):
 #   julia-buildpkg uses Pkg.instantiate() which installs from the
 #   committed Manifest.toml. CI verifies that a clean checkout +
-#   lockfile install builds and that 82/82 assertions pass.
+#   lockfile install builds and that the full assertion count passes.
 #
 # Julia version: 1.12 to match the dev environment. Project.toml
 # [compat] declares julia = "1.10" so older versions should also
 # work; expand the matrix when there's a reason to support them.
+#
+# Platform matrix: ubuntu-latest exercises the LL-024 Phase 1
+# Linux readers (sysfs/procfs) on every push; macos-latest
+# exercises the LL-024 Phase 2a + 2b macOS readers (sysctl /
+# pmset / ioreg shell-out + AppleSMC IOKit FFI for CPU-die
+# thermal). Windows remains scaffold-error pending Phase 3.
 
 name: CI
 
@@ -28,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         julia-version: ['1.12']
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2

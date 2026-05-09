@@ -1028,18 +1028,38 @@ construction.
                        FFI. CI runs on ubuntu-latest and
                        exercises the Linux-actual-sysfs branch on
                        every push.
-    Phase 2 (macOS).   Scoped, deferred. IOKit / SMC FFI required;
-                       per-Mac-model sensor discovery; ~2 weeks
-                       development effort.
+    Phase 2a (macOS). Implemented at v0.0.82. Six readers
+                       via hermetic non-privileged shell-out to
+                       `sysctl` / `pmset` / `ioreg` — no FFI
+                       bindings, no IOKit framework dependency,
+                       no privileged access. Apple-Silicon-aware
+                       substitutions where Apple Silicon does not
+                       expose values via public sysctl: thermal
+                       reads battery temperature; CPU activity
+                       proxies to `vm.page_free_count`.
+    Phase 2b (macOS). Implemented at v0.0.82. AppleSMC IOKit
+                       FFI for CPU-die thermal — `ccall` to
+                       `IOServiceOpen` + `IOConnectCallStructMethod`
+                       at SMC kernel index 2; ~425 µs per read
+                       (25× faster than the Phase 2a `ioreg`
+                       fallback). Probes a priority list of
+                       SMC thermal keys (Tp0a / Tp0d / Tp0p /
+                       TC0P / TaLP) — stable across the
+                       M1/M2/M3/M4/M5 chip series + Intel.
+                       Falls back to Phase 2a battery temp if
+                       SMC is unavailable.
     Phase 3 (Windows). Scoped, deferred. WMI + PDH FFI required;
                        ~2-3 weeks development effort.
     Phase 4 (TPM).     P7 hardening track; deferred.
 
-64. Until Phase 2 + Phase 3 land, real-deployment integration
-    testing is restricted to Linux hosts. The synthetic-stream
+64. Until Phase 3 lands, real-deployment integration testing
+    is restricted to Linux + macOS hosts. The synthetic-stream
     test fixtures (`gaussian_noise_stream`, `binary_step_stream`,
     `constant_stream`) exercise the structural composition on any
-    host where Julia is installed.
+    host where Julia is installed. CI runs the full suite on
+    `ubuntu-latest` + `macos-latest` on every push, exercising
+    the Phase 1 Linux + Phase 2a/2b macOS readers against
+    real hardware in CI.
 
 ========================================================================
 8.  POSITION IN THE TRIAD DEPLOYMENTS

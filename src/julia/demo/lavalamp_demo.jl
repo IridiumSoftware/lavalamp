@@ -77,6 +77,7 @@
 
 using Random
 using Printf
+using Statistics: median
 
 using LavaLamp
 using LavaLamp.Audit: residue
@@ -545,6 +546,45 @@ if all_ok
 else
     println("\n❌ One or more pipeline stages diverged from spec. Investigate before shipping.")
     exit(1)
+end
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 11. Real-sensor smoke (macOS Phase 2a/2b; opt-in via env var).
+# ─────────────────────────────────────────────────────────────────────
+#
+# Default-off: the demo is cross-platform deterministic and
+# verify_demo.sh's diff against expected_output.txt would break if
+# real-sensor readings printed unconditionally. Set
+# `LAVALAMP_REAL_SENSORS=1` (and run on macOS) to opt in to a brief
+# live-readings block exercising the LL-024 Phase 2 path.
+if Sys.isapple() && get(ENV, "LAVALAMP_REAL_SENSORS", "") == "1"
+    println("\n" * "─"^72)
+    println("Step 11 — Real-sensor smoke (macOS Phase 2a + 2b; LAVALAMP_REAL_SENSORS=1)")
+    println("─"^72)
+    println("Reading directly from this Mac's hardware sensors via the")
+    println("LL-024 Phase 2 readers (sysctl/pmset/ioreg shell-out + SMC")
+    println("IOKit FFI for CPU-die thermal). No privileged access required.")
+    println()
+    let
+        s_th  = real_thermal_stream(sample_rate=4.0, t_max=0.3)
+        s_la  = real_loadavg_stream(sample_rate=4.0, t_max=0.3)
+        s_ac  = real_ac_stream(sample_rate=4.0, t_max=0.3)
+        s_bat = real_battery_stream(sample_rate=4.0, t_max=0.3)
+        s_usb = real_usb_stream(sample_rate=4.0, t_max=0.3)
+        s_cpu = real_cpu_governor_stream(sample_rate=10.0, t_max=0.3)
+        @printf "  • thermal (Phase 2b SMC CPU-die) : median %.2f °C  (n=%d)\n" median(s_th.values) length(s_th.values)
+        @printf "  • loadavg (1-min, sysctl)        : median %.3f       (n=%d)\n" median(s_la.values) length(s_la.values)
+        @printf "  • ac_online (pmset)              : %s              (n=%d)\n" Int(s_ac.values[1]) == 1 ? "1.0 (AC)   " : "0.0 (battery)" length(s_ac.values)
+        @printf "  • battery_current (ioreg)        : median %.0f mA      (charging if negative; n=%d)\n" median(s_bat.values) length(s_bat.values)
+        @printf "  • usb_count (ioreg IOUSB)        : %d                  (n=%d; controllers + nested devices)\n" Int(s_usb.values[1]) length(s_usb.values)
+        @printf "  • cpu activity proxy (vm.pfc)    : median %d  (n=%d)\n" Int(round(median(s_cpu.values))) length(s_cpu.values)
+    end
+    println()
+    println("These readings are real per-deployment-unique values from this")
+    println("substrate. In a production deployment they would replace the")
+    println("synthetic `constant_stream` used in Step 1 — the same SDE +")
+    println("envelope-calibration + residue-audit pipeline runs on top.")
 end
 
 println("\nDemo complete.")

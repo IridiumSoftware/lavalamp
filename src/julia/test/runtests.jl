@@ -1087,6 +1087,49 @@ end
             @test all(stream_usb.values .>= 0.0)
         end
     elseif Sys.isapple()
+        @testset "macOS Phase 2b SMC FFI (LL-024)" begin
+            # Phase 2b: SMC IOKit FFI for CPU-die thermal.
+            # Exercises the FFI path (no shell-out) on actual
+            # AppleSMC hardware; falls back gracefully if SMC is
+            # unavailable.
+            using LavaLamp.RealSensors: _smc_open, _smc_close,
+                                         _smc_read_key_raw,
+                                         _smc_decode_flt,
+                                         _smc_pack_key,
+                                         _read_smc_temperature_macos
+
+            # Pure helpers (run anywhere — no FFI):
+            @test _smc_pack_key("Tp0a") == UInt8[0x61, 0x30, 0x70, 0x54]
+            @test _smc_pack_key("#KEY") == UInt8[0x59, 0x45, 0x4B, 0x23]
+            # IEEE single, little-endian: 55.453°C bytes
+            @test _smc_decode_flt(UInt8[0x00, 0xd0, 0x5d, 0x42]) ≈ 55.453 atol=1e-2
+            # Bad length → NaN
+            @test isnan(_smc_decode_flt(UInt8[0x01, 0x02]))
+
+            # Live SMC: open / read / close on this host.
+            conn = _smc_open()
+            @test conn != 0
+            try
+                # `#KEY` is the canonical "always-present" SMC key.
+                # The SMC encodes it as `ui32` (key count).
+                r = _smc_read_key_raw(conn, "#KEY")
+                @test r !== nothing
+                if r !== nothing
+                    (dt, bytes) = r
+                    @test dt == "ui32"
+                    @test length(bytes) == 4
+                end
+            finally
+                _smc_close(conn)
+            end
+
+            # End-to-end: SMC thermal returns a sensible CPU temp
+            # (well above ambient, well below thermal trip).
+            v = _read_smc_temperature_macos()
+            @test v !== nothing
+            @test 10.0 < v < 110.0   # CPU reads in this range under any load
+        end
+
         @testset "macOS Phase 2a readers exercise actual sysctl/ioreg/pmset (LL-024)" begin
             # On macOS, exercise the public readers against the host's
             # actual shell-out sources. Use small t_max + low sample
@@ -1112,10 +1155,14 @@ end
             @test stream_usb isa SensorStream
             @test all(stream_usb.values .>= 0.0)
 
-            # Thermal (battery temp): non-negative (0 if no battery).
+            # Thermal (Phase 2b SMC CPU-die or Phase 2a battery
+            # fallback): non-negative on any host.
             stream_th = real_thermal_stream(sample_rate=2.0, t_max=0.5)
             @test stream_th isa SensorStream
             @test all(stream_th.values .>= 0.0)
+            # Under load, CPU thermal should be well above 10°C.
+            # Any working reader returns sensible values.
+            @test all(stream_th.values .< 200.0)
 
             # CPU activity proxy (vm.page_free_count): non-negative.
             stream_cpu = real_cpu_governor_stream(sample_rate=2.0, t_max=0.5)

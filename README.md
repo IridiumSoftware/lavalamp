@@ -101,21 +101,24 @@ implements the SDE substrate (Lorenz-96), sensor-coupling layer,
 Lyapunov-spectrum residue audit, chaos-guard, and side-channel
 hardening. The decoupled visual layer (`visual/`) lands in 0.0.33
 with the LL-002 decoupling invariant made executable via static
-text-search assertions on every commit. The real-sensor scaffold
-(`src/julia/src/RealSensors.jl`) lands in 0.0.38 with API stubs
-for hardware-bound deployment (Linux-first roadmap; FFI
-implementations forthcoming post-round-3). CI runs `Pkg.test()`
-on every push (202 assertions pass in ~53s).
+text-search assertions on every commit. Real-hardware sensor
+support (`src/julia/src/RealSensors.jl`) is **Linux Phase 1
+implemented at 0.0.63** (sysfs/procfs file I/O, no FFI) and
+**macOS Phase 2a + 2b implemented at 0.0.82** (hermetic shell-out
+to `sysctl` / `pmset` / `ioreg` for five readers; SMC IOKit FFI
+for CPU-die thermal — no privileged access required); Windows
+remains scaffold-error pending Phase 3. CI runs `Pkg.test()` on
+every push (488 assertions pass in ~68s).
 
-**Spec ledger:** 29 entries with the current breakdown:
+**Spec ledger:** 38 entries with the current breakdown (0.0.82):
 
 | status | count | entries |
 |---|---:|---|
-| `:proved` | 1 | LL-021 worst-case bound (Lean 4 + Mathlib v4.29.1; `mul_le_of_le_one_right` over the bound shape `0 ≤ ε_A → proj ≤ 1 → ε_A · proj ≤ ε_A`; first-ever LavaLamp `:proved` entry; promoted at 0.0.48 L2) |
+| `:proved` | 2 | LL-021 worst-case bound (Lean 4 + Mathlib v4.29.1; `mul_le_of_le_one_right`; promoted at 0.0.48); LL-006 detection bound (theorem 41 abstract concentration + theorem 43 Mathlib-probability lift via `HasSubgaussianMGF.measure_ge_le` + theorem 46 non-trivial Gaussian-residue instantiation; promoted at 0.0.80 conditional on LL-035) |
 | `:verified` | 0 | — |
-| `:tested` | 3 | LL-002 visual ↔ security decoupling, LL-004 sensor coupling, LL-007 chaos-guard |
-| `:benchmarked` | 4 | LL-003 SDE choice, LL-006 detection bound, LL-019 timing-indistinguishability, LL-027 asymptotic Lyapunov density invariant |
-| `:argued` | 20 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1: LL-025 A7-passive-emanation-boundary + LL-026 three-layer-logic-tier-annotation-discipline + round-3 Tier 3: LL-028 runtime-conformance-verification + LL-029 multi-channel-entropy-independence) |
+| `:tested` | 12 | LL-002, LL-004, LL-007, LL-029, plus eight joint-defense meta-claims (LL-030, LL-031, LL-032, LL-033, LL-034 from the v0.2.4 top-band engine pass; LL-036, LL-037, LL-038 from the v0.2.9 stratified-scan) |
+| `:benchmarked` | 4 | LL-003 SDE choice, LL-019 timing-indistinguishability, LL-027 asymptotic Lyapunov density invariant, LL-035 Lorenz-96 max-residue sub-Gaussian (the empirical hypothesis backing LL-006's conditional `:proved`) |
+| `:argued` | 19 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1 + round-3 Tier 3) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
 
 See:

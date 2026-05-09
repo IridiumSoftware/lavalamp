@@ -5,20 +5,23 @@ Aaron Green, May 2026
 ================================================================
 
 Canonical URL:  https://github.com/IridiumSoftware/lavalamp
-Released:       2026-05-09 (v1.1; v1.0 released 2026-05-08)
-Release tag:    whitepaper-v1.1 + threat-landscape-v1.0
+Released:       2026-05-09 (v1.2; v1.1 same date earlier; v1.0 released 2026-05-08)
+Release tag:    whitepaper-v1.2 + threat-landscape-v1.0
 License:        Triadic Closure License (TCL) v1.3
 Author:         Aaron Green
 
 This file documents the canonical SHA-256 hashes for two
 artefacts:
 
-  (1) LavaLamp Whitepaper v1.1 — the deployment-specific paper
+  (1) LavaLamp Whitepaper v1.2 — the deployment-specific paper
       for the LavaLamp substrate-bound identity primitive.
-      v1.1 reflects v0.0.80 LL-006 promotion to :proved + LL-035
-      spawning, and v0.0.81 LL-036/037/038 joint-defense additions
-      surfaced by TCE 0.2.9 stratified-scan.
-      Files: lavalamp_whitepaper.{txt,pdf}.
+      v1.2 reflects v0.0.82 LL-024 Phase 2a + 2b macOS real-
+      sensor implementation (six hermetic shell-out readers
+      via sysctl/pmset/ioreg + AppleSMC IOKit FFI for CPU-die
+      thermal). v1.1 reflected v0.0.80 LL-006 promotion to
+      :proved + LL-035 spawning, and v0.0.81 LL-036/037/038
+      joint-defense additions surfaced by TCE 0.2.9 stratified-
+      scan. Files: lavalamp_whitepaper.{txt,pdf}.
 
   (2) Triad Deployments Threat-Landscape Companion v1.0 — the
       umbrella-tier piece situating LavaLamp / Lazarus / PharOS
@@ -33,8 +36,18 @@ release, the companion will move there with appropriate
 canonical-URL update.
 
 ================================================================
-SHA-256 HASHES (current — Whitepaper v1.1)
+SHA-256 HASHES (current — Whitepaper v1.2)
 ================================================================
+
+lavalamp_whitepaper.txt
+dd18dcdd831bd9b37dbdc6f1d81965dca1172008840ab954dab236a86292ee0f
+
+lavalamp_whitepaper.pdf
+b7009f8f0435efd59669feac6f08caf3f5597382514fab6fff87d35fc600e5ef
+
+----------------------------------------------------------------
+PRIOR HASHES (Whitepaper v1.1, superseded 2026-05-09 same day)
+----------------------------------------------------------------
 
 lavalamp_whitepaper.txt
 b414ebee5cd597100b993c6dd150f90bd61818c02728c00b32b7ae16cdba1871
@@ -81,9 +94,12 @@ artefacts are versioned with the source tree, not separately:
                                      check.
 
 To verify the whitepaper matches the codebase at this release,
-clone at the whitepaper-v1.1 tag and confirm the lake build
+clone at the whitepaper-v1.2 tag and confirm the lake build
 returns 2872 jobs with zero sorry warnings, Pkg.test() returns
-453/453 pass, and verify_demo.sh exits 0.
+488/488 pass on macOS (or 480/480 on Linux — the difference
+is the 8 `Sys.isapple()`-gated assertions exercising live
+Phase 2 readers; the platform-independent macOS parser +
+SMC-helper tests run on both), and verify_demo.sh exits 0.
 
 ================================================================
 VERIFICATION
