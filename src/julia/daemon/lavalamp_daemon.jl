@@ -38,6 +38,7 @@ using Random
 using Printf
 using Dates
 using Sockets
+using SHA
 using LavaLamp
 using LavaLamp.Audit: residue
 using LavaLamp.Engine: lorenz96_coupled, CouplingParams
@@ -46,36 +47,69 @@ using LavaLamp.Sensors: constant_stream
 const HEARTBEAT_DIR = expanduser("~/.lavalamp")
 const HEARTBEAT_FILE = joinpath(HEARTBEAT_DIR, "heartbeat")
 const VERIFY_SOCKET = joinpath(HEARTBEAT_DIR, "verify.sock")
+const VERIFY_SECRET = joinpath(HEARTBEAT_DIR, "verify.secret")
 
-# ─── LL-040: daemon verify-result IPC channel ──────────────────
+# ─── LL-040 + LL-041: daemon verify-result IPC channel ──────────
 #
 # A second cross-process channel beyond the LL-039 heartbeat:
-# a Unix socket at $HEARTBEAT_DIR/verify.sock that exposes the
-# *cached* verify_full result to authorised local clients
+# an AF_UNIX socket at $HEARTBEAT_DIR/verify.sock that exposes
+# the *cached* verify_full result to authorised local clients
 # (PharOS PAM module being the canonical consumer).
 #
-# Strict LL-002 amendment: this channel CARRIES the verify
-# Bool result, which is more than the LL-039 channel's
-# existence-only bit. The amendment is justified by:
-#   (a) socket is filesystem-permission-restricted (chmod 0600);
-#   (b) socket is local-only (AF_UNIX, never network-exposed);
-#   (c) the protocol exposes a single byte response — A/R/S
-#       — never residue magnitudes, never per-exponent values,
-#       never timing information that correlates with the
-#       verify computation;
-#   (d) the response is a CACHED result, not a per-request
-#       computation, so the channel can't be used for
-#       threshold-probing oracle attacks (V-010).
+# Strict LL-002 amendment (LL-040): this channel CARRIES the
+# verify Bool result, more than LL-039's existence-only bit.
+# Justified by: (a) chmod 0600 restricts to owner UID;
+# (b) AF_UNIX never traverses network; (c) cached not per-
+# request, so no threshold-probing oracle (V-010); (d) one
+# byte / three states.
 #
-# Protocol (LL-040):
-#   Client connects, optionally writes 1 byte, reads 1 byte.
-#   Response byte:
-#     'A' = ACCEPT  (last verify_full returned true, fresh)
-#     'R' = REJECT  (last verify_full returned false, fresh)
-#     'S' = STALE   (cached result older than IPC_STALE_AFTER_S)
-#   Client closes connection.
+# LL-041 anti-replay extension (v2 protocol):
+#   - Daemon generates a 32-byte random secret on startup,
+#     written to $HEARTBEAT_DIR/verify.secret (mode 0600).
+#   - Both client and daemon use the secret to compute
+#     HMAC-SHA256 over (nonce || result_byte || timestamp).
+#   - Client sends 17-byte request: 1-byte version (0x02) +
+#     16-byte random nonce.
+#   - Daemon responds with 42-byte response: 1-byte version
+#     (0x02) + 1-byte result + 8-byte LE timestamp + 32-byte
+#     HMAC.
+#   - Client validates: nonce embedded in HMAC matches the
+#     nonce it sent (anti-replay) AND HMAC validates against
+#     the shared secret (anti-forge MITM) AND timestamp is
+#     fresh (within IPC_STALE_AFTER_S).
+#
+# Protocol negotiation: only v2 is supported in this build.
+# v1 (1-byte response) is the LavaLamp v0.0.84 protocol;
+# clients speaking v1 will get a malformed response and
+# should fail closed.
+#
+# Threat model honest framing:
+#   - Anti-replay defends against capture-and-replay attacks
+#     (attacker observes one IPC exchange, replays the
+#     captured response later).
+#   - Anti-forge defends against same-process-tier attackers
+#     who can connect to the socket but cannot read the
+#     secret file.
+#   - Same-UID attackers (i.e., attacker has the user's UID
+#     or root) can read both the socket AND the secret, and
+#     therefore can forge responses. This is the load-bearing
+#     limit; same-UID attackers have already defeated the
+#     security model.
+#   - TPM-bound asymmetric signing (LL-022 strategy 1) would
+#     defeat same-UID forgery; deferred to a future LL-NNN.
 
 const IPC_STALE_AFTER_S = 120.0  # 2× the default 60s verify cadence
+const IPC_VERSION = UInt8(0x02)
+const IPC_REQUEST_LEN = 17    # 1 version + 16 nonce
+const IPC_RESPONSE_LEN = 42   # 1 version + 1 result + 8 ts + 32 hmac
+const IPC_NONCE_LEN = 16
+const IPC_HMAC_LEN = 32
+const IPC_SECRET_LEN = 32
+
+# Pre-generated per-startup random secret. Re-rolled every
+# time the daemon process starts; clients must re-read after
+# daemon restarts.
+const STARTUP_SECRET = Ref{Vector{UInt8}}(UInt8[])
 
 # Mutable shared state between verify loop and IPC handler tasks.
 # Read by IPC clients; written by the verify loop. Single writer
@@ -134,34 +168,109 @@ function delete_verify_socket()
     end
 end
 
+function delete_verify_secret()
+    try
+        isfile(VERIFY_SECRET) && rm(VERIFY_SECRET; force=true)
+    catch
+    end
+end
+
+"""
+    generate_startup_secret!()
+
+Generates the 32-byte per-startup random secret and writes it
+to VERIFY_SECRET with mode 0600. Called once at daemon start.
+"""
+function generate_startup_secret!()
+    STARTUP_SECRET[] = rand(RandomDevice(), UInt8, IPC_SECRET_LEN)
+    open(VERIFY_SECRET, "w") do io
+        write(io, STARTUP_SECRET[])
+    end
+    chmod(VERIFY_SECRET, 0o600)
+end
+
+"""
+    hmac_sha256(key, message) -> Vector{UInt8}
+
+HMAC-SHA256 implementation built on stdlib SHA. Returns a
+32-byte vector. Pure Julia, no external crypto deps.
+"""
+function hmac_sha256(key::AbstractVector{UInt8}, message::AbstractVector{UInt8})
+    block_size = 64
+    k = if length(key) > block_size
+        collect(sha256(collect(key)))
+    elseif length(key) < block_size
+        vcat(collect(key), zeros(UInt8, block_size - length(key)))
+    else
+        collect(key)
+    end
+    o_key_pad = k .⊻ UInt8(0x5c)
+    i_key_pad = k .⊻ UInt8(0x36)
+    inner = sha256(vcat(i_key_pad, collect(message)))
+    return collect(sha256(vcat(o_key_pad, collect(inner))))
+end
+
+"""
+    encode_int64_le(n) -> Vector{UInt8}
+
+Encodes a signed Int64 as 8 little-endian bytes. Used for
+the timestamp field in v2 responses.
+"""
+function encode_int64_le(n::Int64)
+    bytes = Vector{UInt8}(undef, 8)
+    v = reinterpret(UInt64, n)
+    for i in 1:8
+        bytes[i] = UInt8((v >> ((i-1)*8)) & 0xff)
+    end
+    return bytes
+end
+
 """
     ipc_handle_client(client)
 
-Reads at most one byte from the client (request signal; the
-content is ignored in MVP-2), then writes one byte indicating
-the cached verify state: 'A' / 'R' / 'S'. Closes the connection.
-The handler is run in an @async task so multiple concurrent
-clients are served.
+LL-041 v2 protocol handler. Reads 17 bytes from the client
+(1-byte version + 16-byte nonce), determines the cached
+verify state, and writes 42 bytes back (1-byte version +
+1-byte result + 8-byte LE timestamp + 32-byte HMAC over
+nonce||result||timestamp). Closes the connection.
+
+Run in an @async task so multiple concurrent clients are
+served. Bad protocol versions / short reads / write errors
+just close the connection silently — the client will see
+a short read or EOF and fail closed.
 """
 function ipc_handle_client(client::IO)
     try
-        # Optionally consume a request byte; non-blocking read with timeout.
-        # If the client doesn't send anything we still respond — the connect
-        # itself signals the request.
-        if bytesavailable(client) > 0
-            read(client, 1)
+        # Read the v2 request header (timeout via channel-close
+        # when daemon shuts down; otherwise block).
+        request = read(client, IPC_REQUEST_LEN)
+        if length(request) != IPC_REQUEST_LEN || request[1] != IPC_VERSION
+            return  # close connection; client gets short read
         end
+        nonce = request[2:1 + IPC_NONCE_LEN]
+
+        # Determine result byte from cached state.
         age = time() - STATE.last_verify_ts
-        response_byte = if STATE.last_verify_ts == 0.0 || age > IPC_STALE_AFTER_S
+        result = if STATE.last_verify_ts == 0.0 || age > IPC_STALE_AFTER_S
             UInt8('S')
         elseif STATE.accepted
             UInt8('A')
         else
             UInt8('R')
         end
-        write(client, response_byte)
+
+        # Build signed response.
+        ts = Int64(round(time()))
+        ts_bytes = encode_int64_le(ts)
+        signed_message = vcat(nonce, [result], ts_bytes)
+        mac = hmac_sha256(STARTUP_SECRET[], signed_message)
+
+        response = vcat([IPC_VERSION, result], ts_bytes, mac)
+        @assert length(response) == IPC_RESPONSE_LEN
+        write(client, response)
     catch
-        # Best-effort: clients that close early shouldn't crash the daemon.
+        # Best-effort: clients that close early or send malformed
+        # data shouldn't crash the daemon.
     finally
         try; close(client); catch; end
     end
@@ -267,22 +376,30 @@ function main()
     ensure_heartbeat_dir()
     delete_heartbeat()
     delete_verify_socket()
+    delete_verify_secret()
+
+    # Generate the per-startup secret used for LL-041 anti-replay
+    # HMAC. Re-rolled on every daemon restart; clients must
+    # re-read the secret file after a restart.
+    generate_startup_secret!()
 
     # Robust cleanup: runs on any process exit (SIGINT, SIGTERM,
     # SIGHUP, normal return, uncaught exception). Without this,
-    # a daemon killed mid-sleep can leave a stale heartbeat or
-    # socket file that fools downstream consumers into believing
-    # the daemon is alive — exactly the failure mode we never
-    # want.
+    # a daemon killed mid-sleep can leave a stale heartbeat,
+    # socket, or secret file that fools downstream consumers
+    # into believing the daemon is alive — exactly the failure
+    # mode we never want.
     Base.atexit(delete_heartbeat)
     Base.atexit(delete_verify_socket)
+    Base.atexit(delete_verify_secret)
 
     println("LavaLamp daemon")
     println("  Heartbeat file        : $HEARTBEAT_FILE")
     println("  Verify-result socket  : $VERIFY_SOCKET   (LL-040)")
+    println("  HMAC secret file      : $VERIFY_SECRET   (LL-041 v2)")
     println("  Verify cadence        : every $VERIFY_CADENCE_SECONDS s")
     println("  Heartbeat cadence     : every $HEARTBEAT_CADENCE_SECONDS s")
-    println("  Press Ctrl-C to stop (heartbeat + socket cleaned up).")
+    println("  Press Ctrl-C to stop (heartbeat + socket + secret cleaned up).")
     println()
 
     Base.exit_on_sigint(false)
