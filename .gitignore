@@ -57,3 +57,4 @@ dashboard.md
 # Swift build artifacts (lavalamp_menubar; users build locally)
 src/swift/lavalamp_menubar/lavalamp_menubar
 src/swift/**/*.dSYM/
+src/swift/lavalamp_se_signer/lavalamp_se_signer

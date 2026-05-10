@@ -47,10 +47,9 @@ using LavaLamp.Sensors: constant_stream
 const HEARTBEAT_DIR = expanduser("~/.lavalamp")
 const HEARTBEAT_FILE = joinpath(HEARTBEAT_DIR, "heartbeat")
 const VERIFY_SOCKET = joinpath(HEARTBEAT_DIR, "verify.sock")
-const VERIFY_PRIV   = joinpath(HEARTBEAT_DIR, "verify.priv")
 const VERIFY_PUB    = joinpath(HEARTBEAT_DIR, "verify.pub")
 
-# ─── LL-040 + LL-041 + LL-042: daemon verify-result IPC ────────
+# ─── LL-040 + LL-041 + LL-042 + LL-043: daemon verify-result IPC ─
 #
 # A second cross-process channel beyond the LL-039 heartbeat:
 # an AF_UNIX socket at $HEARTBEAT_DIR/verify.sock that exposes
@@ -58,54 +57,71 @@ const VERIFY_PUB    = joinpath(HEARTBEAT_DIR, "verify.pub")
 # (PharOS PAM module being the canonical consumer).
 #
 # Protocol versions:
-#   v1 (LL-040, v0.0.84): 1-byte response. Existence + cached
-#       Bool only. Superseded.
-#   v2 (LL-041, v0.0.85): 17-byte challenge + 42-byte HMAC-SHA256
-#       response with shared secret. Anti-replay + anti-forge
-#       MITM. Superseded.
-#   v3 (LL-042, v0.0.86): 17-byte challenge + 74-byte Ed25519-
-#       signed response with on-disk private key. Asymmetric
-#       crypto — public key is public-readable; only the daemon
-#       UID has the private key. Current.
+#   v1 (LL-040, v0.0.84): 1-byte response. Superseded.
+#   v2 (LL-041, v0.0.85): 17-byte challenge + 42-byte HMAC-SHA256.
+#       Superseded.
+#   v3 (LL-042, v0.0.86): 17-byte challenge + 74-byte Ed25519
+#       asymmetric signature. Superseded — Ed25519 is not
+#       supported by Apple Secure Enclave, blocking the
+#       hardware-key roadmap.
+#   v4 (LL-043, v0.0.87): 17-byte challenge + 74-byte ECDSA
+#       P-256 (prime256v1) raw r||s signature. **Current.**
+#       ECDSA P-256 is supported by both Apple Secure Enclave
+#       and TPM 2.0, unblocking future LL-044 (Linux TPM2-bound)
+#       and LL-045 (macOS Secure-Enclave-bound) without further
+#       wire-format changes.
 #
-# Wire format (v3 / LL-042):
-#   Request (17 bytes): version (0x03) + 16-byte client nonce
-#   Response (74 bytes): version (0x03) + 1-byte result
-#                        + 8-byte LE Int64 timestamp
-#                        + 64-byte Ed25519 signature
-#                        over (nonce ‖ result ‖ timestamp)
+# Wire format (v4 / LL-043):
+#   Request (17 bytes):
+#     - byte 0: version 0x04
+#     - bytes 1..16: 16-byte client nonce
+#   Response (74 bytes):
+#     - byte 0: version 0x04
+#     - byte 1: result 'A' / 'R' / 'S'
+#     - bytes 2..9: 8-byte LE Int64 daemon timestamp
+#     - bytes 10..73: 64-byte raw ECDSA P-256 signature
+#                     (32-byte r ‖ 32-byte s)
+#                     over SHA-256(nonce ‖ result ‖ timestamp)
 #
-# Threat model honest framing for v3 (LL-042 software-key tier):
+# Public key file (verify.pub, mode 0644): 33 bytes — SEC1
+# compressed point (0x02 or 0x03 prefix + 32-byte X).
+#
+# Threat model honest framing for v4 (LL-043 software-key tier):
 #   Defended:
-#     - Capture-and-replay (client-supplied nonce binds response)
+#     - Capture-and-replay (client-supplied nonce binds signature)
 #     - Same-process-tier MITM forgery (private key file mode 0600)
 #     - Stale captured responses (timestamp freshness window)
-#     - Public-key compromise → no forgery (verifying with public
-#       does not enable signing; the asymmetric shape is the
-#       architectural improvement over LL-041's shared secret —
-#       client doesn't need the private key)
-#   NOT defended (load-bearing limit, deferred to LL-NNN+1):
+#     - Public-key compromise → no forgery (asymmetric shape;
+#       client only holds public key)
+#   NOT defended (load-bearing limit, deferred):
 #     - Same-UID attackers (root or daemon UID) can read the
-#       private key file directly. TPM/Secure-Enclave key
-#       binding (LL-022 strategy 1) is the defense; private
-#       key never leaves the secure element. Out of scope for
-#       this software-key release; queued.
+#       private key file directly.
+#     - **LL-044** (Linux TPM 2.0 binding) closes this on Linux:
+#       private key generated inside the TPM, never extractable.
+#       Same v4 wire format; only key-storage layer changes.
+#     - **LL-045** (macOS Secure Enclave binding) closes this
+#       on macOS but requires Apple Developer ID code-signing
+#       (the SE's `keychain-access-groups` entitlement is
+#       gated to apps with valid provisioning). The Swift
+#       helper at src/swift/lavalamp_se_signer/ ships
+#       code-ready; runtime binding awaits Developer ID
+#       infrastructure.
 
-const IPC_STALE_AFTER_S = 120.0  # 2× the default 60s verify cadence
-const IPC_VERSION = UInt8(0x03)
+const IPC_STALE_AFTER_S = 120.0
+const IPC_VERSION = UInt8(0x04)
 const IPC_REQUEST_LEN = 17    # 1 version + 16 nonce
 const IPC_RESPONSE_LEN = 74   # 1 version + 1 result + 8 ts + 64 sig
 const IPC_NONCE_LEN = 16
-const IPC_SIG_LEN = 64
-const IPC_KEY_LEN = 32        # Ed25519 raw key (priv = pub = 32 bytes)
+const IPC_SIG_LEN = 64        # raw r(32) || s(32)
+const IPC_RAW_FIELD_LEN = 32  # r and s are each 32 bytes
+const IPC_PUB_LEN = 33        # SEC1 compressed P-256 point
+const IPC_PUB_UNCOMPRESSED_LEN = 65  # 0x04 || X(32) || Y(32)
 
-# OpenSSL Ed25519 NID (from <openssl/obj_mac.h>).
-const EVP_PKEY_ED25519 = Cint(1087)
+# OpenSSL constants and library reference.
 const LIBCRYPTO = "libcrypto"
 
-# Per-startup signing key. Pointer into OpenSSL's EVP_PKEY
-# heap; held for the lifetime of the daemon process. Freed
-# in the atexit hook.
+# Per-startup signing key (EVP_PKEY*). Held for the lifetime of
+# the daemon process; freed in the atexit hook.
 const SIGNING_PKEY = Ref{Ptr{Cvoid}}(C_NULL)
 
 # Mutable shared state between verify loop and IPC handler tasks.
@@ -165,13 +181,6 @@ function delete_verify_socket()
     end
 end
 
-function delete_verify_priv()
-    try
-        isfile(VERIFY_PRIV) && rm(VERIFY_PRIV; force=true)
-    catch
-    end
-end
-
 function delete_verify_pub()
     try
         isfile(VERIFY_PUB) && rm(VERIFY_PUB; force=true)
@@ -180,60 +189,165 @@ function delete_verify_pub()
 end
 
 """
-    evp_pkey_from_priv(priv) -> Ptr{Cvoid}
+    evp_ec_gen_p256() -> Ptr{Cvoid}
 
-Allocates an OpenSSL `EVP_PKEY` from a raw 32-byte Ed25519
-private seed. Returns a non-null pointer; caller is
-responsible for `EVP_PKEY_free`.
+Generates a fresh ECDSA P-256 keypair via the OpenSSL 1.1+
+multi-step paramgen API (avoiding Julia's varargs-ccall
+issue with `EVP_PKEY_Q_keygen` on ARM64). Returns an
+EVP_PKEY pointer; caller is responsible for `EVP_PKEY_free`.
+
+Steps:
+  1. EVP_PKEY_CTX_new_id(EVP_PKEY_EC = 408, NULL)
+  2. EVP_PKEY_keygen_init(ctx)
+  3. EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_EC, OP_PARAMGEN|OP_KEYGEN,
+                      CTRL_EC_PARAMGEN_CURVE_NID, NID_P-256, NULL)
+  4. EVP_PKEY_keygen(ctx, &pkey)
+  5. EVP_PKEY_CTX_free(ctx)
 """
-function evp_pkey_from_priv(priv::Vector{UInt8})
-    @assert length(priv) == IPC_KEY_LEN
-    pkey = ccall((:EVP_PKEY_new_raw_private_key, LIBCRYPTO), Ptr{Cvoid},
-                 (Cint, Ptr{Cvoid}, Ptr{UInt8}, Csize_t),
-                 EVP_PKEY_ED25519, C_NULL, priv, IPC_KEY_LEN)
-    pkey == C_NULL && error("EVP_PKEY_new_raw_private_key failed")
-    return pkey
+function evp_ec_gen_p256()
+    # OpenSSL constants (from openssl/evp.h, openssl/obj_mac.h):
+    EVP_PKEY_EC                            = Cint(408)
+    EVP_PKEY_OP_PARAMGEN_OR_KEYGEN         = Cint(4 | 8)   # PARAMGEN=1<<2, KEYGEN=1<<3
+    EVP_PKEY_CTRL_EC_PARAMGEN_CURVE_NID    = Cint(0x1001)  # EVP_PKEY_ALG_CTRL + 1
+    NID_X9_62_prime256v1                   = Cint(415)
+
+    ctx = ccall((:EVP_PKEY_CTX_new_id, LIBCRYPTO), Ptr{Cvoid},
+                (Cint, Ptr{Cvoid}), EVP_PKEY_EC, C_NULL)
+    ctx == C_NULL && error("EVP_PKEY_CTX_new_id(EVP_PKEY_EC) failed")
+
+    try
+        rc1 = ccall((:EVP_PKEY_keygen_init, LIBCRYPTO), Cint,
+                    (Ptr{Cvoid},), ctx)
+        rc1 == 1 || error("EVP_PKEY_keygen_init failed: rc=$rc1")
+
+        rc2 = ccall((:EVP_PKEY_CTX_ctrl, LIBCRYPTO), Cint,
+                    (Ptr{Cvoid}, Cint, Cint, Cint, Cint, Ptr{Cvoid}),
+                    ctx, EVP_PKEY_EC, EVP_PKEY_OP_PARAMGEN_OR_KEYGEN,
+                    EVP_PKEY_CTRL_EC_PARAMGEN_CURVE_NID,
+                    NID_X9_62_prime256v1, C_NULL)
+        rc2 == 1 || error("EVP_PKEY_CTX_ctrl(set curve P-256) failed: rc=$rc2")
+
+        pkey_ref = Ref{Ptr{Cvoid}}(C_NULL)
+        rc3 = ccall((:EVP_PKEY_keygen, LIBCRYPTO), Cint,
+                    (Ptr{Cvoid}, Ptr{Ptr{Cvoid}}), ctx, pkey_ref)
+        rc3 == 1 || error("EVP_PKEY_keygen failed: rc=$rc3")
+        pkey_ref[] == C_NULL && error("EVP_PKEY_keygen returned NULL")
+
+        return pkey_ref[]
+    finally
+        ccall((:EVP_PKEY_CTX_free, LIBCRYPTO), Cvoid, (Ptr{Cvoid},), ctx)
+    end
 end
 
 """
-    get_raw_public(pkey) -> Vector{UInt8}
+    get_uncompressed_pub(pkey) -> Vector{UInt8}
 
-Extracts the 32-byte raw Ed25519 public key from an EVP_PKEY.
+Extracts the 65-byte SEC1 uncompressed public key from an
+EVP_PKEY for an EC key. Format: 0x04 || X(32) || Y(32).
+Uses OpenSSL 3's EVP_PKEY_get_octet_string_param("pub").
 """
-function get_raw_public(pkey::Ptr{Cvoid})
-    pub = zeros(UInt8, IPC_KEY_LEN)
-    len = Ref{Csize_t}(IPC_KEY_LEN)
-    rc = ccall((:EVP_PKEY_get_raw_public_key, LIBCRYPTO), Cint,
-               (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Csize_t}),
-               pkey, pub, len)
-    rc == 1 || error("EVP_PKEY_get_raw_public_key failed: rc=$rc")
-    len[] == IPC_KEY_LEN || error("unexpected pub len: $(len[])")
+function get_uncompressed_pub(pkey::Ptr{Cvoid})
+    pub = zeros(UInt8, IPC_PUB_UNCOMPRESSED_LEN)
+    out_len = Ref{Csize_t}(IPC_PUB_UNCOMPRESSED_LEN)
+    rc = ccall((:EVP_PKEY_get_octet_string_param, LIBCRYPTO), Cint,
+               (Ptr{Cvoid}, Cstring, Ptr{UInt8}, Csize_t, Ptr{Csize_t}),
+               pkey, "pub", pub, IPC_PUB_UNCOMPRESSED_LEN, out_len)
+    rc == 1 || error("EVP_PKEY_get_octet_string_param(pub) failed: rc=$rc")
+    out_len[] == IPC_PUB_UNCOMPRESSED_LEN || error("unexpected pub len: $(out_len[])")
     return pub
 end
 
 """
-    ed25519_sign(pkey, message) -> Vector{UInt8}
+    compress_pub(uncompressed) -> Vector{UInt8}
 
-Signs `message` with the Ed25519 private key bound to `pkey`.
-Returns a 64-byte signature.
+Converts SEC1 uncompressed P-256 (0x04 || X(32) || Y(32),
+65 bytes) to SEC1 compressed (0x02 or 0x03 prefix + X(32),
+33 bytes). Prefix is 0x02 if Y is even, 0x03 if odd.
 """
-function ed25519_sign(pkey::Ptr{Cvoid}, message::AbstractVector{UInt8})
+function compress_pub(uncompressed::Vector{UInt8})
+    @assert length(uncompressed) == IPC_PUB_UNCOMPRESSED_LEN
+    @assert uncompressed[1] == 0x04
+    x = uncompressed[2:33]
+    y_last = uncompressed[65]
+    prefix = (y_last & 0x01) == 0 ? UInt8(0x02) : UInt8(0x03)
+    return vcat([prefix], x)
+end
+
+"""
+    der_to_raw64(der) -> Vector{UInt8}
+
+Converts an ASN.1 DER-encoded ECDSA P-256 signature (as
+returned by `EVP_DigestSign`) into the raw 64-byte form
+(32-byte r ‖ 32-byte s, big-endian, zero-padded).
+"""
+function der_to_raw64(der::Vector{UInt8})
+    idx = 1
+    @assert der[idx] == 0x30 "expected SEQUENCE tag"; idx += 1
+    # Single-byte length form (ECDSA P-256 DER is always < 128 bytes total)
+    if (der[idx] & 0x80) != 0
+        nbytes = Int(der[idx] & 0x7f)
+        idx += 1 + nbytes
+    else
+        idx += 1
+    end
+    # Read r
+    @assert der[idx] == 0x02 "expected INTEGER tag for r"; idx += 1
+    rlen = Int(der[idx]); idx += 1
+    rbytes = collect(der[idx:idx + rlen - 1]); idx += rlen
+    # Read s
+    @assert der[idx] == 0x02 "expected INTEGER tag for s"; idx += 1
+    slen = Int(der[idx]); idx += 1
+    sbytes = collect(der[idx:idx + slen - 1]); idx += slen
+
+    # Strip leading zero (DER negative-prevention padding)
+    while length(rbytes) > IPC_RAW_FIELD_LEN && rbytes[1] == 0x00
+        rbytes = rbytes[2:end]
+    end
+    while length(sbytes) > IPC_RAW_FIELD_LEN && sbytes[1] == 0x00
+        sbytes = sbytes[2:end]
+    end
+    # Left-pad to 32 bytes
+    rbytes = vcat(zeros(UInt8, IPC_RAW_FIELD_LEN - length(rbytes)), rbytes)
+    sbytes = vcat(zeros(UInt8, IPC_RAW_FIELD_LEN - length(sbytes)), sbytes)
+    @assert length(rbytes) == IPC_RAW_FIELD_LEN && length(sbytes) == IPC_RAW_FIELD_LEN
+    return vcat(rbytes, sbytes)
+end
+
+"""
+    ecdsa_p256_sign(pkey, message) -> Vector{UInt8}
+
+Signs `message` with ECDSA P-256 over SHA-256. Returns the
+64-byte raw r||s signature (DER → raw conversion done
+internally so the wire format is fixed-size).
+"""
+function ecdsa_p256_sign(pkey::Ptr{Cvoid}, message::AbstractVector{UInt8})
     mctx = ccall((:EVP_MD_CTX_new, LIBCRYPTO), Ptr{Cvoid}, ())
     mctx == C_NULL && error("EVP_MD_CTX_new failed")
     try
+        sha256_md = ccall((:EVP_sha256, LIBCRYPTO), Ptr{Cvoid}, ())
+        sha256_md == C_NULL && error("EVP_sha256 returned NULL")
         rc = ccall((:EVP_DigestSignInit, LIBCRYPTO), Cint,
                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                   mctx, C_NULL, C_NULL, C_NULL, pkey)
+                   mctx, C_NULL, sha256_md, C_NULL, pkey)
         rc == 1 || error("EVP_DigestSignInit failed: rc=$rc")
-        sig = zeros(UInt8, IPC_SIG_LEN)
-        sig_len = Ref{Csize_t}(IPC_SIG_LEN)
+
         msg_bytes = collect(message)
+        # First call: get required signature length
+        sig_len = Ref{Csize_t}(0)
+        rc1 = ccall((:EVP_DigestSign, LIBCRYPTO), Cint,
+                    (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Csize_t}, Ptr{UInt8}, Csize_t),
+                    mctx, C_NULL, sig_len, msg_bytes, length(msg_bytes))
+        rc1 == 1 || error("EVP_DigestSign (size query) failed: rc=$rc1")
+
+        # Second call: actually sign
+        sig = zeros(UInt8, sig_len[])
         rc2 = ccall((:EVP_DigestSign, LIBCRYPTO), Cint,
                     (Ptr{Cvoid}, Ptr{UInt8}, Ptr{Csize_t}, Ptr{UInt8}, Csize_t),
                     mctx, sig, sig_len, msg_bytes, length(msg_bytes))
         rc2 == 1 || error("EVP_DigestSign failed: rc=$rc2")
-        sig_len[] == IPC_SIG_LEN || error("unexpected sig len: $(sig_len[])")
-        return sig
+
+        actual_der = sig[1:Int(sig_len[])]
+        return der_to_raw64(actual_der)
     finally
         ccall((:EVP_MD_CTX_free, LIBCRYPTO), Cvoid, (Ptr{Cvoid},), mctx)
     end
@@ -255,27 +369,27 @@ end
 """
     generate_startup_keypair!()
 
-Generates the per-startup Ed25519 keypair, writes raw private
-to VERIFY_PRIV (mode 0600) and raw public to VERIFY_PUB (mode
-0644). Holds the EVP_PKEY in SIGNING_PKEY for in-process
-signing.
+Generates the per-startup ECDSA P-256 keypair via OpenSSL,
+writes the SEC1-compressed (33-byte) public key to VERIFY_PUB
+(mode 0644). The private key is held in OpenSSL's EVP_PKEY
+heap structure (referenced from SIGNING_PKEY[]); on the
+software-key tier this means the bytes live in the daemon
+process's address space.
 
-Honest scope: keys are software-stored on disk. Same-UID
-attackers can read VERIFY_PRIV. TPM/Secure-Enclave key
-binding is the future defense; deferred.
+Honest scope: software-key tier. Same-UID attackers (root or
+daemon UID) can read process memory and recover the private
+key. LL-044 (Linux TPM 2.0 binding) and LL-045 (macOS Secure
+Enclave binding, awaiting Developer ID code-signing) are the
+future defenses; same v4 wire format, only key-storage layer
+swaps.
 """
 function generate_startup_keypair!()
-    priv = rand(RandomDevice(), UInt8, IPC_KEY_LEN)
-    SIGNING_PKEY[] = evp_pkey_from_priv(priv)
-    pub = get_raw_public(SIGNING_PKEY[])
-
-    open(VERIFY_PRIV, "w") do io
-        write(io, priv)
-    end
-    chmod(VERIFY_PRIV, 0o600)
+    SIGNING_PKEY[] = evp_ec_gen_p256()
+    pub_uncompressed = get_uncompressed_pub(SIGNING_PKEY[])
+    pub_compressed = compress_pub(pub_uncompressed)
 
     open(VERIFY_PUB, "w") do io
-        write(io, pub)
+        write(io, pub_compressed)
     end
     chmod(VERIFY_PUB, 0o644)
 end
@@ -297,11 +411,11 @@ end
 """
     ipc_handle_client(client)
 
-LL-042 v3 protocol handler. Reads 17 bytes from the client
-(1-byte version 0x03 + 16-byte nonce), determines the cached
+LL-043 v4 protocol handler. Reads 17 bytes from the client
+(1-byte version 0x04 + 16-byte nonce), determines the cached
 verify state, and writes 74 bytes back (1-byte version +
-1-byte result + 8-byte LE timestamp + 64-byte Ed25519
-signature over nonce ‖ result ‖ timestamp).
+1-byte result + 8-byte LE timestamp + 64-byte raw ECDSA
+P-256 signature over SHA-256(nonce ‖ result ‖ timestamp)).
 
 Run in an @async task so multiple concurrent clients are
 served. Bad protocol versions / short reads / write errors
@@ -328,7 +442,7 @@ function ipc_handle_client(client::IO)
         ts = Int64(round(time()))
         ts_bytes = encode_int64_le(ts)
         signed_message = vcat(nonce, [result], ts_bytes)
-        sig = ed25519_sign(SIGNING_PKEY[], signed_message)
+        sig = ecdsa_p256_sign(SIGNING_PKEY[], signed_message)
 
         response = vcat([IPC_VERSION, result], ts_bytes, sig)
         @assert length(response) == IPC_RESPONSE_LEN
@@ -441,13 +555,13 @@ function main()
     ensure_heartbeat_dir()
     delete_heartbeat()
     delete_verify_socket()
-    delete_verify_priv()
     delete_verify_pub()
 
-    # Generate the per-startup Ed25519 keypair used for LL-042
-    # asymmetric signing. Private key written mode 0600
-    # (daemon-UID readable), public key written mode 0644
-    # (world-readable — clients verify with public key only).
+    # Generate the per-startup ECDSA P-256 keypair used for LL-043
+    # asymmetric signing. Private key lives in OpenSSL's EVP_PKEY
+    # heap structure (in daemon process memory); public key is
+    # SEC1-compressed (33 bytes) and written to VERIFY_PUB at
+    # mode 0644 (world-readable — clients verify only).
     generate_startup_keypair!()
 
     # Robust cleanup: runs on any process exit (SIGINT, SIGTERM,
@@ -457,15 +571,13 @@ function main()
     # exactly the failure mode we never want.
     Base.atexit(delete_heartbeat)
     Base.atexit(delete_verify_socket)
-    Base.atexit(delete_verify_priv)
     Base.atexit(delete_verify_pub)
     Base.atexit(free_signing_pkey!)
 
     println("LavaLamp daemon")
     println("  Heartbeat file         : $HEARTBEAT_FILE")
     println("  Verify-result socket   : $VERIFY_SOCKET   (LL-040)")
-    println("  Ed25519 private key    : $VERIFY_PRIV     (LL-042, mode 0600)")
-    println("  Ed25519 public key     : $VERIFY_PUB      (LL-042, mode 0644)")
+    println("  ECDSA P-256 public key : $VERIFY_PUB      (LL-043, mode 0644, 33 bytes)")
     println("  Verify cadence         : every $VERIFY_CADENCE_SECONDS s")
     println("  Heartbeat cadence      : every $HEARTBEAT_CADENCE_SECONDS s")
     println("  Press Ctrl-C to stop (all files cleaned up).")
