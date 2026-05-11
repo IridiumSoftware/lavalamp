@@ -53,7 +53,7 @@ jobs:
   tpm2-binding:
     name: LL-044 TPM2 binding (swtpm + ubuntu-latest)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -107,20 +107,38 @@ jobs:
           echo "Daemon PID: $DAEMON_PID"
 
           # Wait for the daemon to write verify.pub (signals
-          # init complete) — up to 600s (10 min). The daemon's
+          # init complete) — up to 1500s (25 min). The daemon's
           # first launch lazy-loads LavaLamp + ChaosGuard +
-          # RealSensors + DiffEq deps, which on a cold-cache
-          # GitHub runner can take 3-8 minutes even after
-          # julia-buildpkg's precompile. setup_envelope() and
-          # the first verify cycle add a bit more on top.
+          # RealSensors + DiffEq + DynamicalSystems deps, which
+          # on a cold-cache GitHub runner can take 12-18 minutes
+          # even after julia-buildpkg's precompile (the project's
+          # own `using LavaLamp` triggers additional precompile
+          # beyond what `Pkg.precompile()` covers).
+          # setup_envelope() and the first verify cycle add ~30s
+          # on top of the precompile cost.
+          #
+          # Subsequent runs hitting the julia-actions/cache@v2
+          # depot cache will be substantially faster.
           set +e
           ready=0
-          for i in $(seq 1 600); do
+          for i in $(seq 1 1500); do
             if [ -f ~/.lavalamp/verify.pub ] \
                && [ -S ~/.lavalamp/verify.sock ]; then
               echo "Daemon ready after ${i}s"
               ready=1
               break
+            fi
+            # Progress log every 30s so the run doesn't look
+            # hung. Show daemon log size + whether the julia
+            # process is still alive.
+            if [ $((i % 30)) = 0 ]; then
+              log_size=$(wc -c < /tmp/daemon.log 2>/dev/null || echo 0)
+              if kill -0 $DAEMON_PID 2>/dev/null; then
+                echo "[${i}s] still waiting; daemon alive; log size=${log_size}B"
+              else
+                echo "[${i}s] daemon process died (PID $DAEMON_PID)"
+                break
+              fi
             fi
             sleep 1
           done
