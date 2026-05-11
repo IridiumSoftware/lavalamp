@@ -32,6 +32,17 @@ ACTUAL="$(mktemp -t lavalamp_demo_actual.XXXXXX)"
 #   4. "elapsed = 0.060 s)" — Step 7 LL-019 verify_constant_time line
 NORMALIZE_SED='s/in [0-9]+\.[0-9]+ s/in <TIMING> s/g; s/registered in [0-9]+\.[0-9]+ s/registered in <TIMING> s/g; s/Wall-clock — ([^:]+) : [0-9]+\.[0-9]+ s/Wall-clock — \1 : <TIMING> s/g; s/elapsed = [0-9]+\.[0-9]+ s/elapsed = <TIMING> s/g'
 
+# Pre-warm LavaLamp module loading + Pkg.precompile() so any
+# precompile output goes to /dev/null rather than spilling into
+# the demo's stdout below. Without this pre-warm step, cold-cache
+# CI runs spill ~440 lines of "Precompiling packages..." into the
+# demo's stdout, producing a spurious diff against
+# expected_output.txt. Pkg.precompile() is idempotent — a no-op
+# if everything is already cached in the depot.
+julia --project="${REPO_ROOT}/src/julia" \
+      -e 'using Pkg; Pkg.precompile(); using LavaLamp' \
+      > /dev/null 2>&1 || true
+
 # Run the demo (capture stdout + stderr) and normalize.
 if ! julia --project="${REPO_ROOT}/src/julia" "${DEMO_FILE}" 2>&1 | sed -E "${NORMALIZE_SED}" > "${ACTUAL}"; then
     echo "❌ Demo failed to run."
