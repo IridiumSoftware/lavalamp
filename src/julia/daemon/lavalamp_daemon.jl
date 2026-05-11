@@ -49,6 +49,24 @@ const HEARTBEAT_FILE = joinpath(HEARTBEAT_DIR, "heartbeat")
 const VERIFY_SOCKET = joinpath(HEARTBEAT_DIR, "verify.sock")
 const VERIFY_PUB    = joinpath(HEARTBEAT_DIR, "verify.pub")
 
+# LL-044 TPM2 working files. Used only on Linux when tpm2-tools
+# is available; otherwise the daemon falls through to the
+# LL-043 software-key path.
+const TPM2_PRIMARY_CTX = joinpath(HEARTBEAT_DIR, "tpm2_primary.ctx")
+const TPM2_KEY_PUB     = joinpath(HEARTBEAT_DIR, "tpm2_key.pub")
+const TPM2_KEY_PRIV    = joinpath(HEARTBEAT_DIR, "tpm2_key.priv")  # TPM-encrypted blob, NOT a software priv
+const TPM2_KEY_CTX     = joinpath(HEARTBEAT_DIR, "tpm2_key.ctx")
+# Persistent handle for the loaded key. The 0x81xxxxxx range is
+# reserved for application persistent handles per TPM 2.0 spec.
+# We use 0x81FF0001 (high in the range to minimise collision with
+# other apps that don't pick deterministic handles).
+const TPM2_PERSISTENT_HANDLE = "0x81FF0001"
+
+# Runtime flag: true if we're using the TPM2-bound signing path.
+# Set during generate_startup_keypair! based on platform + tool
+# availability.
+const SIGNING_VIA_TPM2 = Ref{Bool}(false)
+
 # ─── LL-040 + LL-041 + LL-042 + LL-043: daemon verify-result IPC ─
 #
 # A second cross-process channel beyond the LL-039 heartbeat:
@@ -366,24 +384,249 @@ function free_signing_pkey!()
     end
 end
 
+# ─── LL-044: Linux TPM 2.0 binding (shell-out to tpm2-tools) ───
+#
+# When tpm2-tools is available on Linux, the daemon binds its
+# signing key to the TPM. The private key parameters never
+# leave the TPM; signing operations are mediated by the TPM
+# kernel (~30ms latency per signature). When TPM2 is unavailable
+# (no tools / non-Linux / no /dev/tpmrm0), the daemon falls
+# back to the LL-043 software-key path — same v4 wire format,
+# different key-storage tier.
+#
+# Honest scope for the current release:
+#   - Code is implemented but UNVERIFIED on actual TPM2
+#     hardware in this session (developer is on macOS without
+#     a TPM). The dispatch logic is exercised by the software
+#     fallback path; the TPM2 path is exercised only when CI
+#     or downstream deployments run on Linux with tpm2-tools.
+#   - Marked :argued in the spec until validated end-to-end
+#     against swtpm in CI or a real TPM in a deployment.
+
+"""
+    tpm2_available() -> Bool
+
+Returns true on Linux when `tpm2_getcap` is on \$PATH and
+exits 0 when invoked. False on macOS (no Linux TPM kernel
+interface), when tpm2-tools is not installed, or when the
+TPM device is unreachable.
+"""
+function tpm2_available()
+    Sys.islinux() || return false
+    try
+        rc = run(pipeline(`tpm2_getcap properties-fixed`,
+                           stdout=devnull, stderr=devnull);
+                 wait=false)
+        wait(rc)
+        return rc.exitcode == 0
+    catch
+        return false
+    end
+end
+
+"""
+    tpm2_init_signing_key()
+
+Generates a primary key + a child ECDSA P-256 signing key
+inside the TPM, persists the loaded key to
+`TPM2_PERSISTENT_HANDLE`, and writes the SEC1-compressed
+public key to VERIFY_PUB. Per-startup: previous handle (if
+any) is evicted first.
+
+Throws an exception if any step fails (caller catches and
+falls back to software ECDSA).
+"""
+function tpm2_init_signing_key()
+    # Best-effort eviction of any leftover persistent handle.
+    try
+        run(pipeline(Cmd(["tpm2_evictcontrol", "-c", TPM2_PERSISTENT_HANDLE]),
+                     stdout=devnull, stderr=devnull); wait=true)
+    catch
+        # Ignore — handle may not exist yet.
+    end
+
+    # Create primary in owner hierarchy.
+    run(Cmd(["tpm2_createprimary",
+             "--hierarchy=o",
+             "--key-algorithm=ecc",
+             "--key-context=$TPM2_PRIMARY_CTX"]))
+
+    # Create ECDSA P-256 signing key as child of primary.
+    # --key-algorithm=ecc256 selects NIST P-256.
+    # --hash-algorithm=sha256 sets the per-key hash.
+    # --attributes restricts to signing only.
+    # Using Cmd array-form to avoid Julia's command-parser
+    # rejecting the `|` separators in --attributes.
+    run(Cmd(["tpm2_create",
+             "--parent-context=$TPM2_PRIMARY_CTX",
+             "--key-algorithm=ecc256:ecdsa-sha256",
+             "--hash-algorithm=sha256",
+             "--attributes=sign|userwithauth|sensitivedataorigin",
+             "--public=$TPM2_KEY_PUB",
+             "--private=$TPM2_KEY_PRIV"]))
+
+    # Load the key into TPM transient memory.
+    run(Cmd(["tpm2_load",
+             "--parent-context=$TPM2_PRIMARY_CTX",
+             "--public=$TPM2_KEY_PUB",
+             "--private=$TPM2_KEY_PRIV",
+             "--key-context=$TPM2_KEY_CTX"]))
+
+    # Make persistent (per-startup rotation: we evict on
+    # shutdown; persistence is required for tpm2_sign to find
+    # the key across separate tpm2-tools invocations).
+    run(Cmd(["tpm2_evictcontrol",
+             "--hierarchy=o",
+             "--object-context=$TPM2_KEY_CTX",
+             TPM2_PERSISTENT_HANDLE]))
+
+    # Read the public key in PEM format, then convert to
+    # SEC1-compressed via OpenSSL CLI.
+    pub_pem = joinpath(HEARTBEAT_DIR, "tpm2_pub.pem")
+    run(Cmd(["tpm2_readpublic",
+             "--object-context=$TPM2_PERSISTENT_HANDLE",
+             "--output=$pub_pem",
+             "--format=pem"]))
+
+    # Use OpenSSL CLI to extract the compressed point.
+    pub_der = joinpath(HEARTBEAT_DIR, "tpm2_pub.der")
+    run(pipeline(Cmd(["openssl", "ec",
+                      "-pubin", "-in", pub_pem,
+                      "-conv_form", "compressed",
+                      "-outform", "DER"]),
+                 stdout=pub_der))
+
+    # Parse the DER to extract the raw 33-byte compressed point.
+    # The X.509 SubjectPublicKeyInfo structure ends with a
+    # BIT STRING whose value (after the unused-bits byte) is
+    # the SEC1 encoded public key. For P-256 compressed, that's
+    # 33 bytes at the end of the file.
+    der_bytes = read(pub_der)
+    # The compressed point is the last 33 bytes.
+    @assert length(der_bytes) >= IPC_PUB_LEN "DER too short: $(length(der_bytes))"
+    compressed = der_bytes[end - IPC_PUB_LEN + 1:end]
+    @assert compressed[1] == 0x02 || compressed[1] == 0x03 "expected SEC1 compressed prefix, got 0x$(string(compressed[1], base=16, pad=2))"
+
+    open(VERIFY_PUB, "w") do io
+        write(io, compressed)
+    end
+    chmod(VERIFY_PUB, 0o644)
+
+    # Clean up intermediate PEM/DER files; keep the .ctx files
+    # for sign-time context loading.
+    isfile(pub_pem) && rm(pub_pem; force=true)
+    isfile(pub_der) && rm(pub_der; force=true)
+end
+
+"""
+    tpm2_sign(message) -> Vector{UInt8}
+
+Signs `message` via the TPM's persistent signing handle.
+Returns the 64-byte raw r||s signature. Shell-out cost is
+~30-50ms per signature on real TPM hardware; ~5-10ms on
+swtpm.
+
+The TPM signs SHA-256(message) via ECDSA. tpm2_sign emits a
+TPM2B_SIGNATURE structure; we extract r and s from the
+serialized format.
+"""
+function tpm2_sign(message::AbstractVector{UInt8})
+    msg_bytes = collect(message)
+    msg_file = tempname()
+    sig_file = tempname()
+    try
+        write(msg_file, msg_bytes)
+
+        # Sign with SHA-256 hash; --format=plain emits raw r||s
+        # on tpm2-tools >= 4.0.
+        run(Cmd(["tpm2_sign",
+                 "--key-context=$TPM2_PERSISTENT_HANDLE",
+                 "--hash-algorithm=sha256",
+                 "--signature=$sig_file",
+                 "--format=plain",
+                 msg_file]))
+
+        # `--format=plain` emits raw r||s for ECDSA on
+        # tpm2-tools >= 4.0. (Older versions need DER parsing
+        # via --format=tss + manual extraction.)
+        sig_bytes = read(sig_file)
+        if length(sig_bytes) == IPC_SIG_LEN
+            return collect(sig_bytes)
+        elseif length(sig_bytes) > IPC_SIG_LEN
+            # tss format — DER-like. Try der_to_raw64 fallback.
+            return der_to_raw64(collect(sig_bytes))
+        else
+            error("tpm2_sign produced unexpected signature length: $(length(sig_bytes))")
+        end
+    finally
+        isfile(msg_file) && rm(msg_file; force=true)
+        isfile(sig_file) && rm(sig_file; force=true)
+    end
+end
+
+"""
+    tpm2_cleanup()
+
+Evicts the persistent handle and removes intermediate context
+files. Idempotent; called from atexit.
+"""
+function tpm2_cleanup()
+    if SIGNING_VIA_TPM2[]
+        try
+            run(pipeline(Cmd(["tpm2_evictcontrol", "-c", TPM2_PERSISTENT_HANDLE]),
+                         stdout=devnull, stderr=devnull); wait=true)
+        catch
+        end
+    end
+    for f in (TPM2_PRIMARY_CTX, TPM2_KEY_PUB, TPM2_KEY_PRIV, TPM2_KEY_CTX)
+        try
+            isfile(f) && rm(f; force=true)
+        catch
+        end
+    end
+end
+
 """
     generate_startup_keypair!()
 
-Generates the per-startup ECDSA P-256 keypair via OpenSSL,
-writes the SEC1-compressed (33-byte) public key to VERIFY_PUB
-(mode 0644). The private key is held in OpenSSL's EVP_PKEY
-heap structure (referenced from SIGNING_PKEY[]); on the
-software-key tier this means the bytes live in the daemon
-process's address space.
+Dispatches per-platform: on Linux with tpm2-tools available,
+generates the per-startup ECDSA P-256 keypair INSIDE THE TPM
+(LL-044 path; private key never leaves the TPM). Otherwise
+falls back to the LL-043 software-key path (private key in
+OpenSSL EVP_PKEY heap, in process memory).
 
-Honest scope: software-key tier. Same-UID attackers (root or
-daemon UID) can read process memory and recover the private
-key. LL-044 (Linux TPM 2.0 binding) and LL-045 (macOS Secure
-Enclave binding, awaiting Developer ID code-signing) are the
-future defenses; same v4 wire format, only key-storage layer
-swaps.
+Either path writes a 33-byte SEC1-compressed public key to
+VERIFY_PUB (mode 0644). Wire format is identical regardless
+of the key-storage tier.
+
+Honest scope:
+  - Software-key tier (LL-043, current default on macOS):
+    same-UID attackers can read process memory and recover
+    the private key.
+  - TPM2-bound tier (LL-044, Linux when tpm2-tools available):
+    private key parameters never leave the TPM; same-UID
+    attackers cannot extract the key. Closes the LL-043
+    software-key limit on Linux.
+  - macOS Secure Enclave tier (LL-045): code-ready
+    (`src/swift/lavalamp_se_signer/`); awaits Apple Developer
+    ID code-signing.
 """
 function generate_startup_keypair!()
+    # Try LL-044 Linux TPM2 path first.
+    if tpm2_available()
+        try
+            tpm2_init_signing_key()
+            SIGNING_VIA_TPM2[] = true
+            return
+        catch e
+            @warn "LL-044 TPM2 init failed; falling back to LL-043 software key" exception=e
+            tpm2_cleanup()
+            SIGNING_VIA_TPM2[] = false
+            # Fall through to software path below.
+        end
+    end
+
+    # LL-043 software-key path (default on macOS / no-TPM Linux).
     SIGNING_PKEY[] = evp_ec_gen_p256()
     pub_uncompressed = get_uncompressed_pub(SIGNING_PKEY[])
     pub_compressed = compress_pub(pub_uncompressed)
@@ -442,7 +685,11 @@ function ipc_handle_client(client::IO)
         ts = Int64(round(time()))
         ts_bytes = encode_int64_le(ts)
         signed_message = vcat(nonce, [result], ts_bytes)
-        sig = ecdsa_p256_sign(SIGNING_PKEY[], signed_message)
+        sig = if SIGNING_VIA_TPM2[]
+            tpm2_sign(signed_message)
+        else
+            ecdsa_p256_sign(SIGNING_PKEY[], signed_message)
+        end
 
         response = vcat([IPC_VERSION, result], ts_bytes, sig)
         @assert length(response) == IPC_RESPONSE_LEN
@@ -573,11 +820,15 @@ function main()
     Base.atexit(delete_verify_socket)
     Base.atexit(delete_verify_pub)
     Base.atexit(free_signing_pkey!)
+    Base.atexit(tpm2_cleanup)
 
+    key_tier = SIGNING_VIA_TPM2[] ? "LL-044 TPM2-bound (Linux, tpm2-tools)" :
+                                     "LL-043 software-key (process memory)"
     println("LavaLamp daemon")
     println("  Heartbeat file         : $HEARTBEAT_FILE")
     println("  Verify-result socket   : $VERIFY_SOCKET   (LL-040)")
-    println("  ECDSA P-256 public key : $VERIFY_PUB      (LL-043, mode 0644, 33 bytes)")
+    println("  ECDSA P-256 public key : $VERIFY_PUB      (mode 0644, 33 bytes)")
+    println("  Signing-key tier       : $key_tier")
     println("  Verify cadence         : every $VERIFY_CADENCE_SECONDS s")
     println("  Heartbeat cadence      : every $HEARTBEAT_CADENCE_SECONDS s")
     println("  Press Ctrl-C to stop (all files cleaned up).")
