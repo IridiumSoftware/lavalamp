@@ -110,13 +110,13 @@ for CPU-die thermal — no privileged access required); Windows
 remains scaffold-error pending Phase 3. CI runs `Pkg.test()` on
 every push (488 assertions pass in ~68s).
 
-**Spec ledger:** 38 entries with the current breakdown (0.0.82):
+**Spec ledger:** 44 entries with the current breakdown (0.0.89, whitepaper v1.3):
 
 | status | count | entries |
 |---|---:|---|
 | `:proved` | 2 | LL-021 worst-case bound (Lean 4 + Mathlib v4.29.1; `mul_le_of_le_one_right`; promoted at 0.0.48); LL-006 detection bound (theorem 41 abstract concentration + theorem 43 Mathlib-probability lift via `HasSubgaussianMGF.measure_ge_le` + theorem 46 non-trivial Gaussian-residue instantiation; promoted at 0.0.80 conditional on LL-035) |
 | `:verified` | 0 | — |
-| `:tested` | 12 | LL-002, LL-004, LL-007, LL-029, plus eight joint-defense meta-claims (LL-030, LL-031, LL-032, LL-033, LL-034 from the v0.2.4 top-band engine pass; LL-036, LL-037, LL-038 from the v0.2.9 stratified-scan) |
+| `:tested` | 18 | LL-002, LL-004, LL-007, LL-029 + eight joint-defense meta-claims (LL-030..LL-034, LL-036..LL-038) + six operational-layer entries (LL-039 daemon-visual-status, LL-040 v1 verify-result IPC, LL-041 v2 HMAC anti-replay, LL-042 v3 Ed25519 asymmetric signing, LL-043 v4 ECDSA P-256, LL-044 Linux TPM2 binding's fallback dispatch) |
 | `:benchmarked` | 4 | LL-003 SDE choice, LL-019 timing-indistinguishability, LL-027 asymptotic Lyapunov density invariant, LL-035 Lorenz-96 max-residue sub-Gaussian (the empirical hypothesis backing LL-006's conditional `:proved`) |
 | `:argued` | 19 | (P2 design + round-2 closures + closure-pass arguments + P-OS downward + P-PharOS upward + P-RS operational deployment-stack triple + round-3 Tier 1 + round-3 Tier 3) |
 | `:open` | 1 | LL-015 (A3-OOS scoping declaration; permanent by design) |
@@ -189,11 +189,13 @@ attack curve, and read theorems 41+43+46 in Lean has the
 evidence to evaluate the claim on its merits — they are not
 asked to take any of it on faith.
 
-## Daily-driver UX (macOS, 0.0.83)
+## Daily-driver UX (macOS, 0.0.83+)
 
 Two new pieces of deployment infrastructure landed at v0.0.83
 to give the user continuous visual feedback that LavaLamp is
-running:
+running. The IPC channel and signing protocol have since been
+hardened through four protocol versions (LL-040..LL-043) and
+gained an optional TPM 2.0 binding on Linux (LL-044):
 
 ```bash
 # Start the daemon in one terminal:
@@ -213,6 +215,24 @@ strict LL-002 compliance, no security state leaks. The browser
 visual at `visual/index.html` is now positioned as the
 marketing/landing-page asset; the menu bar app is the daily
 driver.
+
+**OS-level integration (PharOS).** As of v0.0.88 the daemon
+exposes an AF_UNIX verify-result IPC at
+`~/.lavalamp/verify.sock` speaking the LL-043 v4 ECDSA P-256
+protocol (33-byte SEC1-compressed pubkey at
+`~/.lavalamp/verify.pub`, 17-byte challenge, 74-byte signed
+response). The
+[PharOS](https://github.com/IridiumSoftware/pharos) deployment
+consumes this channel from Linux PAM (`pam_lavalamp.so`),
+macOS Authorization Plug-in
+(`LavaLampMechanism.bundle`), and Windows Credential Provider
+Filter (`LavaLampCredentialProvider.dll`) — so `sudo`, login,
+screen-unlock, System Settings privileged panes, and Windows
+LogonUI all gate on substrate-bound verify. On Linux hosts
+with `tpm2-tools` available, LL-044 binds the daemon's
+signing key inside the TPM 2.0 chip (persistent handle
+`0x81FF0001`) so the private key never leaves the TPM —
+closing the same-UID forgery limit on Linux.
 
 ## Layout
 
@@ -269,12 +289,30 @@ lavalamp/
 
 ## Portfolio
 
-LavaLamp is one of *The Triad Deployments — Digital Identity
-Resilience*, alongside Lazarus and PharOS (forthcoming). The
-three deployments share a defensive-postured, resolution-bounded
-identity stance: detection over prevention, structurally
-inherited from the C-conjugate adversary construction in
-*Possibilistic Security*.
+LavaLamp is the substrate-tier deployment in *The Triad
+Deployments — Digital Identity Resilience*. All three
+deployments are now public:
+
+- **[LavaLamp](https://github.com/IridiumSoftware/lavalamp)** —
+  substrate-bound identity primitive (this repo). Chaotic-SDE
+  residue audit at the entropy layer. Whitepaper v1.3
+  (`lavalamp_whitepaper.txt` / `lavalamp_whitepaper.pdf`).
+- **[PharOS](https://github.com/IridiumSoftware/pharos)** —
+  OS-membrane shim. Linux PAM module + macOS Authorization
+  Plug-in + Windows Credential Provider Filter. Consumes
+  LavaLamp's LL-043 v4 IPC. Whitepaper v1.0
+  (`pharos_whitepaper.txt` / `pharos_whitepaper.pdf`).
+- **[Lazarus](https://github.com/IridiumSoftware/lazarus)** —
+  runtime-integrity sentinel. Face check, keystroke lockout,
+  network anomaly detection. Whitepaper v0.0.x in repo.
+
+The three deployments share a defensive-postured, resolution-
+bounded identity stance: detection over prevention,
+structurally inherited from the C-conjugate adversary
+construction in *Possibilistic Security*. They compose at the
+deployment-policy level — no shared runtime processes, no
+architectural coupling beyond the LL-023 Bool-only consumer
+API.
 
 ## License
 
