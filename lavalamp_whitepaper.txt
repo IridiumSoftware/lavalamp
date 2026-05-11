@@ -1,7 +1,7 @@
 LAVALAMP:
 SUBSTRATE-BOUND IDENTITY VIA CHAOTIC-SDE RESIDUE AUDIT
 Aaron Green
-May 2026 (v1.3)
+May 2026 (v1.4)
 
 ========================================================================
 LICENSE AND DEDICATION
@@ -1540,10 +1540,30 @@ accessible to platform-native authentication infrastructure.
      - **macOS Authorization Plug-in** (`LavaLampMechanism.
        bundle`). Same v4 protocol; bundle is loaded by
        `authd` when a configured authorization right's
-       mechanism array references the bundle. Compile-
-       tested + ad-hoc-signed; live-system validation
-       deferred to a user-supervised install session
-       (lockout-risk surface is real).
+       mechanism array references the bundle. As of PharOS
+       v0.0.9, the bundle's crypto path runs on Apple's
+       Security.framework (no third-party dylib deps);
+       universal arm64+x86_64, ad-hoc-signed, loads
+       cleanly through AMFI. PharOS v0.0.10 live-test on
+       macOS 26.4.1 then established empirically (via
+       `spctl -a -vvv -t install` returning `rejected`)
+       that modern macOS Gatekeeper does not approve
+       ad-hoc-signed Authorization Plug-ins for
+       `authorizationhost` load — even though
+       `authorizationhost` carries the
+       `clear-library-validation` entitlement. Promotion
+       to `:tested` is gated on Apple Developer ID
+       Application code-signing + Apple Notarization,
+       which **also lifts LL-045** (Secure Enclave
+       binding — same Apple-trust gate). One Developer
+       ID enrollment serves both.
+     - **Windows Credential Provider Filter**
+       (`LavaLampCredentialProvider.dll`). PharOS v0.0.8.
+       Same v4 protocol; LogonUI / CredUI calls Filter()
+       at tile-enumeration time and our code runs LL-043
+       v4 against the daemon, returning per-provider
+       show/hide. ~600 LOC C++ COM scaffold; not yet
+       compile-tested on a Windows host.
 
 93b. PharOS does not modify LavaLamp's substrate-physics
      primitive in any way. PharOS preserves LL-002 visual-
@@ -1575,12 +1595,18 @@ accessible to platform-native authentication infrastructure.
      key from daemon memory and forge signatures (LL-044
      mitigates this *partially* on Linux by TPM-binding the
      key; macOS SE-binding is gated by Apple Developer ID
-     provisioning, deferred). A3 kernel-level adversaries
-     remain explicitly out of scope per LL-015. The PharOS
-     deployment is one membrane in a defense-in-depth
-     stack; the substrate-physics primitive carries the
-     load-bearing security claim, the OS-membrane gates
-     access to platform-native authentication results.
+     provisioning, deferred — same gate that PharOS v0.0.10
+     live-tested on PH-011 confirmed empirically on macOS
+     26.4.1: ad-hoc-signed Authorization Plug-ins are
+     rejected by Gatekeeper post-AMFI-load, so neither
+     LL-045 nor PH-011 can be promoted to `:tested` without
+     Apple Developer ID enrollment). A3 kernel-level
+     adversaries remain explicitly out of scope per LL-015.
+     The PharOS deployment is one membrane in a defense-in-
+     depth stack; the substrate-physics primitive carries
+     the load-bearing security claim, the OS-membrane
+     gates access to platform-native authentication
+     results.
 
 12.6  What v1.3 changes about the conclusion
 ------------------------------------------------------------------------
