@@ -53,7 +53,7 @@ jobs:
   tpm2-binding:
     name: LL-044 TPM2 binding (swtpm + ubuntu-latest)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -87,21 +87,6 @@ jobs:
         with:
           project: src/julia
 
-      - name: Pre-warm Julia + LavaLamp precompile
-        env:
-          TPM2TOOLS_TCTI: "swtpm:host=127.0.0.1,port=2321"
-        run: |
-          # The daemon's first launch triggers heavy precompile of
-          # LavaLamp + ChaosGuard + RealSensors + DiffEq deps,
-          # which can take 60-120s on a cold runner. Pre-warm here
-          # so the daemon's subsequent launch is fast and the
-          # IPC-init timeout window (below) is realistic.
-          julia --project=src/julia -e '
-            using Pkg; Pkg.precompile()
-            using LavaLamp
-            println("LavaLamp precompiled and loadable.")
-          '
-
       - name: Run daemon against swtpm + smoke-test v4 IPC
         env:
           TPM2TOOLS_TCTI: "swtpm:host=127.0.0.1,port=2321"
@@ -122,12 +107,15 @@ jobs:
           echo "Daemon PID: $DAEMON_PID"
 
           # Wait for the daemon to write verify.pub (signals
-          # init complete) — up to 120s. Even with pre-warm, the
-          # daemon's setup_envelope + first verify cycle on a
-          # fresh ~/.lavalamp can take a while.
+          # init complete) — up to 600s (10 min). The daemon's
+          # first launch lazy-loads LavaLamp + ChaosGuard +
+          # RealSensors + DiffEq deps, which on a cold-cache
+          # GitHub runner can take 3-8 minutes even after
+          # julia-buildpkg's precompile. setup_envelope() and
+          # the first verify cycle add a bit more on top.
           set +e
           ready=0
-          for i in $(seq 1 120); do
+          for i in $(seq 1 600); do
             if [ -f ~/.lavalamp/verify.pub ] \
                && [ -S ~/.lavalamp/verify.sock ]; then
               echo "Daemon ready after ${i}s"
@@ -141,6 +129,8 @@ jobs:
             echo "FAIL: daemon never wrote verify.pub + verify.sock"
             echo "--- daemon log ---"
             cat /tmp/daemon.log || echo "(daemon log empty)"
+            echo "--- process state ---"
+            ps -ef | grep -E '(julia|swtpm|tpm2)' | grep -v grep || true
             kill $DAEMON_PID 2>/dev/null || true
             wait $DAEMON_PID 2>/dev/null || true
             exit 1
