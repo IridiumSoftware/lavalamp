@@ -49,3 +49,94 @@ jobs:
           project: src/julia
       - name: Verify demo against canonical output
         run: bash src/julia/demo/verify_demo.sh
+
+  tpm2-binding:
+    name: LL-044 TPM2 binding (swtpm + ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install swtpm + tpm2-tools + Python crypto
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swtpm swtpm-tools tpm2-tools \
+            libtss2-tcti-swtpm0 python3-cryptography
+          which swtpm tpm2_getcap tpm2_createprimary tpm2_sign
+
+      - name: Start swtpm (TCP, port 2321/2322)
+        run: |
+          mkdir -p /tmp/swtpm-state
+          swtpm socket --tpm2 \
+            --tpmstate dir=/tmp/swtpm-state \
+            --ctrl type=tcp,port=2322 \
+            --server type=tcp,port=2321 \
+            --flags startup-clear \
+            --daemon
+          sleep 2
+          # Confirm swtpm is reachable via the swtpm TCTI.
+          TPM2TOOLS_TCTI="swtpm:host=127.0.0.1,port=2321" tpm2_getcap properties-fixed | head -10
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.12'
+
+      - uses: julia-actions/cache@v2
+
+      - uses: julia-actions/julia-buildpkg@v1
+        with:
+          project: src/julia
+
+      - name: Run daemon against swtpm + smoke-test v4 IPC
+        env:
+          TPM2TOOLS_TCTI: "swtpm:host=127.0.0.1,port=2321"
+        run: |
+          # Confirm the daemon will see tpm2_available() == true.
+          tpm2_getcap properties-fixed > /dev/null
+          echo "swtpm reachable; tpm2_available() should return true"
+
+          # Start the daemon in background.
+          mkdir -p ~/.lavalamp
+          rm -f ~/.lavalamp/verify.{sock,pub}
+
+          julia --project=src/julia \
+            src/julia/daemon/lavalamp_daemon.jl \
+            --heartbeat-cadence 1 > /tmp/daemon.log 2>&1 &
+          DAEMON_PID=$!
+          echo "Daemon PID: $DAEMON_PID"
+
+          # Wait for the daemon to write verify.pub (signals
+          # init complete) — up to 30s.
+          for i in $(seq 1 30); do
+            if [ -f ~/.lavalamp/verify.pub ] \
+               && [ -S ~/.lavalamp/verify.sock ]; then
+              break
+            fi
+            sleep 1
+          done
+
+          test -f ~/.lavalamp/verify.pub
+          test -S ~/.lavalamp/verify.sock
+          test "$(wc -c < ~/.lavalamp/verify.pub)" = "33"
+
+          # Confirm daemon took the LL-044 TPM2-bound path
+          # (and not the LL-043 software-key fallback).
+          if grep -q "LL-044 TPM2-bound" /tmp/daemon.log; then
+            echo "PASS: daemon reports LL-044 TPM2-bound path active"
+          else
+            echo "FAIL: daemon banner does not mention LL-044 TPM2"
+            echo "--- daemon log ---"
+            cat /tmp/daemon.log
+            kill $DAEMON_PID 2>/dev/null || true
+            exit 1
+          fi
+
+          # End-to-end v4 IPC smoke against the running daemon.
+          python3 test/tpm2_ipc_smoke.py
+
+          # Stop daemon (atexit triggers tpm2_evictcontrol cleanup).
+          kill -INT $DAEMON_PID
+          wait $DAEMON_PID 2>/dev/null || true
+
+          echo "--- daemon log (tail) ---"
+          tail -40 /tmp/daemon.log
