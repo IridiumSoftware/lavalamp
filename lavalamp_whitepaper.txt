@@ -1,7 +1,7 @@
 LAVALAMP:
 SUBSTRATE-BOUND IDENTITY VIA CHAOTIC-SDE RESIDUE AUDIT
 Aaron Green
-May 2026
+May 2026 (v1.3)
 
 ========================================================================
 LICENSE AND DEDICATION
@@ -53,14 +53,26 @@ The security claim is **resolution-bounded**: secure against any
 adversary whose measurement and compute resolution is exceeded by
 the device's chaos-production rate (LL-008).
 
-The paper documents thirty-eight formal spec entries (LAVALAMP_SPEC.md),
+The paper documents forty-four formal spec entries (LAVALAMP_SPEC.md),
 eight **joint-defense meta-claims** (LL-030 through LL-038, omitting
 LL-035 which is the empirical-conservativeness hypothesis backing
 LL-006) surfaced by Discovery.Triadic engine passes on the spec
 corpus, fifty-three Lean 4 + Mathlib v4.29.1 theorems
 (THEOREMS.md), a four-hundred-fifty-three-assertion Julia test
 suite, and a clone-and-run end-to-end demo with cross-machine
-reproducibility check. The detection bound (LL-006) is now at
+reproducibility check. Spec entries LL-039 through LL-044 — added
+in v1.3 of this paper — extend the **operational layer**: a
+persistent daemon with macOS menu-bar visual status (LL-039), an
+AF_UNIX IPC channel exposing the cached verify result to OS-level
+consumers (LL-040), and a four-protocol-version hardening sequence
+adding HMAC-SHA256 anti-replay (LL-041 v2), Ed25519 asymmetric
+signing (LL-042 v3), ECDSA P-256 signing (LL-043 v4, switched
+from Ed25519 to unblock the SE/TPM2 hardware-binding roadmap), and
+Linux TPM 2.0 binding of the daemon's signing key via tpm2-tools
+(LL-044). The full LL-043 v4 protocol is consumed by the PharOS
+deployment (Linux PAM module + macOS Authorization Plug-in) so
+that platform-native authentication on Linux and macOS now gates
+on substrate-bound verify results, not just liveness. The detection bound (LL-006) is now at
 status `:proved` — conditional on the empirically-calibrated
 sub-Gaussian-residue hypothesis tracked separately as LL-035 — via
 a Mathlib-probability lift (`HasSubgaussianMGF.measure_ge_le`) and
@@ -168,7 +180,9 @@ construction.
     shape. §7 documents the integration test and demo. §8 places
     LavaLamp in the Triad Deployments portfolio. §9 lists what is not
     claimed. §10 records limitations and open questions. §11
-    concludes.
+    concludes. §12 (added in v1.3) documents the operational
+    layer: daemon, IPC, protocol-hardening sequence, Linux TPM
+    binding, and PharOS as channel consumer.
 
 10. Three appendices catalog: cited spec entries (Appendix A), cited
     Lean theorems (Appendix B), and the V-NNN-to-LL-NNN attack-vector
@@ -1287,12 +1301,15 @@ construction.
     at resolution exceeding adversary capability) rather than a
     computational hardness assumption.
 
-85. The work documents thirty-eight formal spec entries, eight
-    joint-defense meta-claims surfaced across two Discovery.
-    Triadic engine passes (top-band v0.2.4 and stratified-scan
-    v0.2.9), fifty-three Lean 4 + Mathlib v4.29.1 theorems, a
-    453-assertion Julia test suite, and a clone-and-run demo
-    with cross-machine reproducibility verification. Five template
+85. The work documents forty-four formal spec entries (thirty-
+    eight load-bearing for the substrate-physics primitive plus
+    six operational-layer entries LL-039 through LL-044 added in
+    v1.3 of this paper), eight joint-defense meta-claims
+    surfaced across two Discovery.Triadic engine passes (top-band
+    v0.2.4 and stratified-scan v0.2.9), fifty-three Lean 4 +
+    Mathlib v4.29.1 theorems, a 453-assertion Julia test suite,
+    and a clone-and-run demo with cross-machine reproducibility
+    verification. Five template
     generalisation findings emerged: tier-agnostic, structure-
     additive (asymptote validated across two engine passes),
     evidence-regime-agnostic, stratified-discovery-stable, and
@@ -1333,10 +1350,263 @@ construction.
     can only be extended by triads that close.
 
 ========================================================================
+12.  OPERATIONAL LAYER ADDENDUM (v1.3)
+========================================================================
+
+The v1.2 prose described the LL-023 consumer-API surface as
+designed for composability with PharOS *(planned)* and with
+platform-native authentication mechanisms. v1.3 of this paper
+records the operational layer that came into existence between
+v1.2 and v1.3: the daemon, the IPC channel, the four-version
+protocol-hardening sequence, the Linux TPM 2.0 binding, and the
+PharOS deployment that consumes the channel on Linux and macOS.
+None of this content modifies the resolution-bounded security
+claim (§3) or the detection-bound proof chain (§6); the
+substrate-physics primitive is unchanged. What v1.3 adds is the
+**operational-layer scaffolding** that makes the primitive
+accessible to platform-native authentication infrastructure.
+
+12.1  The LavaLamp daemon and visual status (LL-039)
+------------------------------------------------------------------------
+
+89a. The LavaLamp daemon is a persistent Julia process
+     (`src/julia/daemon/lavalamp_daemon.jl`) that maintains a
+     warm chaotic trajectory, runs the chaos-guard (LL-007), and
+     periodically invokes `verify_full` against the registered
+     envelope. The daemon's cadence is configurable; the default
+     `IPC_CACHE_PERIOD_S = 60` writes a fresh verify result every
+     60 seconds.
+
+89b. On macOS, the daemon ships with a menu-bar visual-status
+     indicator (LL-039). The indicator is a transparent
+     lavalamp glyph in the menu bar, **grey when the daemon
+     reports cache 'R' or 'S'** (substrate verify-fail or
+     stale) and **green when the daemon reports cache 'A'**
+     (substrate verify-pass). The indicator reads only the
+     daemon's cached result; it does not invoke verification
+     itself, preserving the no-oracle discipline (LL-017).
+     Strict LL-002 visual-security decoupling is preserved: the
+     indicator displays one of two states (~1 bit), not a
+     spectrum of distance information.
+
+12.2  The verify-result IPC channel (LL-040)
+------------------------------------------------------------------------
+
+90a. LL-040 specifies an AF_UNIX socket at `verify.sock` (under
+     `~/.lavalamp/` for user-mode daemons; under
+     `/var/run/lavalamp/` for system-mode) that exposes the
+     daemon's cached verify result to OS-level consumers. The
+     v1 protocol (`IPC_VERSION = 0x01`) is a 1-byte
+     request → 1-byte response: client sends `0x01`, daemon
+     responds with one of `0x41 'A'` (verify-passing),
+     `0x52 'R'` (verify-failing), `0x53 'S'` (cache stale or
+     pre-first-verify), or `0x45 'E'` (error). The channel is
+     a deliberate, **scoped amendment** of LL-002's strict
+     one-bit posture — three-valued response carries
+     log2(3) ≈ 1.58 bits per cycle — justified by four clauses:
+     filesystem-permission-restricted (socket mode 0600),
+     local-only AF_UNIX (no TCP exposure), cached
+     not-per-request (the value is the daemon's existing
+     cadence, not a fresh oracle), and three-state encoding
+     (A/R/S, not a continuous distance).
+
+90b. The LL-017 no-oracle constraint is preserved through the
+     channel: the daemon returns the same byte for every
+     adversary at every distance. No information leaks
+     beyond the three-state cache.
+
+12.3  Protocol hardening: anti-replay, asymmetric, ECDSA P-256
+------------------------------------------------------------------------
+
+91a. **LL-041 — v2 HMAC-SHA256 anti-replay.** The v1 channel
+     defends against an adversary who lacks any access to the
+     local filesystem. An adversary who can read the socket
+     (e.g. via a same-UID daemon process on the host) can
+     observe one byte and learn the current substrate state.
+     The v2 protocol upgrades to a 17-byte request (`0x02` +
+     16-byte client-supplied nonce) and a 42-byte response
+     (version + result + 8-byte LE timestamp + 32-byte HMAC-
+     SHA256 over nonce ‖ result ‖ timestamp). Daemon and
+     client share a 32-byte secret stored mode-0600 alongside
+     the socket. Captured responses cannot be replayed at a
+     later session window — the nonce binds the response to
+     the request. The freshness window
+     (`IPC_TS_SKEW_S = 30s`) catches stale captures.
+
+91b. **LL-042 — v3 Ed25519 asymmetric signing.** v2's HMAC
+     defends capture-and-replay but the shared secret is
+     forge-capable: any consumer that wants to verify must be
+     given the secret, and the secret is then sufficient to
+     *generate* valid responses, not just check them. The v3
+     protocol moves to Ed25519 asymmetric signing — daemon
+     holds private key, clients hold only the 32-byte public
+     key (mode-0644 — world-readable). Response shape is
+     74 bytes (version + result + 8-byte LE timestamp + 64-byte
+     Ed25519 signature). Verification capability can now be
+     distributed widely (PharOS, future shims, third-party
+     consumers, the public Trust Layer) without expanding the
+     forge-capable surface — only the daemon can sign, anyone
+     can verify.
+
+91c. **LL-043 — v4 ECDSA P-256 signing.** v3's curve choice
+     (Ed25519) does not compose with Apple's Secure Enclave,
+     which only supports ECDSA / ECDH on the NIST P-256 curve.
+     The v4 protocol swaps the curve from Ed25519 to ECDSA
+     P-256. Wire format slot count is unchanged from v3
+     (74-byte response, 64-byte raw r‖s ECDSA P-256 signature
+     over SHA-256(nonce ‖ result ‖ timestamp)); public key is
+     now a 33-byte SEC1-compressed P-256 point at
+     `verify.pub`. The same protocol composes with TPM 2.0,
+     OpenSC, and YubiKey hardware, so the future deployment of
+     hardware-bound keys (LL-044 and forthcoming LL-045 on
+     macOS) does not need further wire-format changes.
+
+12.4  Linux TPM 2.0 binding (LL-044)
+------------------------------------------------------------------------
+
+92a. v4 stores the ECDSA P-256 private key on the daemon's
+     filesystem in a mode-0600 file. A same-UID attacker
+     (root, or the daemon's effective UID, or anyone with
+     equivalent privilege escalation) can read the private
+     key directly and forge any signature. **LL-044** closes
+     this gap on Linux hosts by binding the daemon's signing
+     key to the system's TPM 2.0 chip via the tpm2-tools
+     command-line interface.
+
+92b. **Implementation.** On startup, the daemon checks for
+     `tpm2_getcap properties-fixed` to detect a TPM 2.0
+     chip. If present, the daemon runs the standard tpm2-tools
+     key-generation flow:
+
+     - `tpm2_createprimary` creates an SRK-rooted primary
+       object in the TPM.
+     - `tpm2_create` creates an ECDSA P-256 child key under
+       the primary, with attributes `sign|userwithauth|
+       sensitivedataorigin` (signing-only, sensitive material
+       never leaves the TPM, daemon authorization required).
+     - `tpm2_load` loads the child key into a transient TPM
+       handle.
+     - `tpm2_evictcontrol` persists the child key at the
+       persistent handle `0x81FF0001`, surviving daemon
+       restarts without re-keying.
+     - `tpm2_readpublic` extracts the public-key bytes for
+       writing to `verify.pub`.
+
+92c. On verify-IPC, the daemon dispatches to `tpm2_sign
+     --format=plain` against the persistent handle, which
+     returns a raw r‖s signature directly (matching the
+     v4 wire format with no conversion). The TPM signs
+     inside the chip; the private key never appears in
+     daemon memory. Same-UID attackers can use the TPM to
+     sign (the authorization model is per-policy, not
+     per-process — this is honestly framed as a *partial*
+     same-UID defense), but cannot extract the key, which
+     blocks key-exfiltration and cross-host attack.
+
+92d. **Fallback.** When TPM 2.0 is unavailable (no chip; chip
+     present but software unable to reach it; non-Linux
+     platform), the daemon falls back to in-process OpenSSL
+     key generation and on-disk private-key storage,
+     preserving the same v4 wire format. The fallback path
+     is the v0.0.87 behavior. Daemon logs (and the LL-039
+     menu-bar indicator's tooltip) report which mode is
+     active.
+
+92e. **Honest status.** LL-044's TPM path is shipped but
+     not yet validated under a live TPM 2.0 chip in this
+     session's environment (the developer's M5 Max does
+     not expose a tpm2-tools-accessible TPM). The
+     `:argued`-portion of LL-044's status reflects that the
+     code-path is exercised against `swtpm` (software TPM
+     emulator) in CI in principle but not yet wired into
+     the GitHub Actions matrix; live-hardware validation is
+     deferred to a real-Linux-TPM deployment session.
+     The software-fallback path remains `:tested` via the
+     existing test suite.
+
+12.5  PharOS as the channel consumer
+------------------------------------------------------------------------
+
+93a. v1.2 of this paper described PharOS as *forthcoming*.
+     PharOS now exists as a deployed companion to LavaLamp,
+     instantiating the LL-023 consumer-API at the
+     operating-system membrane layer:
+
+     - **Linux PAM module** (`pam_lavalamp.so`). Consumes the
+       LL-043 v4 protocol; gates `pam_sm_authenticate` on
+       signature-valid + result='A'. Five MVP-5 fixtures
+       in CI on every push (ACCEPT / REJECT / STALE /
+       ts-skew / no-socket fallback).
+     - **macOS Authorization Plug-in** (`LavaLampMechanism.
+       bundle`). Same v4 protocol; bundle is loaded by
+       `authd` when a configured authorization right's
+       mechanism array references the bundle. Compile-
+       tested + ad-hoc-signed; live-system validation
+       deferred to a user-supervised install session
+       (lockout-risk surface is real).
+
+93b. PharOS does not modify LavaLamp's substrate-physics
+     primitive in any way. PharOS preserves LL-002 visual-
+     security decoupling at the OS-membrane layer (returns
+     only PAM_SUCCESS / PAM_AUTH_ERR on Linux;
+     kAuthorizationResultAllow / kAuthorizationResultDeny on
+     macOS — no spectrum), preserves LL-017 no-oracle (rate-
+     limited binary response, no latency-channel leak), and
+     preserves the resolution-bounded security claim
+     (LL-008) transparently by passing through the daemon's
+     verify_full result without modification.
+
+93c. **What PharOS gates against.** The PharOS deployment
+     defeats the canonical "stolen credential reused on a
+     different machine" attack at the OS membrane: an
+     adversary running a LavaLamp daemon under a different
+     envelope on different hardware is now caught because
+     the cross-host daemon's `verify_full` against the
+     captured envelope fails (substrate residue diverges
+     from registered shape), the cross-host daemon's cache
+     holds 'R', the PAM module returns `PAM_AUTH_ERR`, and
+     `sudo` / login / privileged-pane access is denied.
+     This is the load-bearing operational gain over a
+     liveness-only gate.
+
+93d. **What PharOS does NOT gate against.** Same-UID
+     attackers on a single host (root, or daemon UID, or
+     equivalent privilege escalation) can read the private
+     key from daemon memory and forge signatures (LL-044
+     mitigates this *partially* on Linux by TPM-binding the
+     key; macOS SE-binding is gated by Apple Developer ID
+     provisioning, deferred). A3 kernel-level adversaries
+     remain explicitly out of scope per LL-015. The PharOS
+     deployment is one membrane in a defense-in-depth
+     stack; the substrate-physics primitive carries the
+     load-bearing security claim, the OS-membrane gates
+     access to platform-native authentication results.
+
+12.6  What v1.3 changes about the conclusion
+------------------------------------------------------------------------
+
+94a. The §11 conclusion remains correct as written: the
+     prototype is sufficient to demonstrate the structural
+     properties claimed; production deployment requires
+     Phase 2 / Phase 3 real-sensor implementations, formal
+     promotion of LL-035, and per-deployment hardening per
+     §10. v1.3 adds: the LL-023 consumer-API surface has now
+     been instantiated by a working OS-membrane companion
+     (PharOS) on Linux and macOS. The Triad Deployments
+     architecture transitions, in v1.3, from *two-public-
+     deployments-and-a-forthcoming-third* (v1.2 framing) to
+     *three-public-deployments* with PharOS shipping at
+     v0.0.6, six PH-NNN spec entries at `:tested`, four
+     `:argued`, one PAM-on-Linux integration in CI, and one
+     macOS Authorization Plug-in compile-tested with
+     deployment workflow documented and live-system
+     validation deferred to user-supervised install.
+
+========================================================================
 APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
 ========================================================================
 
-89. The thirty-eight spec entries cited in this paper are
+89. The forty-four spec entries cited in this paper are
     catalogued in `LAVALAMP_SPEC.md` at the canonical repository.
     A condensed map follows:
 
@@ -1421,13 +1691,39 @@ APPENDIX A.  CITED SPEC ENTRIES (LL-NNN)
               (Operational, :tested at v0.0.81; structure-additive
               template asymptote at 2 theorems / 0 new structures).
 
-90. Status counts at the time of this paper (canonical
-    `LAVALAMP_SPEC.md` v0.0.81 final-section counts):
+    Operational layer (LL-039 through LL-044; v1.3 additions):
+      LL-039  daemon-visual-status-indicator (Operational,
+              :tested at v0.0.83; macOS menu-bar lavalamp glyph,
+              grey-on-fail / green-on-pass, strict LL-002 ~1 bit).
+      LL-040  daemon-verify-result-IPC (Operational, :tested
+              at v0.0.84; AF_UNIX socket, v1 1-byte protocol;
+              scoped amendment of LL-002 with four-clause
+              justification).
+      LL-041  daemon-verify-result-IPC-v2-anti-replay
+              (Operational, :tested at v0.0.85; v2 HMAC-SHA256
+              nonce-bound challenge-response).
+      LL-042  daemon-verify-result-IPC-v3-asymmetric-signing
+              (Operational, :tested at v0.0.86; v3 Ed25519
+              asymmetric signing; client no longer holds a
+              secret).
+      LL-043  daemon-verify-result-IPC-v4-ecdsa-p256
+              (Operational, :tested at v0.0.87; v4 ECDSA P-256;
+              curve switch unblocks SE/TPM2 hardware-binding
+              roadmap).
+      LL-044  daemon-signing-key-tpm2-bound-linux (Operational,
+              :argued at v0.0.88; tpm2-tools shell-out to bind
+              v4 signing key to TPM 2.0 persistent handle on
+              Linux; software fallback when TPM unavailable;
+              live-hardware validation deferred to a real-Linux-
+              TPM deployment session).
 
-      Total:           38
+90. Status counts at the time of this paper (canonical
+    `LAVALAMP_SPEC.md` v0.0.88 final-section counts):
+
+      Total:           44
       :proved:         2   (LL-021, LL-006 — LL-006 conditional
                             on LL-035)
-      :tested:        12
+      :tested:        18
       :verified:       0
       :benchmarked:    4
       :argued:        19
