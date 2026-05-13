@@ -40,19 +40,30 @@ package «lavalamp-hermetic» where
   ]
 
 -- Cross-repo dependency on Lazarus's hermetic Lean tree.
--- Required by TriadBackboneMirror (LL-046 no-oracle-triad-
--- backbone), which imports Lazarus.TriadBackbone to re-export
--- the `no_oracle_triad_backbone` composition theorem (proved
--- at Lazarus v0.1.26 using PharOS Membrane + LavaLamp
--- LL002Visual + Lazarus CompanionDiscipline as the three
--- concrete legs). LL-046 cites the Lazarus theorem from
--- LavaLamp's perspective; mirror entries also exist at
--- PharOS PH-014 and Lazarus LZ-028. Lazarus's lake-manifest
--- pins lavalamp-hermetic@1a2534f transitively — Lake prefers
--- the local lavalamp-hermetic (this package, HEAD) over that
--- transitive copy of itself.
+-- Required by:
+--   - TriadBackboneMirror (LL-046 no-oracle-triad-backbone) —
+--     imports Lazarus.TriadBackbone for the
+--     `no_oracle_triad_backbone` 12-element joint composition
+--     (LL-002 + LZ-012 + PH-004).
+--   - DecouplingBackboneMirror (LL-050 decoupling-triad-
+--     backbone) — imports Lazarus.DecouplingBackbone for the
+--     `decoupling_triad_backbone` 8-element joint composition
+--     (LL-002 + LZ-001 + PH-004; structurally distinct from
+--     the No-Oracle Backbone despite sharing LL-002 + PH-004,
+--     because Lazarus's leg shifts from LZ-012 LlmOutput to
+--     LZ-001 Mode).
+-- Pin bumped from v0.1.26 commit `062dcb3` to v0.1.29 commit
+-- `5f402d1` at LL-050 promotion (2026-05-12) to bring in
+-- Lazarus's new DecouplingBackbone module + sibling
+-- VisualSkinDecoupling module. The bump is backward-compatible:
+-- TriadBackboneMirror's cited theorem
+-- `no_oracle_triad_backbone` exists unchanged in v0.1.29
+-- (only new files were added).
+-- Lazarus's lake-manifest pins lavalamp-hermetic@1a2534f
+-- transitively — Lake prefers the local lavalamp-hermetic
+-- (this package, HEAD) over that transitive copy of itself.
 require «lazarus-lean» from git
-  "https://github.com/IridiumSoftware/lazarus.git" @ "062dcb3" / "src/lean4"
+  "https://github.com/IridiumSoftware/lazarus.git" @ "5f402d1" / "src/lean4"
 
 @[default_target]
 lean_lib «LL002Visual» where
@@ -66,4 +77,18 @@ lean_lib «LL002Visual» where
 -- target so `lake build` validates it.
 @[default_target]
 lean_lib «TriadBackboneMirror» where
+  srcDir := "."
+
+-- LL-050 cross-Triad Decoupling axis mirror — re-exports
+-- Lazarus's `decoupling_triad_backbone` theorem under
+-- LavaLamp's namespace. Lazarus's DecouplingBackbone composes
+-- LavaLamp.LL002Visual.VisualOutput + Lazarus.VisualSkinDecoupling.Mode
+-- + PharOS.Membrane.MembraneOutput into an 8-element finite
+-- joint output type. The Lake git dep above (bumped to
+-- v0.1.29 commit `5f402d1` for this mirror) brings the proof
+-- artifact into LavaLamp's hermetic build; this lean_lib
+-- stanza makes the mirror module a default build target so
+-- `lake build` validates it.
+@[default_target]
+lean_lib «DecouplingBackboneMirror» where
   srcDir := "."
