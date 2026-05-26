@@ -1852,6 +1852,25 @@ APPENDIX D.  SUPPORTING MATERIAL
     v1.4, May 2026. github.com/IridiumSoftware/closure-forces-
     structure.
 
+    von Neumann, J. (1952/1956). 'Probabilistic Logics and the
+    Synthesis of Reliable Organisms from Unreliable Components.'
+    Lectures delivered at the California Institute of Technology,
+    January 4-15, 1952; notes by R. S. Pierce. Published in
+    C. E. Shannon and J. McCarthy (eds.), Automata Studies, Annals
+    of Mathematics Studies No. 34, Princeton University Press,
+    1956, pp. 43-98. Foundational reference for the entire
+    Triad Deployments thesis: a reliable identity-binding system
+    can be built from unreliable components (sensors, hardware,
+    network, OS) by carrying every signal on a bundle of N lines
+    with periodic restoring organs that drive bundle excitation
+    toward {0, 1}, achieving error rate delta arbitrarily small
+    for sufficiently large N at fixed per-component error epsilon.
+    LavaLamp's chaotic-SDE residue audit (LL-001..LL-051) is a
+    substrate-specific instantiation: the chaotic dynamics of a
+    lava lamp serve as the unreliable physical substrate, the
+    audit pipeline as the restoring organ, and the substrate
+    residue as the reliable identity binding.
+
 98. The canonical LavaLamp repository is
     github.com/IridiumSoftware/lavalamp; this paper, the source
     code, the Lean theorems, the test suite, and the demo all
