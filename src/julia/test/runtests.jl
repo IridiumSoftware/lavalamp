@@ -2884,3 +2884,10 @@ end
     end
 
 end
+
+# LL-040 daemon singleton guard (cold-start IPC bug fix, 2026-05-29).
+# Self-contained testset; includes the daemon as a module WITHOUT
+# starting it (PROGRAM_FILE guard) and exercises only the flock lock
+# against a temp file — never touches ~/.lavalamp. See
+# docs/ll040_ipc_coldstart_bug_companion.md.
+include(joinpath(@__DIR__, "test_daemon_singleton.jl"))

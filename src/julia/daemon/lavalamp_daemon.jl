@@ -49,6 +49,41 @@ const HEARTBEAT_FILE = joinpath(HEARTBEAT_DIR, "heartbeat")
 const VERIFY_SOCKET = joinpath(HEARTBEAT_DIR, "verify.sock")
 const VERIFY_PUB    = joinpath(HEARTBEAT_DIR, "verify.pub")
 
+# ─── LL-040 singleton guard (cold-start IPC bug fix, 2026-05-29) ─
+#
+# The daemon previously had NO singleton guard. main() deletes
+# verify.sock / verify.pub at startup *and* at exit; with two
+# overlapping instances (a manual run racing the launchd job, or a
+# restart overlap) the short-lived instance's atexit hooks would
+# delete files the long-lived instance is still advertising —
+# leaving a healthy daemon whose IPC channel is gone from disk
+# while its banner still claims it. See
+# docs/ll040_ipc_coldstart_bug_companion.md for the full root cause.
+#
+# Fix: take an exclusive, non-blocking flock(2) on a lock file
+# before ANY destructive file op in main(). The lock is held for
+# the whole process lifetime and the kernel auto-releases it on
+# exit (including SIGKILL / crash), so there is no stale-lock
+# problem. A second instance that cannot acquire the lock exits
+# immediately without touching the incumbent's files.
+const LOCK_FILE = joinpath(HEARTBEAT_DIR, "daemon.lock")
+
+# BSD flock(2) operation flags — identical values on macOS + Linux.
+const FLOCK_LOCK_EX = Cint(2)   # exclusive lock
+const FLOCK_LOCK_NB = Cint(4)   # non-blocking: fail rather than wait
+
+# Holds the open lock-file handle for the daemon's lifetime. Keeping
+# the IOStream referenced here prevents GC from closing the fd (which
+# would release the flock). `nothing` until the lock is acquired.
+const LOCK_HANDLE = Ref{Union{IOStream,Nothing}}(nothing)
+
+# Defense-in-depth behind the flock guard: only the instance that
+# actually stood up the IPC files may delete them at exit. Guards the
+# should-never-happen case where flock is a no-op on an exotic
+# filesystem (e.g. some NFS-mounted home dirs). Set true once
+# verify.sock + verify.pub are both live for THIS process.
+const I_OWN_IPC_FILES = Ref{Bool}(false)
+
 # LL-044 TPM2 working files. Used only on Linux when tpm2-tools
 # is available; otherwise the daemon falls through to the
 # LL-043 software-key path.
@@ -203,6 +238,51 @@ function delete_verify_pub()
     try
         isfile(VERIFY_PUB) && rm(VERIFY_PUB; force=true)
     catch
+    end
+end
+
+"""
+    acquire_singleton_lock(lock_path=LOCK_FILE) -> Bool
+
+Take an exclusive, non-blocking flock(2) on `lock_path`. Returns
+true if this process now holds the lock (stashing the open handle
+in LOCK_HANDLE so the fd stays open — and the lock held — for the
+process lifetime), false if another live daemon already holds it.
+
+The lock file itself is never removed: closing the fd releases the
+flock, and leaving the 0-byte file in place avoids the classic
+unlink-vs-relock race where a new instance locks a freshly-created
+file while the old one still "holds" the unlinked inode.
+
+flock(2) takes a RawFD directly via ccall's RawFD arg type (Julia
+auto-converts); the kernel releases the lock when the fd closes,
+including on SIGKILL / crash, so a stale lock is impossible.
+"""
+function acquire_singleton_lock(lock_path::AbstractString=LOCK_FILE)::Bool
+    io = open(lock_path, "a")   # append: create-if-absent, never truncate
+    rc = ccall(:flock, Cint, (Base.RawFD, Cint),
+               fd(io), FLOCK_LOCK_EX | FLOCK_LOCK_NB)
+    if rc != 0
+        close(io)
+        return false
+    end
+    LOCK_HANDLE[] = io
+    return true
+end
+
+"""
+    release_singleton_lock()
+
+Close the lock handle, releasing the flock. Idempotent. Registered
+in atexit; the kernel would release the lock on process death
+anyway — this just makes the release prompt and explicit. The lock
+file is intentionally left on disk (see acquire_singleton_lock).
+"""
+function release_singleton_lock()
+    io = LOCK_HANDLE[]
+    if io !== nothing
+        try; close(io); catch; end
+        LOCK_HANDLE[] = nothing
     end
 end
 
@@ -800,6 +880,20 @@ end
 
 function main()
     ensure_heartbeat_dir()
+
+    # Singleton guard MUST run before any destructive file op below
+    # (delete_heartbeat / delete_verify_*). If another daemon already
+    # holds the lock, exit cleanly WITHOUT touching its files — this
+    # is the fix for the cold-start IPC bug where an overlapping
+    # instance stomped the incumbent's verify.sock / verify.pub. See
+    # docs/ll040_ipc_coldstart_bug_companion.md.
+    if !acquire_singleton_lock()
+        println("LavaLamp daemon: another instance already holds " *
+                "$LOCK_FILE — exiting without touching its IPC files.")
+        return
+    end
+    Base.atexit(release_singleton_lock)
+
     delete_heartbeat()
     delete_verify_socket()
     delete_verify_pub()
@@ -817,8 +911,16 @@ function main()
     # downstream consumers into believing the daemon is alive —
     # exactly the failure mode we never want.
     Base.atexit(delete_heartbeat)
-    Base.atexit(delete_verify_socket)
-    Base.atexit(delete_verify_pub)
+    # IPC-file cleanup is gated on ownership (defense-in-depth behind
+    # the flock guard): only the instance that actually stood up the
+    # IPC files may remove them at exit, so a second instance that
+    # somehow slipped past the lock can never delete the incumbent's.
+    Base.atexit() do
+        if I_OWN_IPC_FILES[]
+            delete_verify_socket()
+            delete_verify_pub()
+        end
+    end
     Base.atexit(free_signing_pkey!)
     Base.atexit(tpm2_cleanup)
 
@@ -840,6 +942,11 @@ function main()
 
     # Start the LL-040 IPC server (background @async accept loop).
     server = start_ipc_server()
+    # Both IPC files are now live for THIS process — verify.pub from
+    # generate_startup_keypair! above, verify.sock from
+    # start_ipc_server. Claim ownership so the gated atexit cleanup
+    # is permitted to remove them.
+    I_OWN_IPC_FILES[] = true
 
     # First heartbeat + first verify on entry.
     write_heartbeat()
@@ -882,4 +989,9 @@ function main()
     end
 end
 
-main()
+# Only run the daemon when this file is executed as a script.
+# `include`-ing it (e.g. from the test suite) defines all the
+# functions WITHOUT starting the daemon or touching ~/.lavalamp.
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end
