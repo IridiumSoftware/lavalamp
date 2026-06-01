@@ -833,7 +833,23 @@ function setup_envelope()
     N_STEPS  = 1000
     Δt       = 0.05
     T_TR     = 200.0
-    K_CHECK  = 10.0
+    # K_CHECK: residue/σ rejection threshold. verify REJECTs a live
+    # system whose max normalised residue exceeds this.
+    #
+    # Raised 10.0 → 12.0 on 2026-05-31 from 9,790 logged verifies
+    # (2026-05-21 → 05-31): 9,788 ACCEPT, 2 REJECT (0.02%). Both false
+    # rejects barely crossed 10.0 — 10.40 (05-25) and 10.22 (05-26),
+    # both under heavy load (billions of allocations between restarts).
+    # Distribution: min 1.23, median 3.46, mean 3.62, p99 6.82, with a
+    # clear empty gap between ~8.6 and those two outliers. k=12.0 clears
+    # both observed false rejects with ~15% margin and sits in that dead
+    # zone, while staying far below the >15 band where genuine
+    # adversaries fall — eliminates the load-induced nuisance-REJECT
+    # tail without meaningfully narrowing impostor detection. The
+    # downstream PharOS reactor recovery cost is high (physical re-login
+    # + remembering to unload the reactor), so a conservative threshold
+    # is the right default. See PharOS PH-019 log analysis 2026-05-31.
+    K_CHECK  = 12.0
 
     b         = ones(N)
     s_const   = constant_stream(1.0; t_max=2000.0)
